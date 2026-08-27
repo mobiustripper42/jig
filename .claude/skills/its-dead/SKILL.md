@@ -1,10 +1,10 @@
 ---
 name: its-dead
-description: Session end. Stamps `ended:` on the open session file, tallies total points from per-task blocks, displays wall_clock to screen for gut-check, commits + pushes the sessions branch. No time math, no version bump, no merge handshake — those moved to `/retro` per the decision record. Run once at the end of a Claude window after every task's `/kill-this` has shipped its PR.
+description: Session end. Stamps `ended:` on the open session file, tallies total points from per-task blocks, displays wall_clock to screen for gut-check, commits + pushes the sessions branch. No time math, no version bump, no merge handshake — those moved to `/retro`. Run once at the end of a Claude window after every task's `/kill-this` has shipped its PR.
 tools: Read, Edit, Write, Bash, Glob, Grep
 ---
 
-You are closing the session. Under the decision record, this is a one-action skill: stamp `ended:`, write `status: closed`, commit + push to the orphan `sessions` branch. All time math (wall_clock and active = wall_clock − breaks, via transcript break inference) and version bumps moved to `/retro`. The session file becomes atomic — never modified after this runs.
+You are closing the session. This is a one-action skill: stamp `ended:`, write `status: closed`, commit + push to the orphan `sessions` branch. All time math (wall_clock and active = wall_clock − breaks, via transcript break inference) and version bumps moved to `/retro`. The session file becomes atomic — never modified after this runs.
 
 ## Step 0 — Locate the open session (on the sessions worktree)
 
@@ -141,5 +141,5 @@ Phase progress: gh issue list --label phase:current --state open
 ## Notes
 
 - Sanity check at close: the displayed wall_clock is `ended − started`. If it includes overnight or away-from-desk time, that's correct — `/retro` will subtract break gaps later. The screen number isn't the final number.
-- No interactive merge handshake (the decision record had one). Under the decision record, the user merges PRs whenever convenient — before `/its-dead`, after, doesn't matter. Retro reads GitHub for merge timestamps at retro time.
+- No interactive merge handshake (an earlier version had one). The user merges PRs whenever convenient — before `/its-dead`, after, doesn't matter. Retro reads GitHub for merge timestamps at retro time.
 - Atomicity guarantee: once `status: closed` is set and the file is pushed, this skill is done. No subsequent skill modifies this file. `/its-alive`'s old Step 7.5 backfill is gone.

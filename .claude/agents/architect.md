@@ -33,7 +33,7 @@ Decisions live **one per file** in `docs/decisions/DEC-*.md`; `docs/DECISIONS.md
 - When a task requires a pattern not yet used in the project (a new data-access shape, a new module/component pattern, a new data flow)
 - When it's unclear which layer something belongs in (the data store, the client, or a service/server boundary)
 - When scope creep is being considered
-- When a decision contradicts or extends something in the decision record
+- When a decision contradicts or extends an existing decision record
 
 ## Decision Review Checklist
 

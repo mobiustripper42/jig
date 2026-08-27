@@ -9,7 +9,7 @@ You are executing the session start ritual.
 ## Step 0 — Branch check
 
 **Worktree check first:** run `git rev-parse --git-dir`.
-- If the output contains `/worktrees/`: this is a **linked worktree session** — the normal shape of concurrent work under the decision record, created before this session started. Skip the rest of Step 0; the branch here is intentional. Note "Linked worktree" in the briefing and continue to Step 0.6.
+- If the output contains `/worktrees/`: this is a **linked worktree session** — the normal shape of concurrent work, created before this session started. Skip the rest of Step 0; the branch here is intentional. Note "Linked worktree" in the briefing and continue to Step 0.6.
 - Otherwise: continue.
 
 This is a **report**, not a decision. Nothing downstream branches on it: the session's shell, checkout and branch are the same thing either way, which is what lets every other skill use plain `git`.
@@ -18,7 +18,7 @@ Run `git fetch origin` to refresh remote state. Capture `BRANCH=$(git branch --s
 
 **Branch handling:**
 - `task/*` or other intentional feature branch: continue (PR-flow project).
-- `claude/*` (CC Desktop / web / mobile auto-branch): accept and continue. The platform pre-cuts this branch when launching a session. Per the decision record, this branch is the **session-anchor**; per-task code branches get cut as work proceeds, each PR'd separately. Session-file commits go to the orphan `sessions` branch via the worktree, NOT to this branch.
+- `claude/*` (CC Desktop / web / mobile auto-branch): accept and continue. The platform pre-cuts this branch when launching a session. This branch is the **session-anchor**; per-task code branches get cut as work proceeds, each PR'd separately. Session-file commits go to the orphan `sessions` branch via the worktree, NOT to this branch.
 - `main`: `git pull --ff-only origin main`. On divergence, show `git log --oneline origin/main..HEAD` and `git log --oneline HEAD..origin/main`, then ask: **"(a) rebase, (b) reset to origin/main, (c) abort?"** Wait for the choice.
 - Anything else (manual non-standard branch): if `git status --porcelain` is dirty, stop and ask the user to commit/stash. If clean, ask the user **"Stay on `$BRANCH` or switch to `main`?"** Wait for the choice.
 
@@ -88,7 +88,7 @@ grep -q "^\.sessions-worktree/" .gitignore 2>/dev/null || (echo ".sessions-workt
 # Attach worktree:
 git worktree add .sessions-worktree sessions
 ```
-Note: on protected main, the two follow-up commits (remove `sessions/`, add `.gitignore`) may need a PR instead of direct push. Detect with `gh api repos/{owner}/{repo}/branches/main/protection --silent 2>/dev/null`; if protected, open a "Migrate to the decision record" PR with those commits on a `claude/dec-014-migrate` branch and surface the URL.
+Note: on protected main, the two follow-up commits (remove `sessions/`, add `.gitignore`) may need a PR instead of direct push. Detect with `gh api repos/{owner}/{repo}/branches/main/protection --silent 2>/dev/null`; if protected, open a "Migrate sessions to the orphan branch" PR with those commits on a `claude/migrate-sessions` branch and surface the URL.
 
 c. **`origin/sessions` exists but local sessions/ also has uncommitted files** (mid-migration): stop and ask the user to resolve manually.
 
@@ -151,7 +151,7 @@ Capture as `JSONL_DIR`. Use the **Glob** tool with `path: <JSONL_DIR>` and `patt
 SESSION_FILE=".sessions-worktree/sessions/${DATE_PART}-${TIME_PART}-${DEV}-${SLUG}.md"
 ```
 
-Write the file with this content (the decision record schema — atomic, no time math fields):
+Write the file with this content (atomic, no time-math fields):
 
 ```
 ---
@@ -284,7 +284,7 @@ Then ask: **"Ready to go? Confirm the task or redirect me."** — or, if the use
 
 Stop. Do not begin work until the user confirms.
 
-## the decision record + the decision record reminders
+## Workflow reminders
 
 - One Claude window opens **one** session. `/its-dead` runs **once** at the end.
 - `/kill-this` may run multiple times — one per task — each opens its own PR and appends a `## Task <N>` block to this session file (on the sessions branch).

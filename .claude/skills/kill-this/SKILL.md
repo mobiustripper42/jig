@@ -4,7 +4,7 @@ description: Per-task PR + session file update. Build check, commit code, push t
 tools: Read, Edit, Write, Bash, Glob, Grep, Agent
 ---
 
-You are shipping one task. Under the decision record, `/kill-this` runs **per task**, not per session — there may be N invocations between `/its-alive` and `/its-dead`. Each one opens its own PR and appends one `## Task <N>` block to the session file (which lives on the orphan `sessions` branch via `.sessions-worktree/`, per the decision record).
+You are shipping one task. `/kill-this` runs **per task**, not per session — there may be N invocations between `/its-alive` and `/its-dead`. Each one opens its own PR and appends one `## Task <N>` block to the session file (which lives on the orphan `sessions` branch via `.sessions-worktree/`).
 
 ## Step 0 — Locate the session file, capture the branch
 
@@ -18,7 +18,7 @@ BRANCH=$(git branch --show-current)
 
 **More than one match:** another window has a session open. Report the candidates — `session:`, `branch:`, `started:` — and ask which is yours. Do not sort and do not take the first: `... | head -1` returns the lexically-earliest filename, and session filenames start with a date, so it silently picks the *stale* file whenever that one opened earlier. Nothing errors.
 
-`BRANCH` is read from the current directory, and under the decision record that is correct by construction: a session starts in the checkout its work lives in and stays there. If that stops being true, fix the session, not this skill — every wrong-tree symptom downstream is that one broken assumption wearing a different hat.
+`BRANCH` is read from the current directory, and that is correct by construction: a session starts in the checkout its work lives in and stays there. If that stops being true, fix the session, not this skill — every wrong-tree symptom downstream is that one broken assumption wearing a different hat.
 
 Read the file's frontmatter to get session number `N` and the current `pr_numbers:` list.
 
@@ -50,7 +50,7 @@ If there is nothing to commit, surface that and stop here — no PR for no code.
 
 **Push the branch — do not open a PR yet:**
 
-- **On `main` (the decision record solo flow, unprotected main):** `git push origin main`. Skip Steps 3+4 — no PR. Go to Step 5.
+- **On `main` (solo flow, unprotected main):** `git push origin main`. Skip Steps 3+4 — no PR. Go to Step 5.
 - **On a `task/*`, `claude/<slug>`, or feature branch:** `git push -u origin $BRANCH`. Continue.
 
 Capture `SUBJECT=$(git log -1 --format=%s)` for the PR title.
@@ -243,7 +243,7 @@ If `EXISTING_PR_STATE` was `OPEN` and Step 4.2 was skipped, surface the existing
 
 ## Notes
 
-- **No time math, no version bump, no CHANGELOG.** All deferred to `/retro` per the decision record. This skill ships a task and logs it; that's it.
+- **No time math, no version bump, no CHANGELOG.** All deferred to `/retro`. This skill ships a task and logs it; that's it.
 - **Branch ownership.** Code commits go to the current task branch. Session-file commits go to the sessions branch via the worktree. Two completely separate timelines.
 - **Multiple PRs per session is normal.** Each `/kill-this` appends a `## Task <N>` block; the `pr_numbers:` list grows. `/retro` reads this list to enumerate the PRs to query for merge timestamps.
 - **Merge ordering is free.** The user can merge each PR whenever — before the next `/kill-this`, after `/its-dead`, days later. Retro reads GitHub at retro time and gets the merge timestamps regardless.
