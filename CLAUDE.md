@@ -2,7 +2,7 @@
 
 > **Read `.claude/CLAUDE-context.md` first.** It holds this project's name, stack, data model, commands, and any project-specific overrides to the workflow below. Treat it as authoritative for every project-specific fact. If it does not exist, stop and tell the user to create it from jig's `scaffold/claude/CLAUDE-context.md`.
 >
-> This file is jig's shell (DEC-S019): project-agnostic workflow only, byte-identical in every repo. Project-specific content goes in `.claude/CLAUDE-context.md` or it is lost on the next copy.
+> This file is jig's shell: project-agnostic workflow only, byte-identical in every repo. Project-specific content goes in `.claude/CLAUDE-context.md` or it is lost on the next copy.
 
 ## Key Docs
 
@@ -36,7 +36,7 @@ Project-specific docs are listed in `.claude/CLAUDE-context.md` under `## Additi
 
 **No proof, no push.**
 
-**Steps 4, 6 and 7 name a slot, not a tool** (DEC-S042). The shell says what the step must achieve; the context file says how it's done here. Slots are filled, not overridden. Nothing cites a step *number* — numbers move, and a stale cross-reference in an always-loaded file fails silently.
+**Steps 4, 6 and 7 name a slot, not a tool.** The shell says what the step must achieve; the context file says how it's done here. Slots are filled, not overridden. Nothing cites a step *number* — numbers move, and a stale cross-reference in an always-loaded file fails silently.
 
 **An unfilled slot is a real answer and must be written as one.** `Surface check: none — no human-facing surface` is checkable. Blank is not.
 
@@ -187,13 +187,13 @@ Occasional dry humor and sarcasm welcome. One good line beats three forced ones.
 
 ## Communication
 
-**Register — length, shape, preamble, when to expand — is set by the `Concise` output style, not by this file** (DEC-S050). It's a machine preference in user settings, so one edit covers every repo. Override per-repo in `.claude/settings.local.json`. Takes effect at the next session start, never mid-session.
+**Register — length, shape, preamble, when to expand — is set by the `Concise` output style, not by this file.** It's a machine preference in user settings, so one edit covers every repo. Override per-repo in `.claude/settings.local.json`. Takes effect at the next session start, never mid-session.
 
 **Do not re-add register prose here.** This section was 976 words of it and it worked sometimes. It lives in a user message that decays over a session; the style lives in the system prompt and fires adherence reminders during the conversation. If `Concise` is missing something, the answer is a custom output style, not another paragraph here.
 
 **Never lead with a false premise.** If you don't know the cause, ask — "is the server up? which DB?" is one line and fair. What's banned is stating a made-up cause as fact and explaining at length on top of it.
 
-**Ask in prose. Never use the `AskUserQuestion` tool.** A branching decision with three named options and a recommendation is a fine *question* and a bad *picker* — write it out.
+**Ask in prose.** `AskUserQuestion` is denied fleet-wide. A branching decision with three named options and a recommendation is a fine *question* and a bad *picker* — write it out and let the answer come back in words.
 
 **Cite facts; label proposals.** Any claim about the code, config or project rules cites a file:line or a tool result. If you can't cite it, ask instead of asserting. This never restricts *ideas* — propose freely, just mark them "proposed / not in the codebase". Inventing a fact is fabrication; a labelled proposal is not.
 
