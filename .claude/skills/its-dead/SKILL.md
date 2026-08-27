@@ -14,7 +14,7 @@ grep -l "^status: open" .sessions-worktree/sessions/*.md 2>/dev/null
 
 **Exactly one match:** that's `SESSION_FILE`. NEW MODE. Continue.
 
-**No match:** try legacy `session-log.md` on the current branch. If found: LEGACY MODE — Step 4 still applies; everything else simplifies. If neither: STOP and ask the user how to proceed.
+**No match:** STOP and ask the user how to proceed. Do not invent a session file — `/its-alive` creates it, and its absence means the session was never opened.
 
 **More than one match:** another window has a session open. Report the candidates — `session:`, `branch:`, `started:` — and ask which is yours. Do not sort and do not take the first: `... | head -1` returns the lexically-earliest filename, and session filenames start with a date, so it silently picks the *stale* file whenever that one opened earlier. Nothing errors.
 
@@ -115,8 +115,6 @@ git -C .sessions-worktree push origin sessions
 ```
 
 No version bump. No CHANGELOG. No tag. No branch cleanup (task branches and their PRs are managed by the user per-task at `/kill-this` time and via the GitHub merge button).
-
-**LEGACY MODE (no `.sessions-worktree/`, working from `session-log.md`):** stage + commit + push `session-log.md` to the current branch. Skip the worktree-specific commands.
 
 ## Step 6 — Closing summary
 

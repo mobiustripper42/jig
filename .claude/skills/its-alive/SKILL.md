@@ -133,9 +133,7 @@ If the user asks for a concurrent worktree here, give them those two lines and s
 
 Use the **Glob** tool with `path: .sessions-worktree/sessions` and `pattern: *.md` to list current session files. Filter out `README.md` from the result. Call the remaining count `NEW_COUNT`.
 
-Use the **Grep** tool on `session-log.md` (legacy archive on `main`) with `pattern: "^## Session [0-9]+"` and `output_mode: content`. If matches come back, parse the integer from each line and take the maximum — call it `LEGACY_MAX`. If `session-log.md` is absent or returns no matches, `LEGACY_MAX = 0`.
-
-`SESSION_NUM = LEGACY_MAX + NEW_COUNT + 1`. Compute in head — no bash needed.
+`SESSION_NUM = NEW_COUNT + 1`. Compute in head — no bash needed.
 
 (Glob + Grep replaces a chained `ls | wc -l` + `grep | grep | sort | tail` pipeline — same validator-silence reason as Step 4.)
 
@@ -197,14 +195,12 @@ Find the most recent CLOSED session file in the worktree:
 PREV=$(ls -t .sessions-worktree/sessions/*.md 2>/dev/null | grep -v README | grep -v "$(basename $SESSION_FILE)" | head -10)
 ```
 
-For each candidate (newest first), check for `status: closed`. The first match is the previous session. If none exist, fall back to the top entry of `session-log.md` (legacy archive) if present.
+For each candidate (newest first), check for `status: closed`. The first match is the previous session. If none exist, say so — a first session has no predecessor, and that is a fact rather than a gap to fill.
 
 Extract:
 - **Task blocks** (`## Task <N>` sections in the body) — what was shipped
 - **Next Steps** — verbatim
 - **Context** — gotchas
-
-**Pre-the decision record schema tolerance:** legacy session files use a single `Task:` block instead of `## Task <N>` headers. Read either shape.
 
 ## Step 7 — Read project state
 
