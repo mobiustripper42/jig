@@ -2,7 +2,7 @@
 
 > **Read `.claude/CLAUDE-context.md` first.** It holds this project's name, stack, data model, commands, and any project-specific overrides to the workflow below. Treat it as authoritative for every project-specific fact. If it does not exist, stop and tell the user to create it from jig's `scaffold/claude/CLAUDE-context.md`.
 >
-> This file is jig's shell: project-agnostic workflow only, **byte-identical in every repo** — including its title, which is why there is no project name in it. Project-specific content goes in `.claude/CLAUDE-context.md` or it is lost on the next copy.
+> Nothing project-specific goes in this file — it is replaced wholesale on the next update, and anything added here is lost.
 
 ## Key Docs
 

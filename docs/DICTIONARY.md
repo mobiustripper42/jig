@@ -12,4 +12,4 @@ alternates start being caught.
 | Term | Says | Not |
 |---|---|---|
 | **byte-identical** | exactly the same file, character for character — not merely similar or kept in step by hand | — |
-| **md5** | a short fingerprint of a file's contents — two files with the same one are the same file, and `md5sum <file>` prints it | `md5sum`, `checksum`, `hash` |
+| **md5** | a short fingerprint of a file's contents — two files with the same one are the same file, and `md5sum <file>` prints it | — |
