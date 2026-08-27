@@ -27,7 +27,7 @@ import {
 
 const doc = (text, path = "fixture.md") => [{ path, text }];
 const WORLD = {
-  ids: new Set(["DEC-001", "DEC-MSG-1"]),
+  ids: new Set(["DEC-J001"]),
   scripts: { verify: "…", "check:docs": "…" },
   skills: new Set(["kill-this"]),
   agents: new Set(["pm"]),
@@ -35,14 +35,14 @@ const WORLD = {
 
 describe("checkDecRefs", () => {
   it("accepts a reference to a decision that exists", () => {
-    expect(checkDecRefs(doc("per DEC-001 and DEC-MSG-1"), WORLD.ids)).toEqual([]);
+    expect(checkDecRefs(doc("per DEC-J001"), WORLD.ids)).toEqual([]);
   });
 
   it("catches a reference to a decision that does not exist", () => {
     // The negative control for the class `check-decisions` never covered: its scan stops at
     // `docs/decisions/` + the index, leaving 148 references in the rest of the doc set unread.
-    const [f] = checkDecRefs(doc("superseded by DEC-999"), WORLD.ids);
-    expect(f).toMatch(/fixture\.md:1 — cites DEC-999, which has no decision file/);
+    const [f] = checkDecRefs(doc("superseded by DEC-J999"), WORLD.ids);
+    expect(f).toMatch(/fixture\.md:1 — cites DEC-J999, which has no decision file/);
   });
 
   it("ignores the seeds DEC-S series, whose record lives in another repo", () => {
@@ -68,7 +68,7 @@ describe("checkNpmScripts", () => {
 });
 
 describe("checkIssueLinks", () => {
-  const url = (n, kind = "issues") => `https://github.com/mobiustripper42/muster/${kind}/${n}`;
+  const url = (n, kind = "issues") => `https://github.com/mobiustripper42/jig/${kind}/${n}`;
 
   it("accepts a link whose text matches its target", () => {
     expect(checkIssueLinks(doc(`[#204](${url(204)}) and [PR #213](${url(213, "pull")})`))).toEqual([]);
@@ -83,7 +83,7 @@ describe("checkIssueLinks", () => {
 
   it("catches a link pointing at a different repository", () => {
     const [f] = checkIssueLinks(doc("[#204](https://github.com/someone/else/issues/204)"));
-    expect(f).toMatch(/links to someone\/else, not mobiustripper42\/muster/);
+    expect(f).toMatch(/links to someone\/else, not mobiustripper42\/jig/);
   });
 
   it("ignores a bare #204 with no link, which asserts no target", () => {
@@ -139,7 +139,7 @@ describe("checkRosters", () => {
   });
 
   it("ignores plugin skills and built-ins, which have no .claude/skills/ entry by design", () => {
-    expect(checkRosters(roster("`/kill-this` `/stripe-projects` `/review` @pm"), WORLD)).toEqual([]);
+    expect(checkRosters(roster("`/kill-this` `/review` `/simplify` @pm"), WORLD)).toEqual([]);
   });
 });
 
@@ -168,7 +168,7 @@ describe("checkPaths", () => {
   it("checks a doc that is not exempt, so the exemption list is opt-in and not the default", () => {
     // The list is exemptions rather than an allowlist on purpose: a doc added next year is
     // checked by default, and skipping it takes a deliberate line with a reason attached.
-    expect(checkPaths([{ path: "docs/BRAND.md", text: "`src/gone.ts`" }])[0]).toMatch(/does not exist/);
+    expect(checkPaths([{ path: "docs/BRAND.md", text: "`scripts/gone.mjs`" }])[0]).toMatch(/does not exist/);
   });
 });
 
@@ -212,15 +212,15 @@ describe("check — the real doc set", () => {
   it("reports every class through one entry point, so one red build shows all of it", () => {
     const failures = check(
       [
-        { path: "CLAUDE.md", text: "`/kill-this` @pm cites DEC-999 and `npm run nope`" },
-        { path: "docs/BRAND.md", text: "[#1](https://github.com/mobiustripper42/muster/issues/2) `src/gone.ts`" },
+        { path: "CLAUDE.md", text: "`/kill-this` @pm cites DEC-J999 and `npm run nope`" },
+        { path: "docs/BRAND.md", text: "[#1](https://github.com/mobiustripper42/jig/issues/2) `scripts/gone.mjs`" },
       ],
       WORLD,
     );
     expect(failures).toHaveLength(4);
-    expect(failures.join("\n")).toMatch(/DEC-999/);
+    expect(failures.join("\n")).toMatch(/DEC-J999/);
     expect(failures.join("\n")).toMatch(/npm run nope/);
     expect(failures.join("\n")).toMatch(/reads #1 but links to issues\/2/);
-    expect(failures.join("\n")).toMatch(/src\/gone\.ts/);
+    expect(failures.join("\n")).toMatch(/scripts\/gone\.mjs/);
   });
 });

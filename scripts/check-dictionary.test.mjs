@@ -108,14 +108,17 @@ describe('the real corpus', () => {
     expect(check().failures).toEqual([])
   })
 
-  it('reports its pre-existing alternates as warnings rather than failing on them', () => {
-    // Registering `CAS` with `not: [compare-and-swap]` lights up old documents. That list is
-    // the drift the dictionary exists to find, so it must never be the thing that stops a
-    // commit — a gate that punishes registering a term is a gate nobody registers terms in.
-    const { warnings, failures } = check()
-    expect(failures).toEqual([])
-    expect(warnings.length).toBeGreaterThan(0)
-    expect(warnings.join(' ')).toMatch(/forbidden alternate/)
+  it('fails on a forbidden alternate, because jig grandfathers nothing', () => {
+    // Muster warns here instead of failing: it froze its existing vocabulary into a baseline
+    // because the rule fired 3,006 times against a corpus nobody was going to rewrite, and a gate
+    // that punishes registering a term is a gate nobody registers terms in.
+    //
+    // jig started empty, so there is no baseline and nothing to be gentle about — an alternate
+    // written after the rule existed is a defect, not a backlog item. This test states jig's
+    // contract; the warning path is muster's and is exercised by muster's own suite.
+    const { warnings, failures } = check({ dict: 'scripts/fixtures/dictionary-alternate.yml', files: ['scripts/fixtures/uses-alternate.md'] })
+    expect(warnings).toEqual([])
+    expect(failures.join(' ')).toMatch(/`sweeper` is a forbidden alternate — the registered term is `reconciler`/)
   })
 })
 
@@ -178,9 +181,8 @@ describe('the says-recursion self-reference hatch', () => {
     // `"mmc".includes("mc")` used to wave `MC` through inside MMC's own definition — a hole in
     // the one guard whose whole job is stopping a definition leaning on unregistered jargon.
     expect('mmc' === 'mc').toBe(false)
-    const entries = loadDictionary().entries
-    const mmc = entries.find((e) => e.term === 'MMC')
-    expect(mmc, 'MMC should be registered').toBeTruthy()
+    // The hatch forgives a term's definition mentioning the term itself, and nothing shorter.
+    // Asserted against the live corpus, which must always be clean of this.
     expect(check().failures.filter((f) => f.includes('leans on'))).toEqual([])
   })
 })
