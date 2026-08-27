@@ -213,11 +213,19 @@ workflow feels like describing the project. It is not. `ls` describes the projec
   `.gitignore` covers `*.bak`, and the script now prunes to the newest 5 (`KEEP_BACKUPS`).
   The backups themselves stay: a recovery from a stray `.bak` is the incident the script is
   named after.
-- ~~**SessionEnd capture hook still installed**~~ — **now a check rather than a note.**
-  `settings-policy.mjs`'s hook check is inverted from seeds': seeds verified the capture hook
-  was present and executable, jig reports it as retired machinery still wired. It also reports
-  the queue depth, which outlives the hook. Live run 2026-08-27 — queue at **6**, up from 4
-  earlier the same day, which is the argument for the check rather than the note.
+- ~~**SessionEnd capture hook still installed**~~ — **removed 2026-08-27, jig's first action
+  on the world.** Both halves happened in one sitting and the order mattered: the check came
+  first, then the removal it argued for.
+  `settings-policy.mjs`'s hook check is inverted from seeds' — seeds verified the capture hook
+  was present and executable, jig reports it as retired machinery still wired — and the hook
+  itself is now out of `~/.claude/settings.json`. The `hooks` key held nothing else, so it was
+  deleted rather than left as `{}`. Backup at `~/.claude/settings.json.pre-jig-hook-removal.bak`.
+  **Still there:** `~/.claude/tape-capture.sh` (now dead) and 4 captured transcripts, 16.9 MB,
+  which the check still reports because the queue outlives the hook.
+
+  Worth keeping as the worked example of ANALYSIS.md's own rule — *an observation becomes a
+  check, a deny, or a median-gap line, or it stays a note.* This one had been a note since
+  2026-08-26 and grew two more transcripts while being one.
 - ~~**Dictionary format undecided**~~ — **decided in muster 2026-08-26**, see Open questions 1.
   The CLAUDE.md rewrite is unblocked.
 - **`pause-this` / `restart-this`** — still marked review, never resolved.
