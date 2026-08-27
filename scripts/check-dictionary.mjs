@@ -233,7 +233,11 @@ export function check(inject) {
   return { failures, warnings }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+// `endsWith` on argv[1], matching the five sibling gates. The URL comparison this replaces
+// failed whenever the checkout path needed escaping — in a directory with a space, the script
+// printed nothing and exited 0, which `npm run verify` reads as a pass. jig installs into
+// arbitrary project checkouts, so that is a realistic path, not a hypothetical one.
+if (process.argv[1]?.endsWith('check-dictionary.mjs')) {
   const { failures, warnings } = check()
   for (const w of warnings) console.log(`  ⚠ ${w}`)
   if (warnings.length) {

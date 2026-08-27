@@ -57,6 +57,8 @@ for (let i = 0; i < argv.length; i++) {
   }
 }
 
+if (positional.length > 1) die(`expected at most one project path, got ${positional.length}: ${positional.join(' ')}`)
+
 const JIG = resolve(jigArg ?? findJig())
 const PROJECT = resolve(positional[0] ?? process.cwd())
 
@@ -145,8 +147,21 @@ function fileClasses() {
  * Both are excluded here rather than classified, because a registry entry saying "ignore this"
  * still has to be read and kept true; a file the walk never yields cannot go stale.
  */
-const TEMPLATE_ROOTS = ['CLAUDE.md', '.claude', 'scripts', 'scaffold']
+const TEMPLATE_ROOTS = ['CLAUDE.md', '.claude', 'scripts', 'scaffold', 'docs']
 const NOT_TEMPLATES = new Set(['.claude/settings.local.json', '.claude/file-classes.yaml'])
+
+/**
+ * `docs/` is walked because two files in it are `logic` — `AGENTS.md` and `CHEATSHEET.md`
+ * describe the skills and agents, which are identical in every project, so jig holds the one
+ * copy and a project's copy going stale is drift. They were briefly filed under `scaffold/`,
+ * which made them a second copy of a shared file; moving them here was the fix, and the walk not
+ * reaching `docs/` left both entries unreachable — the policing the move was for never happened.
+ *
+ * Everything else under `docs/` is jig's own and is classed `jig-only` in the registry.
+ * `docs/decisions/` is excluded outright: it is `check-decisions`' subject, and a project's
+ * record has nothing to do with jig's.
+ */
+const EXCLUDED_PREFIXES = ['docs/decisions/']
 
 /**
  * jig-side path → project-side path.
@@ -169,19 +184,21 @@ function toProject(rel) {
   return rel
 }
 
-/** Files this project's type has no use for (DEC-S011) — absence is correct, not drift. */
-function typeGated() {
-  const t = join(PROJECT, '.claude', 'project-type')
-  const manifest = join(JIG, '.claude', 'type-manifest.yaml')
-  if (!existsSync(t) || !existsSync(manifest)) return new Set()
-  const type = readFileSync(t, 'utf8').trim()
-  const gated = new Set()
-  for (const line of readFileSync(manifest, 'utf8').split('\n')) {
-    const m = line.match(/^\s*([\w/.-]+):\s*\[([^\]]+)\]/)
-    if (m && !m[2].split(',').map((s) => s.trim()).includes(type)) gated.add(m[1])
-  }
-  return gated
-}
+/**
+ * TYPE GATING IS NOT IMPLEMENTED HERE, DELIBERATELY, and this note exists so the next reader does
+ * not rebuild it.
+ *
+ * It was carried from seeds, where `type-manifest.yaml` named files a project type has no use for
+ * so their absence would not read as drift. Carrying it produced a manifest whose every entry was
+ * inert: `agents/ui-reviewer.md` and everything under `scaffold/` are `context` class, and this
+ * script skips `context` before absence is ever considered. Gating can only change the outcome
+ * for a `logic`, `hybrid` or `presence` file, and jig currently ships no type-specific one.
+ *
+ * The seeds version had the same property and nobody noticed, because a gate that returns
+ * "nothing gated" is indistinguishable from a gate with nothing to gate.
+ *
+ * Rebuild it when a `logic`-class file genuinely applies to one project type — not before.
+ */
 
 function walk(dir, base = dir) {
   if (!existsSync(dir)) return []
@@ -192,7 +209,6 @@ function walk(dir, base = dir) {
 }
 
 const classes = fileClasses()
-const gated = typeGated()
 /**
  * `**` is parked under a placeholder so the single-`*` pass can't chew it in half, then restored.
  * That placeholder used to be a raw NUL byte, which made this entire file BINARY to git: every
@@ -219,13 +235,12 @@ const templates = TEMPLATE_ROOTS.flatMap((root) => {
   const abs = join(JIG, root)
   if (!existsSync(abs)) return []
   return statSync(abs).isDirectory() ? walk(abs).map((r) => `${root}/${r}`) : [root]
-}).filter((rel) => !NOT_TEMPLATES.has(rel))
+}).filter((rel) => !NOT_TEMPLATES.has(rel) && !EXCLUDED_PREFIXES.some((p) => rel.startsWith(p)))
 
 const rows = []
 const missing = []   // `presence` class — reported when absent, never diffed. See below.
 const unclassified = []  // no registry entry at all (DEC-S046) — a jig-side gap, not project drift.
 for (const rel of templates) {
-  if (gated.has(rel)) continue
   const cls = classOf(rel)
   /**
    * Ordered after `classOf` on purpose, and guarded on the class existing. Seeds' version of this
@@ -278,7 +293,7 @@ for (const kind of ['skills', 'agents']) {
   if (!existsSync(dir)) continue
   for (const e of readdirSync(dir)) {
     const name = e.replace(/\.md$/, '')
-    if (!mine.has(name) && !gated.has(`.claude/${kind}/${name}.md`)) rows.push([kind.slice(0, -1), `.claude/${kind}/${e}`, 'not a template — retired, or project-owned'])
+    if (!mine.has(name)) rows.push([kind.slice(0, -1), `.claude/${kind}/${e}`, 'not a template — retired, or project-owned'])
   }
 }
 
@@ -287,7 +302,7 @@ const sv = v(join(JIG, 'jig-version'))
 const pv = v(join(PROJECT, '.claude', 'jig-version'))
 
 console.log(`\ndrift — ${basename(PROJECT)} vs jig`)
-console.log(`jig-version ${pv} vs ${sv}${pv !== sv ? '  ← owes a migration; see docs/SCHEMA_VERSIONS.md' : ''}\n`)
+console.log(`jig-version ${pv} vs ${sv}${pv !== sv ? '  ← owes a migration' : ''}\n`)
 /**
  * Split, because the two groups need different amounts of attention. A file that DIFFERS is drift:
  * two versions of something meant to be identical, and one of them is stale. A file that is ABSENT

@@ -26,7 +26,9 @@ import {
   specSections,
   stripSpecBlocks,
 } from './gen-decisions-index.mjs'
-import { check, validateSchemaRecord } from './check-decisions.mjs'
+import { beforeAmendments, check, hasSchemaKey, idOf, sizeOf, validateSchemaRecord } from './check-decisions.mjs'
+
+const MAX = 2000
 
 /** A three-family record with the families sitting between DEC-014 and DEC-015 — the shape
  *  a project gets when a side family predates the numeric main line. */
@@ -392,13 +394,12 @@ describe('the schema:1 opt-in gate', () => {
   // ZERO enforcement and nothing said so — a rule that looks applied and isn't, which is the
   // class this whole gate exists to close. Found in review, reproduced, then fixed by
   // gating on the parsed value.
-  const gate = (block) => /^schema:/m.test(block)
 
   it('pre-filters on the key, not on a formatting of its value', () => {
-    expect(gate('schema: 1\nid: DEC-200\n')).toBe(true)
-    expect(gate('schema: 1  # v1 draft\nid: DEC-200\n')).toBe(true)
-    expect(gate('schema: "1"\nid: DEC-200\n')).toBe(true)
-    expect(gate('id: DEC-042\ntitle: "T"\n')).toBe(false)
+    expect(hasSchemaKey('schema: 1\nid: DEC-200\n')).toBe(true)
+    expect(hasSchemaKey('schema: 1  # v1 draft\nid: DEC-200\n')).toBe(true)
+    expect(hasSchemaKey('schema: "1"\nid: DEC-200\n')).toBe(true)
+    expect(hasSchemaKey('id: DEC-042\ntitle: "T"\n')).toBe(false)
   })
 
   it('the old regex is what let two of those through', () => {
@@ -412,7 +413,6 @@ describe('the id sweep', () => {
   // One id, one file — across `docs/decisions/` AND `docs/decisions/archive/`. `load()`
   // catches a duplicate inside its own directory and stops there; an archived copy beside
   // the live record is the case it cannot see, and the one that makes a citation ambiguous.
-  const idOf = (block) => block.match(/^id: *(\S+)/m)?.[1]
 
   it('reads the id from a legacy block and a schema-v1 block alike', () => {
     expect(idOf('id: DEC-042\ntitle: "T"\n')).toBe('DEC-042')
@@ -550,5 +550,50 @@ describe('renderDecision round-trips schema v1', () => {
       `title: ${JSON.stringify('A title')}`,
       `topic: ${JSON.stringify(TOPIC)}`,
     ])
+  })
+})
+
+describe('sizeOf and beforeAmendments', () => {
+  const head = '---\nschema: 1\nid: DEC-J001\n---\n\n## DEC-J001: A title\n\nThe decision.\n'
+
+  it('measures the decision, not the amendments piled under it', () => {
+    const amended = head + '\n## Amendment, 2026-08-27 (eric) — later\n\n' + 'x'.repeat(5000) + '\n'
+    expect(sizeOf(amended)).toBe(sizeOf(head))
+    expect(sizeOf(amended)).toBeLessThan(MAX)
+  })
+
+  it('does not truncate at an `## Amendment` inside a fenced block', () => {
+    // The bug this pins: a record that QUOTES the amendment convention measured 21 bytes and
+    // passed a 2,000-byte cap, and the bold-lead-in rule was defeated the same way. A decision
+    // about how to write amendments is exactly the kind this repo writes.
+    const quoting = '---\nschema: 1\n---\n\n```md\n## Amendment, YYYY-MM-DD (who)\n```\n\n' + 'y'.repeat(3000)
+    expect(sizeOf(quoting)).toBeGreaterThan(3000)
+    expect(beforeAmendments(quoting)).toContain('yyy')
+  })
+
+  it('handles a `~~~` fence too, and an unclosed one fails toward measuring more', () => {
+    const tilde = '~~~\n## Amendment, X\n~~~\n\n' + 'z'.repeat(500)
+    expect(sizeOf(tilde)).toBeGreaterThan(500)
+    const unclosed = '```\n## Amendment, X\n\n' + 'z'.repeat(500)
+    expect(sizeOf(unclosed)).toBeGreaterThan(500)
+  })
+
+  it('a record with no amendments measures the whole file', () => {
+    expect(sizeOf(head)).toBe(Buffer.byteLength(head, 'utf8'))
+  })
+})
+
+describe('the frontmatter predicates the sweep runs on', () => {
+  it('`hasSchemaKey` matches the key, whatever the value looks like', () => {
+    expect(hasSchemaKey('schema: 1\nid: DEC-J200\n')).toBe(true)
+    expect(hasSchemaKey('schema: 1  # v1 draft\n')).toBe(true)
+    expect(hasSchemaKey('schema: "1"\n')).toBe(true)
+    expect(hasSchemaKey('id: DEC-J042\ntitle: "T"\n')).toBe(false)
+  })
+
+  it('`idOf` reads the id from either block shape', () => {
+    expect(idOf('id: DEC-J042\ntitle: "T"\n')).toBe('DEC-J042')
+    expect(idOf('schema: 1\nid: DEC-J107a\nstatus: active\n')).toBe('DEC-J107a')
+    expect(idOf('title: "no id here"\n')).toBeUndefined()
   })
 })

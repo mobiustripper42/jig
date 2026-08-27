@@ -49,7 +49,7 @@ export function deniedCommands(policyPath = POLICY) {
     .map((rule) => rule.match(/^Bash\((.+\*)\)$/)?.[1])
     .filter(Boolean)
     .map((pattern) => pattern.replace(/\s*\*+\s*$/, '').trim())
-    .filter((prefix) => prefix && !prefix.startsWith('/') && prefix.length > 2)
+    .filter((prefix) => prefix && !prefix.startsWith('/') && prefix.length > 2 && !unsearchable(prefix))
 }
 
 /**
@@ -82,32 +82,96 @@ export function deniedCommands(policyPath = POLICY) {
  * Inside a fenced block the question does not arise: a line beginning with the command is a
  * command, whatever the comment after it says.
  */
+/**
+ * Rules whose pattern begins with a wildcard — `Bash(* -m pip install *)`, `Bash(* > /dev/*)`.
+ * The leading `*` is not a command name, so there is no prefix to look for in prose. They were
+ * silently unmatchable while still being counted in "65 denied command prefixes", which is a
+ * number that overstated coverage.
+ */
+export const unsearchable = (prefix) => prefix.startsWith('*')
+
+/**
+ * A word boundary is wrong when the prefix already ends in punctuation.
+ *
+ * `rm -rf ~` and `rm -rf ..` are the derived prefixes for two destructive deny rules, and `\b`
+ * after `~` or `.` cannot match before the `/` that always follows in real use. Both rules were
+ * undetectable in their canonical spelling — `rm -rf ~/.cache/foo`, `rm -rf ../build`.
+ */
+const boundary = (cmd) => (/\w$/.test(cmd) ? '\\b' : '')
+
+/**
+ * A command spelling in prose: run inside a fenced or indented code block, or invoked inside a
+ * code span.
+ *
+ * MENTION VS INVOCATION IS STRUCTURAL, NOT A WORD LIST, and getting there took two wrong turns
+ * worth recording because both produced a confidently wrong verdict.
+ *
+ * First attempt skipped any line containing a negative word. That silenced the gate on the exact
+ * file it was built to catch — `npx playwright test  # … do not override` INVOKES the command,
+ * and a trailing comment about worker counts made it look like guidance.
+ *
+ * Second attempt required the negation to come BEFORE the command. That broke the other way on
+ * the shell's own text: **`npx` is denied fleet-wide** names the command first and forbids it
+ * after, so a paragraph doing exactly the right thing was reported as a defect.
+ *
+ * The distinction neither version could see is that a code span holding ONLY the bare command is
+ * naming it, and one holding arguments is running it:
+ *
+ *   `npx`                          a mention — the subject of a sentence
+ *   `npx playwright test`          an invocation
+ *
+ * INSIDE A BLOCK, POSITION IS NOT ENOUGH EITHER. Anchoring at the start of the line missed every
+ * real shape a command appears in: `cd app && npx playwright test`, `- run: npm install` in a CI
+ * snippet, a piped command. A block line is a command line, so the command is looked for after
+ * any shell or YAML boundary on it, not only at column zero.
+ */
 const spellings = (text, cmd) => {
   const out = []
   const esc = cmd.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const b = boundary(cmd)
   const lines = text.split('\n')
   let fenced = false
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]
-    if (/^\s*```/.test(line)) { fenced = !fenced; continue }
+    if (/^\s*(?:```|~~~)/.test(line)) { fenced = !fenced; continue }
 
-    if (fenced) {
-      if (new RegExp('^\\s*(?:\\$\\s*)?' + esc + '\\b', 'i').test(line)) out.push(i + 1)
+    // A four-space (or tab) indented block is a code block in markdown and was never examined —
+    // not fenced, not a code span, so unreachable by both branches.
+    const indented = !fenced && /^(?: {4}|\t)/.test(line) && line.trim() !== ''
+
+    if (fenced || indented) {
+      // Start of line, or after a shell operator, a `$`/`#` prompt, or a YAML `run:` key.
+      if (new RegExp('(?:^|[|&;]|\\$\\s|#\\s|\\brun:)\\s*' + esc + b, 'i').test(line)) out.push(i + 1)
       continue
     }
 
     // Every code span on the line, so one mention does not mask an invocation later in the same
     // sentence. `[^`\n]*` keeps a span from running past its closing backtick into the next.
-    for (const [, span] of line.matchAll(/`([^`\n]*)`/g)) {
+    for (const m0 of line.matchAll(/`([^`\n]*)`/g)) {
+      const span = m0[1]
+      /**
+       * A negation IMMEDIATELY before the span, and the width is the whole safety argument.
+       *
+       * Scanning the line for a negative word was the first version and it silenced the gate on
+       * the file it was built for: `npx playwright test  # … do not override` invokes the command
+       * and a comment about worker counts read as guidance. Requiring the negation to precede the
+       * command was the second, and it flagged `**\`npx\` is denied fleet-wide**` — a paragraph
+       * doing the right thing — because the sentence names the command first.
+       *
+       * The structural rule below already excludes bare mentions, which is what those two were
+       * really reaching for. What is left is the narrow case it cannot see: `Never run
+       * \`npx playwright test\``, guidance that spells the full invocation. Twenty-four characters
+       * of lookbehind covers "never run", "do not use", "instead of" and nothing a sentence away.
+       */
+      if (/\b(never|do not|don't|avoid|instead of|rather than)\b[^`]{0,24}$/i.test(line.slice(0, m0.index))) continue
       // A permission rule quoted as itself. `Bash(npx *)` is the deny entry, and the wildcard
-      // reads as an argument, so the paragraph that documents a deny gets reported for it — which
-      // is how a gate ends up flagging the one file doing the right thing.
+      // reads as an argument, so the paragraph that documents a deny gets reported for it.
       if (/^\s*(?:Bash|Read|Edit|Write|Glob|Grep)\s*\(/.test(span)) continue
-      const m = new RegExp('\\b' + esc + '\\b(.*)$', 'i').exec(span)
+      const m = new RegExp('(?:^|[|&;]\\s*)' + esc + b + '(.*)$', 'i').exec(span)
       if (!m) continue
       // Arguments after the command make it an invocation. A trailing `>` or quote is the
       // placeholder's own punctuation, not an argument.
-      if (m[1].replace(/[>'")\s.]+$/, '').trim()) { out.push(i + 1); break }
+      if (m[1].replace(/[>\'")\s.]+$/, '').trim()) { out.push(i + 1); break }
     }
   }
   return out
@@ -153,6 +217,13 @@ if (process.argv[1]?.endsWith('check-denied.mjs')) {
     process.exit(1)
   }
   const { denied, problems } = check()
+  // An empty deny list is not a clean bill of health, it is a check with nothing to check. The
+  // existsSync guard above covers a missing policy file; a policy whose `deny` was emptied or
+  // renamed printed "0 denied command prefixes" and exited 0.
+  if (!denied.length) {
+    console.error(`✗ denied commands — ${POLICY} has no \`Bash(...)\` deny rules; there is nothing to check against`)
+    process.exit(1)
+  }
   if (!problems.length) {
     console.log(`✓ denied commands — no shipped doc spells any of the ${denied.length} denied command prefixes`)
     process.exit(0)

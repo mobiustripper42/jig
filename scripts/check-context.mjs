@@ -30,21 +30,26 @@
 
 import { existsSync, globSync, readFileSync, readdirSync, statSync } from 'node:fs'
 
-import { readdirSync as _rd, statSync as _st } from 'node:fs'
+/** Every `.md` under a directory, recursively. Absent directory yields nothing. */
+const walkMd = (d) =>
+  !existsSync(d)
+    ? []
+    : readdirSync(d).flatMap((e) => {
+        const p = `${d}/${e}`
+        return statSync(p).isDirectory() ? walkMd(p) : p.endsWith('.md') ? [p] : []
+      })
 
-/** Every `.md` under a directory, recursively. */
-const _walk = (d) =>
-  !existsSync(d) ? [] : _rd(d).flatMap((e) => {
-    const p = `${d}/${e}`
-    return _st(p).isDirectory() ? _walk(p) : p.endsWith('.md') ? [p] : []
-  })
-
-export const DOCS = [
-  'CLAUDE.md',
-  '.claude/CLAUDE-context.md',
-  ..._walk('.claude/skills'),
-  ..._walk('.claude/agents'),
-].filter(existsSync)
+/**
+ * The two always-loaded files are REQUIRED and are never filtered by existence — their absence is
+ * the finding, reported below. Discovered files are a different case: `.claude/skills` holding no
+ * skills is a repo that ships none, not a defect.
+ *
+ * A blanket `.filter(existsSync)` over the whole list was here for one commit and made the
+ * missing-document report unreachable: deleting `.claude/CLAUDE-context.md` produced
+ * `✓ every path … resolves` and exit 0, with the file quietly absent from the list of what had
+ * been checked. The one file every session loads could vanish behind five green gates.
+ */
+export const DOCS = ['CLAUDE.md', '.claude/CLAUDE-context.md', ...walkMd('.claude/skills'), ...walkMd('.claude/agents')]
 
 // A backticked span, optionally written as the `ls <path>` command a reader would actually run.
 // That prefix is the docs' own convention for a pointer — "authoritative list: `ls

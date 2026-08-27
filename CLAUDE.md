@@ -17,7 +17,6 @@
 | `docs/VELOCITY_AND_POKER_GUIDE.md` | Estimation methodology |
 | `sessions/*.md` | Per-session files, `YYYY-MM-DD-HHMM-<slug>.md`, on the orphan `sessions` branch via `.sessions-worktree/` |
 | `.claude/jig-version` | Which generation this project was installed at. Compare against jig's `jig-version` to see what migrations are owed |
-| `.claude/project-type` | `webapp` or `tool`. Says which template files this project has no use for. Optional |
 
 Project-specific docs are listed in `.claude/CLAUDE-context.md` under `## Additional Docs`. The shell names only docs every project has; naming one a whole project type lacks is a dead reference in every one of them.
 

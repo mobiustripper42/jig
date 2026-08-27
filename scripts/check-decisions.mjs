@@ -72,15 +72,49 @@ const BOLD_LEAD_IN = /^\*\*([A-Z][^*\n]{0,40})[:.]\*\*/m
 const MAX_BYTES = 2000
 
 /**
+ * The two frontmatter predicates the sweep runs on, exported so tests assert the real thing.
+ *
+ * Three tests used to define their own copy of each and assert against the copy, so changing the
+ * implementation left all three green — a test that cannot fail is worse than no test, because it
+ * reads as coverage. `hasSchemaKey` in particular guards the opt-in gate, and that gate was
+ * already broken when the review found it.
+ *
+ * `hasSchemaKey` matches the KEY, not a formatting of its value: `/^schema: *1 *$/m` is stricter
+ * than YAML, so `schema: 1  # v1 draft` and `schema: "1"` both read as "never opted in" and the
+ * record got zero enforcement with nothing saying so.
+ */
+export const hasSchemaKey = (block) => /^schema:/m.test(block)
+export const idOf = (block) => block.match(/^id: *(\S+)/m)?.[1]
+
+/**
  * Bytes of frontmatter + decision, excluding any `## Amendment` sections.
  *
  * Measured as "the whole file minus the amendments" rather than by re-serializing, so the number
  * a reader is told still corresponds to something they can see on disk. `statSync` is not used
  * because it counts the amendments the cap deliberately ignores.
  */
-export const sizeOf = (text) => {
-  const i = text.search(/^## Amendment\b/m)
-  return Buffer.byteLength(i === -1 ? text : text.slice(0, i), 'utf8')
+export const sizeOf = (text) => Buffer.byteLength(beforeAmendments(text), 'utf8')
+
+/**
+ * Everything up to the first real `## Amendment` heading — one that is not inside a fenced block.
+ *
+ * THE FENCE CHECK IS THE WHOLE POINT. A bare `text.search(/^## Amendment\b/m)` truncates at the
+ * first such line anywhere, including inside ```` ```md ```` — so a record that QUOTES the
+ * amendment convention to explain it measures 21 bytes and passes a 2,000-byte cap, and
+ * `BOLD_LEAD_IN` is defeated the same way. A decision about how to write amendments is exactly
+ * the kind this repo writes, and it would have disabled both rules on itself.
+ *
+ * Fences are counted rather than matched in pairs: an unclosed fence leaves the rest of the file
+ * "inside" one, which fails toward measuring MORE of the file, not less.
+ */
+export function beforeAmendments(text) {
+  const lines = text.split('\n')
+  let fenced = false
+  for (let i = 0; i < lines.length; i++) {
+    if (/^\s*(?:```|~~~)/.test(lines[i])) { fenced = !fenced; continue }
+    if (!fenced && /^## Amendment\b/.test(lines[i])) return lines.slice(0, i).join('\n')
+  }
+  return text
 }
 
 /** The subset of draft 2020-12 the schema actually uses. Written out rather than pulled in
@@ -186,7 +220,7 @@ export function validateSchemaRecord(meta, body, bytes, schema = JSON.parse(read
    * So the first amendment written under this schema failed the gate for following the
    * instruction the gate's own repo gives. Both halves were right; the scope was wrong.
    */
-  const lead = body.split(/^## Amendment\b/m)[0].match(BOLD_LEAD_IN)
+  const lead = beforeAmendments(body).match(BOLD_LEAD_IN)
   if (lead) {
     errs.push(`body opens a paragraph with \`**${lead[1]}:**\` — structure lives in frontmatter now, not in bold prose`)
   }
@@ -217,7 +251,7 @@ export function check() {
       // One id may exist in exactly one file. `load()` catches a duplicate within its own
       // directory and stops there; an archived copy alongside the live record is the case it
       // cannot see, and it is the one that makes a citation ambiguous.
-      const id = block.match(/^id: *(\S+)/m)?.[1]
+      const id = idOf(block)
       if (id) {
         const prior = seenIds.get(id)
         if (prior) fail(path, `id ${id} is already used by ${prior} — one id, one file`)
@@ -230,7 +264,22 @@ export function check() {
       // enforcement — a rule that looks applied and isn't, which is the exact class this
       // whole gate exists to close. The cheap `^schema:` pre-filter keeps js-yaml off the
       // ~158 legacy blocks that have no such key.
-      if (!/^schema:/m.test(block)) continue // grandfathered — not yet rewritten
+      /**
+       * NO GRANDFATHERING IN JIG, and this line is where that stops being a comment.
+       *
+       * Muster skips a record with no `schema:` key, because its 158 legacy blocks convert one at
+       * a time. jig started empty on 2026-08-27, so a record without the key is not history — it
+       * is a record that was written after the rule existed and dodges every rule at once. A
+       * 4,188-byte file with a `**Decision:**` lead-in and no schema key passed clean while the
+       * comment forty lines above declared that path dead.
+       *
+       * A skip is the wrong shape for this repo regardless of the answer: `continue` is silent,
+       * and every defect this rebuild found was silent.
+       */
+      if (!hasSchemaKey(block)) {
+        fail(path, 'has no `schema:` key — every record here is v1, and there is nothing to grandfather')
+        continue
+      }
       let meta
       try {
         meta = parseYaml(block)

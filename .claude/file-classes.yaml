@@ -37,6 +37,11 @@ file-classes:
   # rewrite is exactly when that cost is already being paid, so it is done here.
   # The default is now "jig runs this, a project does not," and the scripts a
   # project genuinely runs are named.
+  # Test suites first: `check-*.mjs` would otherwise capture `check-*.test.mjs` on first match,
+  # asserting that every project holds jig's test files byte-identical. A project runs the gates,
+  # not their tests.
+  - "scripts/*.test.mjs": jig-only
+  - "scripts/fixtures/**": jig-only
   - "scripts/check-*.mjs": logic
   - "scripts/gen-*.mjs": logic
   - "scripts/**": jig-only
@@ -73,6 +78,21 @@ file-classes:
   # to a project lives in the paired `.claude/CLAUDE-context.md`, which is the
   # project's and never syncs.
   - "CLAUDE.md": hybrid
+  # The project-owned half of that pair. Never copied, never compared — the template is a
+  # placeholder in `scaffold/claude/` and this is whatever the project wrote.
+  - ".claude/CLAUDE-context.md": context
+  # Project-owned config: the repo slug, the roster claims, the exemption lists.
+  - ".claude/doc-check.json": context
+
+  # ── jig's own documents — a project holds nothing at these paths ─────────────
+  #
+  # AGENTS.md and CHEATSHEET.md are the exception below: they describe the shared
+  # skills and agents, so they are one copy and a project's copy going stale is
+  # drift. Everything else under `docs/` is about jig.
+  - "docs/AGENTS.md": logic
+  - "docs/CHEATSHEET.md": logic
+  - "docs/VELOCITY_AND_POKER_GUIDE.md": logic
+  - "docs/**": jig-only
 
   # ── Scaffolds — placeholders a project fills in once and then owns ───────────
   #
@@ -81,11 +101,4 @@ file-classes:
   # apart by their directory when the mirror collapsed, so the split moved here.
   # A scaffold is compared to nothing, because jig's own filled-in `docs/SPEC.md`
   # and the `SPEC.md` it ships are unrelated documents sharing a filename.
-  # AGENTS.md and CHEATSHEET.md are NOT scaffolds and were briefly filed as such.
-  # They describe the seven skills and four agents, which are identical in every
-  # project, so a scaffold copy was a second copy of a shared file — the exact
-  # duplication DEC-J001 removed. It drifted immediately: 31 of check-docs` 53
-  # findings were that copy listing skills jig does not ship. One copy, in docs/.
-  - "docs/AGENTS.md": logic
-  - "docs/CHEATSHEET.md": logic
   - "scaffold/**": context

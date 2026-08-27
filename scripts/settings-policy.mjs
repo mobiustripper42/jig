@@ -42,6 +42,7 @@ import { readFileSync, writeFileSync, existsSync, copyFileSync, statSync, readdi
 import { basename, join, resolve } from 'node:path'
 import { homedir } from 'node:os'
 import { fileURLToPath } from 'node:url'
+import { pruneBackups } from './lib/prune-backups.mjs'
 
 const die = (msg) => {
   console.error(`settings-policy: ${msg}`)
@@ -329,45 +330,6 @@ const rel = (u) => {
   return p.startsWith(process.cwd()) ? p.slice(process.cwd().length + 1) : p
 }
 
-/** How many timestamped backups to keep beside a written settings file. */
-const KEEP_BACKUPS = 5
-
-/**
- * Delete all but the newest `KEEP_BACKUPS` backups of one settings file.
- *
- * The backups themselves are not the problem and are not being removed — a recovery from a stray
- * `.bak` is the incident this script is named after, so keeping several is the point. What was
- * wrong in seeds is that nothing ever bounded or ignored them: every `--write` dropped another
- * beside the file forever, and when the target was a repo's `.claude/settings.json` they arrived
- * as untracked files staged into the next commit. jig fixes both ends — `.gitignore` covers
- * `*.bak` from the first commit, and this bounds the pile on disk.
- *
- * Sorted by NAME, not mtime, which is safe only because the names are ISO-8601 with fixed width:
- * lexicographic order is chronological order. Sorting by mtime would be the obvious choice and is
- * the wrong one here — copying a backup, or restoring one to inspect it, rewrites its mtime and
- * would make the oldest content look newest and survive the prune.
- *
- * WHICH IS WHY THE MATCH IS THE TIMESTAMP PATTERN AND NOT `*.bak`. The first version matched any
- * `<name>.*.bak`, and the sort-order argument above quietly assumed every match was one this
- * function had written. A hand-made `settings.json.pre-jig-hook-removal.bak` — created during the
- * same session, for exactly the reason people create backups — sorts AFTER every `2026-…` name, so
- * it read as the newest and would have held a keep-slot while a real backup was deleted to make
- * room for it. Deleting the wrong file is the one outcome this script cannot afford.
- *
- * So prune manages only what it creates, and a backup a person named by hand is left alone
- * permanently. That is also the behaviour a person expects from a file they named themselves.
- */
-const BACKUP_STAMP = /\.\d{4}-\d{2}-\d{2}T[\d-]+Z\.bak$/
-
-function prune(path) {
-  const dir = resolve(path, '..')
-  const prefix = `${basename(path)}.`
-  const backups = readdirSync(dir)
-    .filter((f) => f.startsWith(prefix) && BACKUP_STAMP.test(f))
-    .sort()
-  for (const f of backups.slice(0, -KEEP_BACKUPS)) unlinkSync(join(dir, f))
-}
-
 /**
  * Merge, never copy. Every key other than `permissions` is preserved exactly as found, and the
  * previous file is kept alongside as `.bak` — this writes to the file that carries a machine's
@@ -390,7 +352,7 @@ function write(path) {
     // incident this script is named after was recovered from exactly such a stray backup.
     backup = `${path}.${new Date().toISOString().replace(/[:.]/g, '-')}.bak`
     copyFileSync(path, backup)
-    prune(path)
+    pruneBackups(path)
   } else {
     const dir = resolve(path, '..')
     if (!existsSync(dir)) die(`refusing to write: ${dir} does not exist. Create it first.`)
