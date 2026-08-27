@@ -148,7 +148,7 @@ Capture as `JSONL_DIR`. Use the **Glob** tool with `path: <JSONL_DIR>` and `patt
 ## Step 5 — Write the open session file (in the worktree)
 
 ```
-SESSION_FILE=".sessions-worktree/sessions/${DATE_PART}-${TIME_PART}-${DEV}-${SLUG}.md"
+SESSION_FILE=".sessions-worktree/sessions/${DATE_PART}-${TIME_PART}-${SLUG}.md"
 ```
 
 Write the file with this content (atomic, no time-math fields):
@@ -156,7 +156,6 @@ Write the file with this content (atomic, no time-math fields):
 ```
 ---
 session: <N>
-dev: <DEV>
 slug: <SLUG>
 branch: <BRANCH>
 started: <START_UTC>
@@ -268,7 +267,6 @@ Session <N> — <DATE_PART>
 Started: <local time> (<UTC time>)
 Branch (session anchor): <BRANCH>
 Session file: <SESSION_FILE>   (lives on `sessions` branch via .sessions-worktree/)
-Dev: <DEV>
 
 Last session: [one-line summary]
 
