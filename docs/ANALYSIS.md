@@ -70,8 +70,13 @@ prompt-and-write branch, and `settings-policy.mjs` loses a check.
 
 ## Open questions
 
-1. Dictionary format — decide after the deep dive, so it covers the terms jig actually needs.
-2. Does the `dev/claude/` ↔ `.claude/` mirror split earn its keep?
+1. ~~Dictionary format~~ — **decided, in muster.** `docs/dictionary.yml`, three keys per entry
+   (`term` / `says` ≤160 chars / `not:` forbidden alternates), generated `DICTIONARY.md`,
+   `check-dictionary.mjs` in `verify`, scoped to SPEC + decisions + `CLAUDE.md` with a frozen
+   grandfather baseline. Shipped 2026-08-26. This unblocks the `CLAUDE.md` rewrite.
+2. ~~Does the `dev/claude/` ↔ `.claude/` mirror split earn its keep?~~ — **DEC-J001.** No.
+   One copy: `.claude/` is the template. `check-mirrors.mjs` does not come over; `drift.mjs`
+   and type-gating do, because jig↔project is a different question and survives intact.
 3. What exactly gets stripped out of its-alive / its-dead / kill-this?
 
 ## Carry over from elsewhere — don't lose these
@@ -198,14 +203,28 @@ workflow feels like describing the project. It is not. `ls` describes the projec
 ## Loose ends — open at 2026-08-27
 
 - `CLAUDE.md` + `CLAUDE-context.md` edits — jig **and** muster. Planned, not started.
-- Check scripts: muster is ahead, merge into jig before jig ships.
+- ~~Check scripts: muster is ahead~~ — **done for the doc gates.** decisions, dictionary,
+  context and docs checks plus their tests are in `scripts/`, from muster's copies. Still
+  owed: `settings-policy.mjs`, `drift.mjs`, `check-mirrors.mjs` (**not coming** — DEC-J001).
 - Dev name: removed in jig by omission.
-- **`settings-policy.mjs --write` leaves timestamped `.bak` files that nothing gitignores.**
-  Every write drops another and they would be committed. Fix in jig's copy.
+- ~~**`settings-policy.mjs --write` leaves timestamped `.bak` files**~~ — `.gitignore` covers
+  `*.bak` from the first commit. The script itself is not carried over yet.
 - **SessionEnd capture hook still installed** — already queued another session since the
-  drain. Remove it or accept the queue keeps growing.
-- **Dictionary format undecided** — it gates the CLAUDE.md rewrite.
+  drain. Remove it or accept the queue keeps growing. Confirmed live 2026-08-27:
+  `~/.claude/settings.json:95` → `tape-capture.sh`, queue at 4.
+- ~~**Dictionary format undecided**~~ — **decided in muster 2026-08-26**, see Open questions 1.
+  The CLAUDE.md rewrite is unblocked.
 - **`pause-this` / `restart-this`** — still marked review, never resolved.
+- **The test suites are coupled to muster's corpus — 8 failures of 119, 2026-08-27.** They
+  came over with the scripts and assert against live muster data: `check-dictionary.test.mjs`
+  looks up the term `MMC` in `loadDictionary()` and jig has no `docs/dictionary.yml` at all;
+  `check-docs.test.mjs` hardcodes `mobiustripper42/muster` URLs. Inline fixtures naming
+  `src/reservations/…` are harmless strings; the live-corpus reads are not. Either the tests
+  get their own fixtures or jig gets the corpus they expect — decide before jig ships, because
+  a suite that is red on arrival is a suite nobody will run.
+- **`npm install` note.** Deps are installed except `js-yaml`: a verification symlink was
+  occupying `node_modules/js-yaml` during the first install, so npm skipped it. Symlink is
+  removed; the install needs one more run.
 
 ## Next, in order
 

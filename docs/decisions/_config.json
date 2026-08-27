@@ -1,0 +1,15 @@
+{
+  "spec": "docs/SPEC.md",
+  "numericIds": false,
+  "families": {
+    "J": 0
+  },
+  "topics": [
+    "Template storage & distribution",
+    "Decision record & dictionary discipline",
+    "Session workflow & skills",
+    "Permission policy & checks",
+    "Repo structure & versioning",
+    "Open questions"
+  ]
+}
