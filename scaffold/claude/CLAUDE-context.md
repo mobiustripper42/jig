@@ -71,9 +71,9 @@ The shell's `## Micro Workflow` says what three steps must achieve and names a s
 
 | Slot | What it answers | This project |
 |---|---|---|
-| **Proof** | What counts as a check written before the change | `<e.g. Playwright integration test; pgTAP if RLS-touching — or: Vitest against the domain core>` |
-| **Proof command** | How to run the checks covering what you touched | `<e.g. ./node_modules/.bin/playwright test tests/foo.spec.ts --project=desktop>` |
-| **Surface check** | How to confirm the change is right where a person meets it | `<e.g. 375px screenshot — or: flash the bench node and read one packet — or: none, no human-facing surface>` |
+| **Proof** | What counts as a check written before the change | `<what a check is, here>` |
+| **Proof command** | How to run the checks covering what you touched | `<the command>` |
+| **Surface check** | How to confirm the change is right where a person meets it | `<how you look at it — or: none, no human-facing surface>` |
 
 **The gate** (`npm run verify`, `cargo test`, …) is what `/kill-this` runs before committing — name it under `## Commands`, not here.
 
@@ -87,7 +87,7 @@ Not preferences — a preference belongs in the output style or a settings key, 
 
 | Gap | Why the default is wrong here |
 |---|---|
-| `<e.g. Formatting is not chained to typecheck — running one does not run the other>` | `<what a competent default would assume>` |
+| `<the gap>` | `<what a competent default would assume>` |
 
 Starts empty. Add one line the first time an incident produces one.
 
@@ -99,9 +99,9 @@ If this section is absent the skill falls back to four generic triggers, which a
 
 | Trigger | Paths |
 |---|---|
-| Money moving | `<e.g. src/payments/**, app/api/webhooks/stripe/**>` |
-| Money computed | `<e.g. src/domain/pay-period/** — anything producing an amount that reaches an invoice or paycheck>` |
-| Auth / capability URL | `<e.g. src/auth/**, middleware.ts, signed-link minting and validation>` |
+| Money moving | `<paths>` |
+| Money computed | `<paths>` |
+| Auth / capability URL | `<paths>` |
 | Data-changing migration | `<migrations containing drop / alter … type / update / delete — an additive add column does not trigger>` |
 
 **The test when a path isn't listed:** *does a number this code produces end up on someone's paycheck or invoice?* If yes it's the money path, whether or not a payment provider is anywhere near the diff. Add it the first time you notice, not the second.
@@ -137,7 +137,7 @@ Vercel, and a convention inherited by not deleting it was never chosen.
 
 Write what this project actually does, not what a template guessed.
 
-- **[Language/typing]** — [e.g. strict mode, no implicit any]
+- **[Language/typing]** — [what]
 - **[Structure]** — [where things live, and the size at which you split them]
 - **[Error handling]** — [the contract: what a failure returns and where it surfaces]
 - **[Naming]** — [files, symbols, database columns, migrations]
