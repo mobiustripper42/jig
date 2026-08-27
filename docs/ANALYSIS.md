@@ -243,6 +243,13 @@ workflow feels like describing the project. It is not. `ls` describes the projec
   occupying `node_modules/js-yaml` during the first install, so npm skipped it. Symlink is
   removed; the install needs one more run.
 
+- **The scaffolds are unverified until a project installs one.** The gates check them for
+  internal consistency — no roster naming a skill jig does not ship, no denied command spelled as
+  an instruction, no dead path. Nothing checks that installing one produces a working project,
+  because only installing one does. This is the same shape as seeds not being able to see its own
+  templates fail, and it is not fixable from inside jig: jig is not a webapp and never will be.
+  Expect the first new project to find things. That is the test.
+
 ## Next, in order
 
 1. **`CLAUDE.md`** — 6,576 words, loaded every request. Byte-identical across seeds, muster
