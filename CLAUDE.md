@@ -168,7 +168,7 @@ For every task — bug, feature, or question — explain the plan and wait befor
 
 ## Scope Discipline
 
-Check `docs/SPEC.md` § Not V1 before adding anything. Apply a change only to the surface named — don't propagate it to sibling pages, and never invent or misattribute a rationale that wasn't stated.
+Check `docs/SPEC.md` "Not V1" before adding anything. Apply a change only to the surface named — don't propagate it to sibling pages, and never invent or misattribute a rationale that wasn't stated.
 
 If a task feels bigger than its estimate: stop, re-estimate, update PROJECT_PLAN.md. If it's scope creep, flag it and move on.
 
