@@ -13,8 +13,10 @@ Evidence from one afternoon, 2026-08-25:
 - The `sed -n` **permission deny** fired 7 times across 4 repos and was obeyed every time.
 - The DEC-S036 **prose rule** ("no new decision amends an old one") was broken 11 times,
   4 of them after it was written.
-- Across a full afternoon working in seeds, Claude opened **one** decision file — the one
-  that had just been written. Every useful citation came from `CLAUDE.md` or `git log`.
+- Across a full afternoon working in seeds, Claude opened **one** decision file — the one just
+  written. Every useful citation came from `CLAUDE.md` or `git log`. The corpus was write-only:
+  257KB produced and never read. Its false claims still reached us, laundered through
+  `CLAUDE.md` and code comments citing records nobody opened.
 
 ## The filter
 
@@ -28,10 +30,14 @@ Keep if yes. Bin if it's a paragraph hoping to be recalled at the right moment.
 |---|---|
 | Name | `jig` — a fixture that makes the wrong cut impossible. The constraint is physical, not remembered. |
 | Repo | Fresh: `mobiustripper42/jig`. Not a fork of seeds. |
-| Decision records | **Binned.** All of them. Nobody read them. |
+| Seeds' 52 decision records | **Binned.** Nobody read them. Not carried to jig. |
+| Decision records as a mechanism | **Kept, gated.** Schema v1 + dictionary gate, both being built in muster. Jig carries the mechanism, not the corpus. `DEC-J` prefix; ids burned, never reused. |
 | Agents | Keep, **except `@doc-consistency` and `@ideas`** — never invoked in a month of transcripts. Not coming to jig. |
 | Update scripts | **Keep.** Cost a lot to build and they work. |
 | Dictionary | **New.** Every term used in any skill, agent or CLAUDE.md must be defined. One line per term. Eric approves each one. If it can't be defined in one line, use plain words instead. |
+| "Don't re-do these" list | **No.** A list of warnings is prose hoping to be recalled — fails the filter. Items become checks or they don't come. The `Write()`/`Edit()` finding becomes a check in `settings-policy.mjs`. |
+| Expiry | **Required.** 78% of muster's reservations corpus was dead because nothing retired anything. `revisit_if` is mandatory; the build fails when its condition fires. This is the gap schema v1 doesn't close. |
+| Branch freshness | **New check.** Fails when the working branch's base isn't current `origin/main`. Cost: an afternoon of evidence gathered against a 24-commit-stale tree, 2026-08-26. |
 
 ## Skills — first pass
 
@@ -65,9 +71,6 @@ prompt-and-write branch, and `settings-policy.mjs` loses a check.
 1. Dictionary format — decide after the deep dive, so it covers the terms jig actually needs.
 2. Does the `dev/claude/` ↔ `.claude/` mirror split earn its keep?
 3. What exactly gets stripped out of its-alive / its-dead / kill-this?
-4. Is there a "don't re-do these" list worth carrying from the 52 binned decisions?
-   Candidate: `Write()` permission rules do nothing — the harness ignores them and warns
-   once per rule per session. `Edit()` covers all file-editing tools including Write.
 
 ## Carry over from elsewhere — don't lose these
 
@@ -98,9 +101,6 @@ Template is 52 files, 41,465 words.
 
 Binning tape, workout and decisions drops ~14,300 words — a third — before writing anything.
 
-Still to question: `CLAUDE.md` at 6,576 words is the biggest single cost since it loads
-every request.
-
 `VELOCITY_AND_POKER_GUIDE.md` (1,951) — **keep.** Eric estimates when building specs and
 project plans.
 
@@ -129,16 +129,16 @@ beats judgment about what feels useful, and it works on jig later too.
 
 ## Next, in order
 
-1. **Finish the doc-check scripts in muster**, then bring them over. They're the best
+1. **`CLAUDE.md`** — 6,576 words, loaded every request. Byte-identical across seeds, muster
+   and soundings (same md5, 2026-08-25): a LoRa firmware project and a Next.js booking app
+   load the same file. It is the largest prose artifact in a system that just proved prose
+   doesn't hold — mechanical deny obeyed 7/7, prose rule broken 11 times including 4 after
+   it was written.
+2. **Finish the doc-check scripts in muster**, then bring them over. They're the best
    thing in the system and the muster copy will be ahead.
-2. **Look hard at `CLAUDE.md`** — 6,576 words, loaded every request in every project,
-   and where all the prose rules that failed are living.
 3. **Get the outside read from claude.ai chat** on seeds before jig sets its shape.
 
-Not started until then.
+## Deep dive — cancelled
 
-## Deep dive — not started
-
-One pass over evidence that already exists: 20 archived observations, today's transcript,
-seeds' git history. Output is a two-column list — works / doesn't — with the incident behind
-each row. A list, not a document. No new agent runs.
+Usage counts, word counts and three incidents already gave the answer. Re-reading 20
+observations is more analysis, not more evidence.
