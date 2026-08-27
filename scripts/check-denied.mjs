@@ -128,6 +128,8 @@ export function scope() {
     '.claude/CLAUDE-context.md',
     ...(existsSync('docs') ? readdirSync('docs').filter((f) => f.endsWith('.md')).map((f) => `docs/${f}`) : []),
     ...walk('scaffold'),
+    ...walk('.claude/skills'),
+    ...walk('.claude/agents'),
   ].filter((p) => existsSync(p))
 }
 

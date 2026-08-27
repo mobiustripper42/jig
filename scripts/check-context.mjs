@@ -30,7 +30,21 @@
 
 import { existsSync, globSync, readFileSync, readdirSync, statSync } from 'node:fs'
 
-export const DOCS = ['CLAUDE.md', '.claude/CLAUDE-context.md']
+import { readdirSync as _rd, statSync as _st } from 'node:fs'
+
+/** Every `.md` under a directory, recursively. */
+const _walk = (d) =>
+  !existsSync(d) ? [] : _rd(d).flatMap((e) => {
+    const p = `${d}/${e}`
+    return _st(p).isDirectory() ? _walk(p) : p.endsWith('.md') ? [p] : []
+  })
+
+export const DOCS = [
+  'CLAUDE.md',
+  '.claude/CLAUDE-context.md',
+  ..._walk('.claude/skills'),
+  ..._walk('.claude/agents'),
+].filter(existsSync)
 
 // A backticked span, optionally written as the `ls <path>` command a reader would actually run.
 // That prefix is the docs' own convention for a pointer — "authoritative list: `ls
