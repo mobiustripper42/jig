@@ -23,10 +23,10 @@ that has no entry is an unclassified file, which is the state this repo keeps fi
 
 | Skill | Why |
 |-------|-----|
-| `/read-the-tape` | ~$2 a session and produced little anyone could use. Its input — the `SessionEnd` capture hook — is removed |
+| `read-the-tape` | ~$2 a session and produced little anyone could use. Its input — the `SessionEnd` capture hook — is removed |
 | `@workout` | Output was 20k characters nobody read |
-| `/doc-consistency-check` | **0 invocations** across 60 retained transcripts, 2026-07-26 → 2026-08-26 |
-| `/pause-this`, `/restart-this` | Sat marked "review" through the whole first pass and were never resolved in either direction |
+| `doc-consistency-check` | **0 invocations** across 60 retained transcripts, 2026-07-26 → 2026-08-26 |
+| `pause-this`, `restart-this` | Sat marked "review" through the whole first pass and were never resolved in either direction |
 
 ## Agents — four
 

@@ -45,5 +45,5 @@ THE STOP
   skips @code-review and announces that to nobody.
 
 NOT CARRIED  ( these existed in seeds and do not here )
-  /read-the-tape /pause-this /restart-this /doc-consistency-check
+  read-the-tape pause-this restart-this doc-consistency-check
   @workout @doc-consistency @ideas @tape-reader

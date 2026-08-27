@@ -168,6 +168,20 @@ export function checkNpmScripts(docs, scripts) {
   if (!scripts) return []
   const failures = []
   for (const { path, text } of docs) {
+    /**
+     * A scaffold's commands belong to the project it scaffolds, not to jig.
+     *
+     * `scaffold/docs/PROJECT_PLAN.md` cites `npm run test:e2e` because the webapp being set up
+     * will have it. jig has no end-to-end suite and never will, so checking a scaffold's script
+     * names against jig's `package.json` asks the wrong repo.
+     *
+     * Deliberately NOT filed under HISTORICAL, which is where these first went. That list means
+     * "described what was true at a point in time" and every entry has to stay true to keep the
+     * list honest. A scaffold is the opposite — forward-looking, describing what will be true
+     * after installation. Reusing an exemption because it happens to silence the right lines is
+     * how an exemption list stops meaning anything.
+     */
+    if (path.startsWith('scaffold/')) continue
     text.split('\n').forEach((line, i) => {
       for (const m of line.matchAll(NPM_SCRIPT)) {
         if (!(m[1] in scripts)) failures.push(`${at(path, i)} — cites \`npm run ${m[1]}\`, which is not a script`)
