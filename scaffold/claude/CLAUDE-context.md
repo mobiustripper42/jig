@@ -12,12 +12,13 @@ Roles:
 
 ## Stack
 
-- **Frontend:** Next.js 14+ (App Router), Tailwind, shadcn/ui
-- **Backend:** Supabase (PostgreSQL + Auth + RLS) — no separate API server
-- **Payments:** Stripe — remove if not applicable
-- **Notifications:** Twilio (SMS), Resend (email) — remove if not applicable
-- **Hosting:** Vercel, Supabase Cloud
-- **Testing:** pgTAP (RLS), Playwright (integration), axe-core (accessibility)
+What this project is built with, and what it runs on. One line per layer; delete the rows that do
+not apply rather than writing `N/A` beside six of them.
+
+- **[Layer]** — [choice, and the version if it matters]
+- **[Layer]** — [choice]
+- **Hosting/target** — [where it runs]
+- **Testing** — [what the test tooling is]
 
 ## Core Data Model
 
@@ -31,27 +32,27 @@ things → sub_things → line_items
 
 ## Commands
 
-**Locally-pinned binaries are spelled `npm run <script>` or `./node_modules/.bin/<bin>`, never `npx`.** `Bash(npx *)` is denied fleet-wide and `deny` beats `allow`, so no project can allowlist its way out — the same syntax that runs your devDependency also fetches an arbitrary package off the network, and the command string cannot distinguish them. Prefer the npm script: it survives someone reading this file a year from now.
+Every command a session might need to run, spelled the way it should be typed.
+
+**Locally-pinned binaries are spelled `npm run <script>` or `./node_modules/.bin/<bin>`, never
+`npx`** — and the equivalent for whatever the toolchain is. `Bash(npx *)` is denied fleet-wide and
+`deny` beats `allow`, so no project can allowlist its way out: the same syntax that runs an
+installed dependency also fetches an arbitrary package off the network, and the command string
+cannot distinguish them. A doc that spells a denied command reads as sanctioned and fails as a
+permission refusal, which looks like the agent being difficult rather than the doc being stale.
 
 ```bash
 # Development
-npm run dev
-npm run build
-npm run lint
+[run it locally]
+[build it]
+[lint it]
 
-# Database (local Supabase)
-supabase start
-supabase db reset
-supabase migration new <name>
+# The gate — what /kill-this runs before committing
+[the one command that must pass]
 
 # Testing
-supabase test db                                      # pgTAP RLS
-npm run test:e2e                                      # full suite
-./node_modules/.bin/playwright test tests/foo.spec.ts --project=desktop
-./node_modules/.bin/playwright test --ui
-
-# Types — after every schema change
-./node_modules/.bin/supabase gen types typescript --local > src/lib/supabase/types.ts
+[full suite]
+[one file, during development]
 ```
 
 ## Additional Docs
@@ -107,81 +108,49 @@ If this section is absent the skill falls back to four generic triggers, which a
 
 ## Migration Protocol (project)
 
-The migration **discipline** is in the shell. This section holds the **toolchain**. Projects without a database: replace everything below with "N/A — no database."
+The migration **discipline** is in the shell and is universal: schema changes go through
+migrations, migrations are the source of truth, never edit an applied one, check for open work on
+the same tables first.
 
-**All schema changes go through `supabase/migrations/`.**
+This section holds **this project's toolchain** — the commands, and whatever guard stops a
+destructive one reaching production. Projects without a database: `N/A — no database.`
 
-- Create: `supabase migration new descriptive_name`
-- Test locally: `supabase db reset` (replays migrations + seed)
-- Apply: `supabase db push`
-- Never edit schema through the dashboard, on any environment
-- `supabase/seed.sql` runs automatically on `db reset` — use for test data
-- Regenerate types after every schema change
+- **Create a migration:** [command]
+- **Apply locally:** [command]
+- **Apply to the deployed environment:** [command, and who runs it]
+- **Regenerate types, if the stack has generated types:** [command]
 
 ### Production write protection
 
-Two layers against running destructive Supabase CLI ops on production:
+[How a destructive command is stopped from reaching production, and what it does NOT cover.]
 
-1. **Discipline:** never `supabase link` to a prod project ref from a dev box. Production reads its URL and service-role key from the host's env vars — there is no reason for a local link to prod. Link only to staging or local.
-2. **Wrapper script:** reads the linked ref from `supabase/.temp/project-ref` and refuses `db reset`, `db push`, `db remote *`, `migration up` and `migration repair` when that ref appears in `.claude/prod-supabase-refs`. Everything else passes through. The matcher walks adjacent argument pairs, so leading global flags don't bypass it.
-
-> **jig does not ship this script.** It lives in the archived seeds checkout at
-> `dev/claude/scripts/safe-supabase.sh`. The first project that needs it should bring it into
-> jig rather than copy it privately — a safety mechanism held in one project is one the next
-> project silently lacks.
-
-The wrapper only catches CLI ops. **Not guarded**, and relying on the discipline: a `--db-url postgres://…prod…` flag that skips the linked project entirely, direct `psql` against the prod URL, and any tool that doesn't go through the `supabase` binary.
-
-### Cross-environment env-var sync
-
-**Host env vars and Supabase project refs do not auto-sync.** A project running separate dev/preview and production Supabase instances has the three vars twice in Vercel — once per environment scope — with intentionally different values. Production matches the prod project; Preview + Development match the dev project, which is what `.env.local` has.
-
-Vercel does not redeploy on env-var change. Trigger one after updating.
-
-Failure modes: **undefined values** give `HTTP 500` site-wide while local `npm run dev` keeps working off `.env.local`, masking it until someone hits the deployed site. **Swapped projects** show test fixtures in prod or real data on a preview URL. **A name typo** produces the same 500 with a correct value.
+Two layers is the shape that has worked: a discipline (never point local tooling at production)
+and a mechanism that refuses the dangerous subcommands. State both, and state what the mechanism
+misses — a wrapper around one binary does not stop a direct database connection, and writing that
+down is what keeps the discipline load-bearing rather than assumed.
 
 ## Conventions
 
-### TypeScript
-- Strict mode. No `any`. Use generated Supabase types; regenerate after every schema change.
+How this project is written — typing, structure, data fetching, auth, error handling, naming,
+testing layout. **Stack-specific, so this project owns them**: every webapp is not Next.js on
+Vercel, and a convention inherited by not deleting it was never chosen.
 
-### Components
-- Server Components by default; `'use client'` only when needed.
-- shadcn/ui in `components/ui/` — don't edit directly. Feature components in `components/[feature]/`.
-- Under 200 lines. Split if larger.
+Write what this project actually does, not what a template guessed.
 
-### Data Fetching
-- Server Components fetch directly via the Supabase server client.
-- Mutations go through Server Actions, not API routes.
-
-### Auth & RLS
-- All auth through Supabase Auth. No custom JWT handling.
-- Role flags on the users table, not mutually exclusive.
-- **Every table needs RLS policies before shipping.** Every RLS change requires a pgTAP test.
-
-### Error Handling
-- Form actions return `string | null` — `null` is success. Button actions return `{ error: string | null }`.
-- Never `throw` in a server action; return the error for inline feedback.
-
-### Naming
-- Files `kebab-case.tsx`, components `PascalCase`, server actions `camelCase`, DB columns `snake_case`.
-- Migrations `supabase/migrations/YYYYMMDDHHMMSS_descriptive_name.sql`.
-
-### UI / Brand
-- White/black base, semantic shadcn tokens. No color for color's sake.
-- One border radius. Layout padding in `layout.tsx` only.
-- Every page works at 375px.
-
-### Testing
-- **Test the user, not the function.** Heavy integration, light unit.
-- **Test-first when behaviour changes.** Update the test, then the code.
-- pgTAP in `supabase/tests/`, Playwright in `tests/`. Viewports 375 / 768 / 1440.
-- Mock external services in test mode.
+- **[Language/typing]** — [e.g. strict mode, no implicit any]
+- **[Structure]** — [where things live, and the size at which you split them]
+- **[Error handling]** — [the contract: what a failure returns and where it surfaces]
+- **[Naming]** — [files, symbols, database columns, migrations]
+- **[Testing layout]** — [what runs where]
 
 ## Workflow Notes (project)
 
-Project-specific debugging gotchas. The shell holds the universal rules.
+Debugging gotchas specific to this project. The shell holds the universal rules; this is the local
+knowledge that would otherwise be rediscovered once a quarter.
 
-- **Before starting `npm run dev`:** check whether one is already running before starting another — `curl` is denied, so use the Read/Bash tools you have or just try the port. Starting a second server on top of a live one is the failure this prevents — don't start another.
-- **Stale `next start` on port 3001:** Playwright reuses an existing server there, so an orphan from an earlier debug run serves the previous build's bundle to every test, producing phantom failures. Kill it once per session: `lsof -ti:3001 | xargs -r kill -9`, then re-check that the port is clean.
-- **Supabase OAuth redirect URLs — use `/**` not `/*`.** Single-star matches one path segment, so `/auth/callback` fails to match, and Supabase silently falls back to Site URL — landing the user on `/?code=…` with the callback route never running. The symptom is auth that "almost works" but never exchanges the code.
+Start empty. Add one the first time something costs you twenty minutes and would have been a
+sentence — a stale process serving an old build, a tool that needs its environment loaded and one
+that does not, a config whose glob syntax is subtly wrong. Write the symptom first, because the
+symptom is what a future session will be looking at:
+
+- **[Symptom someone would actually see]** — [what is really happening, and the fix.]
