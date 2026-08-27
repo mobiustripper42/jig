@@ -113,8 +113,8 @@ If the `production` push fails, STOP. Surface the failure with full output. Loca
 ## Step 6 — Summary
 
 ```
-Promoted main → production at <SHIP_TAG or short-SHA>
-production now at <short-SHA>
+Promoted main → production at <SHIP_TAG or short commit hash>
+production now at <short commit hash>
 Host deploy on `production` triggered (if the host watches the production branch).
 ```
 

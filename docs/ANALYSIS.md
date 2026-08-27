@@ -253,7 +253,7 @@ workflow feels like describing the project. It is not. `ls` describes the projec
 ## Next, in order
 
 1. **`CLAUDE.md`** — 6,576 words, loaded every request. Byte-identical across seeds, muster
-   and soundings (same md5, 2026-08-25): a LoRa firmware project and a Next.js booking app
+   and soundings (verified 2026-08-25): a LoRa firmware project and a Next.js booking app
    load the same file. It is the largest prose artifact in a system that just proved prose
    doesn't hold — mechanical deny obeyed 7/7, prose rule broken 11 times including 4 after
    it was written.
