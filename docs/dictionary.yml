@@ -1,0 +1,45 @@
+# The dictionary. Three keys per entry, no others.
+#
+#   term  the canonical name. Unique across the file.
+#   says  plain English, max 160 characters. May not lean on an unregistered term —
+#         definitions bottom out in ordinary English or they do not pass.
+#   not   forbidden alternates. Using one fails the build, naming the canonical term.
+#
+# `docs/DICTIONARY.md` is generated from this file by `npm run gen:dictionary`. This is the
+# source; the markdown is what a person reads. Never edit the markdown.
+#
+# The gate reads `docs/SPEC.md`, `docs/decisions/*.md` and `CLAUDE.md`. Not code, not commit
+# messages, not session logs.
+#
+# NO BASELINE, AND THAT IS THE DIFFERENCE FROM MUSTER. Muster froze the vocabulary that existed
+# the day its gate shipped into `docs/dictionary-baseline.txt`, because its corpus was already
+# 158 decisions deep and the rule fired 3,006 times against text nobody was going to rewrite.
+# jig started empty on 2026-08-27, so there is nothing to grandfather and the gate runs at full
+# strength against every word. `gen-dictionary-baseline.mjs` still ships — other repos adopting
+# the gate will need it — but jig must never generate one. A baseline here would be exempting
+# vocabulary that was written after the rule existed.
+#
+# Nine terms were unregistered on the first run. Four are registered below. The other five were
+# reworded into plain English instead, which is the outcome the gate is actually for:
+#
+#   NNN   → `DEC-<id>`, a placeholder rather than a word
+#   DB    → "database"
+#   WIP   → "work in progress"
+#   STOP  → "Stop" — bold already carries the emphasis the capitals were doing
+#   IN    → *in* — italics, same reason
+
+- term: PR
+  says: a pull request — the GitHub page where a branch's changes are reviewed and merged
+  not: []
+
+- term: API
+  says: the published surface another program calls, as opposed to the code behind it
+  not: []
+
+- term: UI
+  says: the part of a program a person looks at and clicks
+  not: [user interface]
+
+- term: SMS
+  says: an ordinary phone text message
+  not: [text message]

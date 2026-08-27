@@ -30,7 +30,7 @@ Project-specific docs are listed in `.claude/CLAUDE-context.md` under `## Additi
 5. **Build it** — until it passes. Writing code first and then reconstructing the proof by deleting it to watch the test fail is step 4 the long way round.
 6. **Run the proof** — the checks covering what you touched, not the whole suite. **The test is coverage, not confidence:** if the checks you ran exercise the files you changed, that is the whole proof. Running everything again *because you are about to hand back* is the banned case, and the one that actually happens — "I'm finishing" feels like a reason and isn't. If a change plausibly reaches code you can't name, say so and ask. **Command: the `Proof command` slot.**
 7. **Check the surface** — confirm the change is right where a person meets it, which a passing check does not tell you. **How: the `Surface check` slot.**
-8. **STOP. The task is built, not shipped.** Report what changed and what passes, then **stop and wait**. Do not commit, push, open a PR, or start the next task. This is where the work gets looked at. Waiting is the correct end of a build turn — including when everything is green and the next task is obvious. Handing back *is* the finished state.
+8. **Stop. The task is built, not shipped.** Report what changed and what passes, then **stop and wait**. Do not commit, push, open a PR, or start the next task. This is where the work gets looked at. Waiting is the correct end of a build turn — including when everything is green and the next task is obvious. Handing back *is* the finished state.
 9. **`/kill-this` — the user invokes it, you don't.** It commits, pushes, runs `@code-review`, opens the PR with `closes #<issue>`, and appends a `## Task <N>` block to the session file. **Reaching the same end state by hand is never acceptable** — a hand-typed `git push` + `gh pr create` produces a PR that looks identical and has never been read by `@code-review`, and that absence announces itself to nobody. If you believe a task is ready, say so and stop.
 10. **Pick up another task or close out** — step 1 with a new branch, or `/its-dead` once at the end of the window. Merge PRs whenever.
 
@@ -57,7 +57,7 @@ Project coding conventions — typing, structure, data fetching, auth, error han
 
 Two things the gate cannot check, which is why they are here:
 
-**Search before you write, every time.** Name the subject, run `grep -rli "<subject>" docs/decisions/`, and **say what came back** in the PR — *"returned DEC-NNN; this changes its posture, so it amends"*, or *"nothing on rate limiting; new id."* That sentence is the whole control: a session that would have to write "DEC-NNN covers deposits and this is not that" cannot do it when it's false.
+**Search before you write, every time.** Name the subject, run `grep -rli "<subject>" docs/decisions/`, and **say what came back** in the PR — *"returned DEC-<id>; this changes its posture, so it amends"*, or *"nothing on rate limiting; new id."* That sentence is the whole control: a session that would have to write "DEC-<id> covers deposits and this is not that" cannot do it when it's false.
 
 **A change to what a decision decided goes in that decision's file**, appended as a dated `## Amendment` section saying what still stands. There is no new decision that amends an old one — a new id is for a subject worth writing even if nothing before it existed. Two decisions that merely relate carry a plain **see also**.
 
@@ -116,7 +116,7 @@ Default to the cheapest model that does the job. **Opus 5 is the standing model*
 
 `main` is the always-active trunk; every task PRs into it. Deployable projects add a `production` branch — a deploy pointer the host watches, never a PR base. Ship with `/promote-production`, which ff-merges and pushes.
 
-Adopting one: `git checkout -b production main && git push -u origin production`, then repoint the host **before** `main` takes active work, or WIP auto-deploys to prod.
+Adopting one: `git checkout -b production main && git push -u origin production`, then repoint the host **before** `main` takes active work, or unfinished work auto-deploys to production.
 
 ## Versioning
 
@@ -132,7 +132,7 @@ All tags land on `main` at bump time; `production` only ever receives an already
 
 - **Diagnostic commands** (build, lint, typecheck, test): run them directly.
 - **Environment-changing commands** (installs, migrations, pushes, deploys): output them for the user to run.
-- **On a surprise or mismatch, reconcile before diagnosing.** Pin the assumption and the environment first — dev vs prod, which DB, is the server even up. One environmental check beats a multi-step debug built on an unchecked premise.
+- **On a surprise or mismatch, reconcile before diagnosing.** Pin the assumption and the environment first — dev vs prod, which database, is the server even up. One environmental check beats a multi-step debug built on an unchecked premise.
 - **A denied command is a decision, not a syntax error.** Re-issuing the same intent in a new shell shape is routing around the answer. Once is a fair guess; twice on materially the same command, stop and ask what the denial means.
 - **A scripted edit must fail loudly when its anchor doesn't match — and a one-line `sed -i` is a scripted edit.** That clause is not padding: one session wrote a `python3` script with `assert n == 1`, correctly, and ninety minutes later ran a bare `sed -i` with no check at all. The rule reads as being about *scripts*, and a one-liner doesn't feel like one. Assert the match count per file and exit non-zero on zero matches, or "done" means the script ran, not that the change landed — and the file it silently skipped looks reviewed.
 - **Read files with the Read tool.** `grep` to *search* across files is fine; the banned shape is extracting a section from one file whose path you already know.
@@ -191,7 +191,7 @@ Occasional dry humor and sarcasm welcome. One good line beats three forced ones.
 
 **Do not re-add register prose here.** This section was 976 words of it and it worked sometimes. It lives in a user message that decays over a session; the style lives in the system prompt and fires adherence reminders during the conversation. If `Concise` is missing something, the answer is a custom output style, not another paragraph here.
 
-**Never lead with a false premise.** If you don't know the cause, ask — "is the server up? which DB?" is one line and fair. What's banned is stating a made-up cause as fact and explaining at length on top of it.
+**Never lead with a false premise.** If you don't know the cause, ask — "is the server up? which database?" is one line and fair. What's banned is stating a made-up cause as fact and explaining at length on top of it.
 
 **Ask in prose.** `AskUserQuestion` is denied fleet-wide. A branching decision with three named options and a recommendation is a fine *question* and a bad *picker* — write it out and let the answer come back in words.
 

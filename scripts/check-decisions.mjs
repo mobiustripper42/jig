@@ -71,6 +71,18 @@ const BOLD_LEAD_IN = /^\*\*([A-Z][^*\n]{0,40})[:.]\*\*/m
 
 const MAX_BYTES = 2000
 
+/**
+ * Bytes of frontmatter + decision, excluding any `## Amendment` sections.
+ *
+ * Measured as "the whole file minus the amendments" rather than by re-serializing, so the number
+ * a reader is told still corresponds to something they can see on disk. `statSync` is not used
+ * because it counts the amendments the cap deliberately ignores.
+ */
+export const sizeOf = (text) => {
+  const i = text.search(/^## Amendment\b/m)
+  return Buffer.byteLength(i === -1 ? text : text.slice(0, i), 'utf8')
+}
+
 /** The subset of draft 2020-12 the schema actually uses. Written out rather than pulled in
  *  because it is ~70 lines against a dependency, and because every message here has to name
  *  the key and the limit — a validator that says "does not match schema" is a validator
@@ -161,7 +173,20 @@ export function validateSchemaRecord(meta, body, bytes, schema = JSON.parse(read
   if (bytes > MAX_BYTES) {
     errs.push(`is ${bytes} bytes — the cap is ${MAX_BYTES}. A decision that will not fit is more than one decision`)
   }
-  const lead = body.match(BOLD_LEAD_IN)
+  /**
+   * Scoped to the decision for the same reason the byte cap is, and it collided the same way.
+   *
+   * This rule exists because `**Decision:**`, `**Tradeoff:**` and `**Status:**` used to be prose
+   * lead-ins standing in for structure that now lives in frontmatter. An amendment has no
+   * frontmatter and never will — it is dated prose appended under a heading — and the preamble
+   * prescribes the very phrasing this caught: *"appended as a dated `## Amendment` section saying
+   * what still stands."* Seeds wrote that as `**What this changes, and what still stands.**` in
+   * every one of its amendments.
+   *
+   * So the first amendment written under this schema failed the gate for following the
+   * instruction the gate's own repo gives. Both halves were right; the scope was wrong.
+   */
+  const lead = body.split(/^## Amendment\b/m)[0].match(BOLD_LEAD_IN)
   if (lead) {
     errs.push(`body opens a paragraph with \`**${lead[1]}:**\` — structure lives in frontmatter now, not in bold prose`)
   }
@@ -222,7 +247,24 @@ export function check() {
         continue
       }
       const body = text.slice(text.indexOf('\n---\n', 3) + 5)
-      for (const problem of validateSchemaRecord(meta, body, statSync(path).size, schemaFile)) fail(path, problem)
+      /**
+       * THE CAP MEASURES THE DECISION, NOT THE FILE. Two of this record's own rules collided the
+       * first time anything tried to amend one:
+       *
+       *   "a decision that will not fit is more than one decision"  — the 2000-byte cap
+       *   "a change to what a decision decided goes IN that file"   — the amendment rule
+       *
+       * Together they mean a record can be amended roughly never. DEC-J001 sat at 1,986 bytes of
+       * 2,000, so its first amendment would have failed the gate, and the only ways out are the
+       * two this record explicitly forbids: open a second decision on the same subject, or delete
+       * argued reasoning to make room for later reasoning.
+       *
+       * The cap's own sentence says what it is for, and it is scope — one decision, one subject.
+       * That is a claim about the decision, not about how much history has accumulated under it.
+       * Amendments are the history, they are dated and append-only by design, and a cap on them
+       * would be a cap on recording what changed.
+       */
+      for (const problem of validateSchemaRecord(meta, body, sizeOf(text), schemaFile)) fail(path, problem)
       rewritten.set(meta.id, { ...meta, path })
     }
   }

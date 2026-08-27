@@ -26,7 +26,7 @@ generated index. To add or change one, edit its file and run `npm run gen:decisi
 `npm run check:decisions` fails the build if this index is stale, which is the actual fix for a
 hand-maintained index's decay rather than remembering to regenerate it.
 
-**A change to a decision goes IN that decision's file**, appended as a dated
+**A change to a decision goes *in* that decision's file**, appended as a dated
 `## Amendment, YYYY-MM-DD (who)` section. It is not a new decision and gets no id. A new id is for
 a subject the record has no decision about yet. Two decisions that merely relate name each other
 in plain **see also** prose the generator neither writes nor strips.
