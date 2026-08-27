@@ -220,8 +220,11 @@ workflow feels like describing the project. It is not. `ls` describes the projec
   was present and executable, jig reports it as retired machinery still wired — and the hook
   itself is now out of `~/.claude/settings.json`. The `hooks` key held nothing else, so it was
   deleted rather than left as `{}`. Backup at `~/.claude/settings.json.pre-jig-hook-removal.bak`.
-  **Still there:** `~/.claude/tape-capture.sh` (now dead) and 4 captured transcripts, 16.9 MB,
-  which the check still reports because the queue outlives the hook.
+  **Fully removed the same day** — `~/.claude/tape-capture.sh` and the whole queue: 29 files,
+  86 MB, of which 24 were already-drained transcripts nothing would read again. mill-dev's
+  policy check now reports `current` at both levels, which is the baseline worth having before
+  bee-grace. The queue check stays in `settings-policy.mjs` — bee-grace still has the hook, so
+  it needs something to fire there.
 
   Worth keeping as the worked example of ANALYSIS.md's own rule — *an observation becomes a
   check, a deny, or a median-gap line, or it stays a note.* This one had been a note since
