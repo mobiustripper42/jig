@@ -302,6 +302,10 @@ describe('schema v1 validation', () => {
     date: '2026-08-26',
     ruling: 'The customer pays the whole price at booking and nothing is collected later.',
     claims: [{ kind: 'file', target: 'src/reservations/payment-config.ts' }],
+    // Required in jig, optional in muster — the one place the two schemas differ. Without it
+    // this fixture is not well-formed here, and four tests below fail on a key they never
+    // mention. See the `revisit_if is required here` test for the divergence stated directly.
+    revisit_if: 'the deposit split is revisited for any reason',
   }
 
   const errs = (patch, body = 'Body.\n', bytes = 500) =>
@@ -309,6 +313,19 @@ describe('schema v1 validation', () => {
 
   it('accepts a well-formed record', () => {
     expect(validateSchemaRecord(ok, 'Body.\n', 500)).toEqual([])
+  })
+
+  // jig's single divergence from muster's schema, tested rather than left to the JSON.
+  // Nothing in schema v1 retires a record, which is how 78% of muster's reservations corpus
+  // went dead while still being cited. Optional means the corpus rots; required means it does
+  // not compile without saying when it expires.
+  it('requires `revisit_if`, which muster leaves optional', () => {
+    const { revisit_if, ...without } = ok
+    expect(validateSchemaRecord(without, 'Body.\n', 500)).toEqual([
+      'missing required key `revisit_if`',
+    ])
+    expect(errs({ revisit_if: 'x'.repeat(161) })).toMatch(/revisit_if.*160/)
+    expect(errs({ revisit_if: 'short' })).toMatch(/revisit_if.*10/)
   })
 
   it('names the offending key on an unknown one, because that is the `dumb:` accident', () => {

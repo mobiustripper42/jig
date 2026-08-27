@@ -203,25 +203,30 @@ workflow feels like describing the project. It is not. `ls` describes the projec
 ## Loose ends — open at 2026-08-27
 
 - `CLAUDE.md` + `CLAUDE-context.md` edits — jig **and** muster. Planned, not started.
-- ~~Check scripts: muster is ahead~~ — **done for the doc gates.** decisions, dictionary,
-  context and docs checks plus their tests are in `scripts/`, from muster's copies. Still
-  owed: `settings-policy.mjs`, `drift.mjs`, `check-mirrors.mjs` (**not coming** — DEC-J001).
-- Dev name: removed in jig by omission.
-- ~~**`settings-policy.mjs --write` leaves timestamped `.bak` files**~~ — `.gitignore` covers
-  `*.bak` from the first commit. The script itself is not carried over yet.
-- **SessionEnd capture hook still installed** — already queued another session since the
-  drain. Remove it or accept the queue keeps growing. Confirmed live 2026-08-27:
-  `~/.claude/settings.json:95` → `tape-capture.sh`, queue at 4.
+- ~~Check scripts: muster is ahead~~ — **done.** All 13 are in `scripts/`: the four doc gates
+  and three generators from muster, `settings-policy.mjs` and `drift.mjs` from seeds. Not
+  coming: `check-mirrors.mjs` (DEC-J001), `tape-capture.sh`, `throughput.py`,
+  `split-decisions.mjs`, `dec_s_sweep.py`, `safe-supabase.sh` — the last stays in seeds
+  until a webapp project needs it.
+- Dev name: removed in jig by omission. The `~/.claude/devname` check went with it.
+- ~~**`settings-policy.mjs --write` leaves timestamped `.bak` files**~~ — fixed at both ends.
+  `.gitignore` covers `*.bak`, and the script now prunes to the newest 5 (`KEEP_BACKUPS`).
+  The backups themselves stay: a recovery from a stray `.bak` is the incident the script is
+  named after.
+- ~~**SessionEnd capture hook still installed**~~ — **now a check rather than a note.**
+  `settings-policy.mjs`'s hook check is inverted from seeds': seeds verified the capture hook
+  was present and executable, jig reports it as retired machinery still wired. It also reports
+  the queue depth, which outlives the hook. Live run 2026-08-27 — queue at **6**, up from 4
+  earlier the same day, which is the argument for the check rather than the note.
 - ~~**Dictionary format undecided**~~ — **decided in muster 2026-08-26**, see Open questions 1.
   The CLAUDE.md rewrite is unblocked.
 - **`pause-this` / `restart-this`** — still marked review, never resolved.
-- **The test suites are coupled to muster's corpus — 8 failures of 119, 2026-08-27.** They
-  came over with the scripts and assert against live muster data: `check-dictionary.test.mjs`
-  looks up the term `MMC` in `loadDictionary()` and jig has no `docs/dictionary.yml` at all;
-  `check-docs.test.mjs` hardcodes `mobiustripper42/muster` URLs. Inline fixtures naming
-  `src/reservations/…` are harmless strings; the live-corpus reads are not. Either the tests
-  get their own fixtures or jig gets the corpus they expect — decide before jig ships, because
-  a suite that is red on arrival is a suite nobody will run.
+- **4 tests still red of 120, and 3 of 4 gates.** Every one is jig not having a file yet, not
+  a defect: no `docs/dictionary.yml` (`check-dictionary`), no `CLAUDE.md` or
+  `.claude/CLAUDE-context.md` (`check-context`), no `.claude/doc-check.json` (`check-docs`,
+  which crashes on import rather than reporting). Four earlier failures were mine — requiring
+  `revisit_if` invalidated a fixture that never mentions it — and are fixed, with the
+  divergence now asserted by a test rather than left in the JSON.
 - **`npm install` note.** Deps are installed except `js-yaml`: a verification symlink was
   occupying `node_modules/js-yaml` during the first install, so npm skipped it. Symlink is
   removed; the install needs one more run.
