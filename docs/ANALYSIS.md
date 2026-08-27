@@ -128,6 +128,86 @@ boundaries. Zero is the meaningful number, not "low."
 **This test is mechanical and reusable:** count invocations in retained transcripts. It
 beats judgment about what feels useful, and it works on jig later too.
 
+## The always-loaded surface — measured 2026-08-27
+
+| file | words |
+|---|---|
+| `CLAUDE.md` | 6,576 |
+| `.claude/CLAUDE-context.md` | 6,477 |
+| **total loaded every session** | **13,053** |
+
+The context file is the same size as the shell and we had not been counting it. Cutting
+`CLAUDE.md` alone gets you halfway at best.
+
+### Two tests, applied per paragraph
+
+1. **Could a script produce this?** If yes, cut it and leave the command. Inventory rots;
+   `ls` does not.
+2. **Is this needed every session, or once?** Procedures — setting up a new project, moving
+   files between repos — are needed once and loaded sixty times a session.
+
+### CLAUDE.md — four moves
+
+1. **Mechanism-backed prose collapses to one line.** `sed -n` (~200 words), `npx` (~250),
+   `env.example` (~150), Decision Record (~900) all explain enforcement that already fires
+   without being read. **~1,400 words out, relocated nowhere.** The deny works regardless,
+   and `git log -S '<rule>' -- settings.json` returns the reasoning if anyone ever asks.
+2. **Dead machinery goes with the skills** — read-the-tape, @workout, @doc-consistency,
+   @ideas, @tape-reader, the dev handle, the "workflow fixes don't get made here" route,
+   the SessionEnd narration. Several hundred words, free.
+3. **Add the section that doesn't exist: where this repo differs from the median.** The only
+   genuinely new content. Entry test: *would a competent default do the wrong thing here?*
+   "Formatting is not chained to typecheck" passes. "Trust my statements the first time"
+   fails — a preference, not a divergence, which is why it keeps losing. Starts nearly
+   empty and grows one incident at a time.
+4. **Upgrade the evidence rule** to: *an observation becomes a check, a deny, or a
+   median-gap line — or it stays a note.*
+
+**The ceiling makes move 4 stick.** A word limit that fails the build, covering the whole
+always-loaded surface — not one file, or the escape is moving prose across the boundary and
+going green. The check must **enumerate** what's loaded rather than hardcode two paths, or
+the next escape is a third file. Set the number **after** the cut, at the landing point plus
+~10%. Guessing it now permits regrowth.
+
+What survives is the residue with no mechanism: Approval Before Action, the step-8 STOP,
+cost phrasings, scope discipline, cite-facts-label-proposals. Keep them, keep them short,
+and accept they are the part that gets broken.
+
+### CLAUDE-context.md — seeds, same tests
+
+| section | words | call |
+|---|---|---|
+| Setting Up a New Dev Project | 1,179 | cut — procedure, needed once |
+| The Workflow System | 987 | cut — inventory of skills, `ls .claude/skills/` |
+| The Learning Loop | 966 | cut — binned |
+| Moving Files Between Seeds and a Project | 635 | cut — procedure |
+| Repo Layout | 512 | cut — `ls` |
+| Mirrors | 447 | cut — `check-mirrors.mjs` prints it |
+| The Routine — OFF | 131 | cut — describes a thing that does not exist |
+| Commands | 117 | cut — `package.json` |
+| Seeds' Own Decision Record | 104 | cut — binned |
+
+**5,078 words, 78%,** before touching anything judgment-shaped. Survivors: what the project
+is, Stack, Workflow Mechanisms (the slots), Blast-Radius Triggers, Conventions, Workflow
+Notes, Migration Protocol, Additional Docs. Lands ~1,200 from 6,477.
+
+Seeds is the worst case because it is the repo *about* the workflow, so describing the
+workflow feels like describing the project. It is not. `ls` describes the project.
+
+## Loose ends — open at 2026-08-27
+
+- `CLAUDE.md` + `CLAUDE-context.md` edits — jig **and** muster. Planned, not started.
+- Check scripts: muster is ahead, merge into jig before jig ships.
+- Dev name: removed in jig by omission.
+- **`settings-policy.mjs --write` leaves timestamped `.bak` files that nothing gitignores.**
+  Every write drops another and they would be committed. Fix in jig's copy.
+- **SessionEnd capture hook still installed** — already queued another session since the
+  drain. Remove it or accept the queue keeps growing.
+- **Dictionary format undecided** — it gates the CLAUDE.md rewrite.
+- **`pause-this` / `restart-this`** — still marked review, never resolved.
+- **jig commits straight to `main`,** no branches. Decide whether jig adopts the
+  task-branch/PR flow for its own development.
+
 ## Next, in order
 
 1. **`CLAUDE.md`** — 6,576 words, loaded every request. Byte-identical across seeds, muster
