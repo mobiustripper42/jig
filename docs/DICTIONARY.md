@@ -7,13 +7,9 @@ Vocabulary already in the docs when the gate shipped is grandfathered and does n
 be registered — but registering it is always welcome, and registering one is how its
 alternates start being caught.
 
-6 terms.
+2 terms.
 
 | Term | Says | Not |
 |---|---|---|
-| **API** | the published surface another program calls, as opposed to the code behind it | — |
 | **byte-identical** | exactly the same file, character for character — not merely similar or kept in step by hand | — |
 | **md5** | a short fingerprint of a file's contents — two files with the same one are the same file, and `md5sum <file>` prints it | `md5sum`, `checksum`, `hash` |
-| **PR** | a pull request — the GitHub page where a branch's changes are reviewed and merged | — |
-| **SMS** | an ordinary phone text message | `text message` |
-| **UI** | the part of a program a person looks at and clicks | `user interface` |

@@ -19,30 +19,21 @@
 # the gate will need it — but jig must never generate one. A baseline here would be exempting
 # vocabulary that was written after the rule existed.
 #
-# Nine terms were unregistered on the first run. Four are registered below. The other five were
-# reworded into plain English instead, which is the outcome the gate is actually for:
+# THE BAR IS "WOULD A COMPETENT READER NEED THIS EXPLAINED", NOT "IS IT AN ACRONYM".
 #
-#   NNN   → `DEC-<id>`, a placeholder rather than a word
-#   DB    → "database"
-#   WIP   → "work in progress"
-#   STOP  → "Stop" — bold already carries the emphasis the capitals were doing
-#   IN    → *in* — italics, same reason
-
-- term: PR
-  says: a pull request — the GitHub page where a branch's changes are reviewed and merged
-  not: []
-
-- term: API
-  says: the published surface another program calls, as opposed to the code behind it
-  not: []
-
-- term: UI
-  says: the part of a program a person looks at and clicks
-  not: [user interface]
-
-- term: SMS
-  says: an ordinary phone text message
-  not: [text message]
+# The first pass registered PR, API, UI and SMS. All four are ordinary English, and defining SMS as
+# "an ordinary phone text message" in a file loaded every session tells the reader you think they
+# might not know. That is worse than saying nothing: it makes the dictionary furniture, and a
+# dictionary nobody respects is one nobody consults for the terms that do matter.
+#
+# So the rule is narrower than the gate is. The gate flags every unregistered acronym, which is
+# correct — it cannot know which are jargon. The answer to most of them is to write plain words,
+# not to register them. Registration is for a term with a specific local meaning that a reader
+# could otherwise guess wrong.
+#
+# Reworded rather than registered so far: PR → "pull request", API → "service", UI → "interface",
+# SMS → "text messaging", NNN → `DEC-<id>`, DB → "database", WIP → "work in progress", and the
+# shouted STOP and IN, whose capitals were doing work that bold and italics already do.
 
 - term: byte-identical
   says: exactly the same file, character for character — not merely similar or kept in step by hand
