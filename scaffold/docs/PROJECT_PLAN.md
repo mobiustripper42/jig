@@ -19,33 +19,30 @@ Tests are baked into every task estimate — no separate testing tasks.
 
 ## Phase 0: Infrastructure
 
-Everything needed to develop safely. No user-facing changes. Do this phase first — no feature work until green.
+Before any feature work: get the environment, the test harness and the docs to a state where every
+later session is faster and safer. No user-facing value ships in this phase.
 
-| # | Task | Effort | Notes |
+**The rows below are questions, not a checklist.** Every project answers them differently — a
+webapp stands up a local database and a browser runner, firmware needs a bench node and a way to
+read packets off it, a library needs neither. Delete rows that do not apply and add the ones this
+stack needs. Points are yours to set.
+
+| # | Task | Points | Notes |
 |---|------|--------|-------|
-| 0.1 | Install Docker Desktop on WSL2, verify running | 2 | |
-| 0.2 | Initialize local Supabase (`supabase init`, `supabase start`) | 2 | |
-| 0.3 | Baseline migration — dump prod schema as `supabase/migrations/000_baseline.sql` | 3 | If greenfield, create initial schema migration instead |
-| 0.4 | Seed data — `supabase/seed.sql` with Playwright test users (all roles) | 2 | |
-| 0.5 | Verify: `supabase db reset` → app runs against local Supabase | 2 | |
-| 0.6 | pgTAP setup — install extension, create `supabase/tests/` structure, verify pipeline | 3 | |
-| 0.7 | pgTAP test suite — RLS tests for `profiles` table (all roles × CRUD) | 3 | |
-| 0.8 | pgTAP test suite — RLS tests for [core tables] | 5 | Adjust effort based on table count |
-| 0.9 | pgTAP test suite — RLS tests for [remaining tables] | 5 | |
-| 0.10 | RLS audit — fix gaps found by pgTAP tests | 3 | |
-| 0.11 | Install Playwright, configure viewports (375/768/1440) | 3 | |
-| 0.12 | Playwright test suite — auth flows (login, register, role routing) | 3 | |
-| 0.13 | Playwright test suite — [core flow 1] | 5 | Adjust per feature complexity |
-| 0.14 | Playwright test suite — [core flow 2] | 5 | |
-| 0.15 | Save @ui-reviewer agent spec to `.claude/agents/ui-reviewer.md` | 2 | Fill in project theme details |
-| 0.16 | Verify session skills installed (`/its-alive`, `/kill-this`, etc.) | 1 | Should already be in `.claude/skills/` in the project root |
-| 0.17 | Fill in CLAUDE.md, SPEC.md, `docs/decisions/`, AGENTS.md, BRAND.md | 3 | Done before first session if possible |
+| 0.1 | Local environment runs the thing | [N] | [what "runs" means here] |
+| 0.2 | Data layer, if there is one — schema under migrations, seed data for tests | [N] | Delete if no database |
+| 0.3 | Test harness installed and one real test passing | [N] | The `Proof` slot in `.claude/CLAUDE-context.md` names what a check is here |
+| 0.4 | The gate runs end to end and is green | [N] | One command. `/kill-this` runs it before every commit |
+| 0.5 | Security-shaped tests for whatever guards access | [N] | Delete if nothing guards access |
+| 0.6 | `@ui-reviewer` spec + `.claude/ui-context.md`, if there is a UI | [N] | Delete for a project with no surface |
+| 0.7 | Session skills present in `.claude/skills/` | 1 | Installed with the rest of jig |
+| 0.8 | `CLAUDE.md`, `.claude/CLAUDE-context.md`, `docs/SPEC.md`, `docs/decisions/` filled in | [N] | Before the first working session if possible |
 
 **Phase 0 total: [sum] pts**
 
-**Ejection point:** Dev environment is professional-grade. Every future session is faster and safer. No user-facing value yet.
+**Ejection point:** the environment is trustworthy. Nothing user-facing exists yet.
 
-**Demo:** `supabase db reset` → `npm run dev` → `supabase test db` (all green) → `npm run test:e2e` (all green)
+**Demo:** the gate, green, from a clean checkout.
 
 ---
 
@@ -100,8 +97,8 @@ Unresolved estimate disagreements. Revisit when the task starts.
 ## Phase Boundary Checklist
 
 At the end of every phase:
-1. All pgTAP tests green (`supabase test db`)
-2. All Playwright tests green (`npm run test:e2e`)
+1. The gate is green — the one command `/kill-this` runs before every commit
+2. Every check the `Proof` slot names for this project passes
 3. @pm phase retrospective — velocity check, timeline update
 4. Write retrospective entry in `docs/RETROSPECTIVES.md` (velocity, scope changes, process notes, forecast update)
 5. Return to primary planning chat — review docs against intent

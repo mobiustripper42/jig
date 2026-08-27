@@ -17,7 +17,7 @@ In practice this means:
 [Practical / warm / playful / no-nonsense / etc.] What the app sounds like in error messages, labels, and empty states. What it should NOT sound like.
 
 ## Visual Direction
-- **Style:** [shadcn preset ID, e.g., b7CSfQ4Xo / or "default"]
+- **Style:** [design-system preset or theme name, if the stack has one]
 - **Default mode:** [Dark / Light]
 - **Font:** [Font name] (heading + body)
 - **Border radius:** [xs / sm / md — pick one, use consistently]
