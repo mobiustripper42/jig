@@ -68,7 +68,7 @@ Where a competent default does the wrong thing in this repo.
 | Gap | Why the default is wrong here |
 |---|---|
 | `.claude/` is the shipped template, not a local config directory | Editing an agent or skill here is editing what every project installs. There is no separate template copy to change instead — DEC-J001 removed it deliberately |
-| Three of four gates are red, and that is the current true state | jig is mid-migration. `check:dictionary`, `check:context` and `check:docs` are red because the files they read do not exist yet. Do not "fix" them by loosening the gate |
+| A red gate here usually means a missing file, not a broken check | jig is mid-migration, so a gate can be red because the corpus it reads does not exist yet. Run it and read the message. Never loosen a gate to get green — `npm run verify` says which, and `docs/PROJECT_PLAN.md` says when each one is due |
 | `scripts/` is jig-only by default | The file-class registry inverts seeds' default: a script here is assumed *not* to reach a project unless it is named `check-*` or `gen-*` |
 
 ## Blast-Radius Triggers
