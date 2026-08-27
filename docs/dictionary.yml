@@ -47,3 +47,7 @@
 - term: byte-identical
   says: exactly the same file, character for character — not merely similar or kept in step by hand
   not: []
+
+- term: md5
+  says: a short fingerprint of a file's contents — two files with the same one are the same file, and `md5sum <file>` prints it
+  not: [md5sum, checksum, hash]
