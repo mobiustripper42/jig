@@ -45,14 +45,13 @@ The seven skills and four agents, byte-identical to what ships.
 | 2.7 | `docs/AGENTS.md` — the canonical spec | 2 | Written 2026-08-27, ahead of the files it describes |
 | 2.8 | Rewrite `scaffold/docs/AGENTS.md` and `CHEATSHEET.md` | 3 | **Known wrong today.** Both still document `@doc-consistency`, `@tape-reader`, `/read-the-tape`, `/pause-this` and `/restart-this` — every project installing them gets a roster of things jig does not ship. Same defect class as the `npx` contradiction, found the same way |
 
-## Phase 3: The dictionary and the ceiling
+## Phase 3: The dictionary and the doc gates
 
 | # | Task | Points | Notes |
 |---|---|---|---|
 | 3.1 | `docs/dictionary.yml` — jig's own, no grandfathering | 5 | No baseline file; the gate runs at full strength |
 | 3.2 | `.claude/doc-check.json` | 2 | Unblocks `check:docs`, which currently crashes on import |
-| 3.3 | Repoint the muster-coupled tests at jig fixtures | 3 | 4 of 120 still red |
-| 3.4 | The word ceiling | 5 | Fails the build. Enumerates the always-loaded set rather than hardcoding paths, or the escape is a third file |
+| 3.3 | Repoint the muster-coupled tests at jig fixtures | 3 | Done — 148/148 |
 
 ## Phase 4: muster to v6
 
@@ -68,6 +67,8 @@ carries seeds' `CLAUDE.md` byte-identical, plus four skills jig does not ship.
 
 ## Not V1
 
+- **A word ceiling on the always-loaded files.** Parked in `docs/FUTURE_IDEAS.md` — it cannot
+  currently say what "loaded" means, and the surface is not growing.
 - **A fleet ledger.** Designed and deliberately not built: it answers the state of a box you are
   not sitting at, and a hand-maintained record of last-known state is the artifact this repo has
   already watched rot. Each machine checks itself instead.
