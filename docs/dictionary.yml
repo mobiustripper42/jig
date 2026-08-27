@@ -43,3 +43,7 @@
 - term: SMS
   says: an ordinary phone text message
   not: [text message]
+
+- term: byte-identical
+  says: exactly the same file, character for character — not merely similar or kept in step by hand
+  not: []

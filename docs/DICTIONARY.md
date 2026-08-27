@@ -7,11 +7,12 @@ Vocabulary already in the docs when the gate shipped is grandfathered and does n
 be registered — but registering it is always welcome, and registering one is how its
 alternates start being caught.
 
-4 terms.
+5 terms.
 
 | Term | Says | Not |
 |---|---|---|
 | **API** | the published surface another program calls, as opposed to the code behind it | — |
+| **byte-identical** | exactly the same file, character for character — not merely similar or kept in step by hand | — |
 | **PR** | a pull request — the GitHub page where a branch's changes are reviewed and merged | — |
 | **SMS** | an ordinary phone text message | `text message` |
 | **UI** | the part of a program a person looks at and clicks | `user interface` |
