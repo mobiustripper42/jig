@@ -1,8 +1,12 @@
 # Dev Reference
 
-Reference material pulled out of the always-loaded `CLAUDE.md` shell (DEC-S031) — read when you need it, not every session.
+Reference material pulled out of the always-loaded `CLAUDE.md` shell — read when you need it, not every session.
 
-## `<VersionTag />` component
+**The version-tag wiring below is Next.js on Vercel.** Keep it if that is this project's stack, delete it if not. The CHANGELOG format and the mobile PR-review notes are stack-neutral and stay either way.
+
+Other stacks get their own wiring section here as they come up. The thing being described is *how a build stamps its own version somewhere a person can see it*, and every stack answers that differently — a Python project reads it from package metadata, firmware bakes it into the image.
+
+## `<VersionTag />` component — Next.js on Vercel
 
 Build-time version display, reads `process.env.NEXT_PUBLIC_APP_VERSION` + `process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA`. Renders e.g. `v1.2.3 (a1b2c3)`.
 
