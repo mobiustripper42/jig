@@ -346,12 +346,24 @@ const KEEP_BACKUPS = 5
  * lexicographic order is chronological order. Sorting by mtime would be the obvious choice and is
  * the wrong one here — copying a backup, or restoring one to inspect it, rewrites its mtime and
  * would make the oldest content look newest and survive the prune.
+ *
+ * WHICH IS WHY THE MATCH IS THE TIMESTAMP PATTERN AND NOT `*.bak`. The first version matched any
+ * `<name>.*.bak`, and the sort-order argument above quietly assumed every match was one this
+ * function had written. A hand-made `settings.json.pre-jig-hook-removal.bak` — created during the
+ * same session, for exactly the reason people create backups — sorts AFTER every `2026-…` name, so
+ * it read as the newest and would have held a keep-slot while a real backup was deleted to make
+ * room for it. Deleting the wrong file is the one outcome this script cannot afford.
+ *
+ * So prune manages only what it creates, and a backup a person named by hand is left alone
+ * permanently. That is also the behaviour a person expects from a file they named themselves.
  */
+const BACKUP_STAMP = /\.\d{4}-\d{2}-\d{2}T[\d-]+Z\.bak$/
+
 function prune(path) {
   const dir = resolve(path, '..')
   const prefix = `${basename(path)}.`
   const backups = readdirSync(dir)
-    .filter((f) => f.startsWith(prefix) && f.endsWith('.bak'))
+    .filter((f) => f.startsWith(prefix) && BACKUP_STAMP.test(f))
     .sort()
   for (const f of backups.slice(0, -KEEP_BACKUPS)) unlinkSync(join(dir, f))
 }
