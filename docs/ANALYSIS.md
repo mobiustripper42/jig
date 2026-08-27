@@ -39,6 +39,7 @@ Keep if yes. Bin if it's a paragraph hoping to be recalled at the right moment.
 | "Don't re-do these" list | **No.** A list of warnings is prose hoping to be recalled — fails the filter. Items become checks or they don't come. The `Write()`/`Edit()` finding becomes a check in `settings-policy.mjs`. |
 | Expiry | **Required.** 78% of muster's reservations corpus was dead because nothing retired anything. `revisit_if` is mandatory; the build fails when its condition fires. This is the gap schema v1 doesn't close. |
 | Branch freshness | **New check.** Fails when the working branch's base isn't current `origin/main`. Cost: an afternoon of evidence gathered against a 24-commit-stale tree, 2026-08-26. |
+| jig's own branching | **Straight to `main`.** Limited ceremony for notes and template edits. jig ships the task-branch/PR flow; it does not use it on itself. |
 
 ## Skills — first pass
 
@@ -205,8 +206,6 @@ workflow feels like describing the project. It is not. `ls` describes the projec
   drain. Remove it or accept the queue keeps growing.
 - **Dictionary format undecided** — it gates the CLAUDE.md rewrite.
 - **`pause-this` / `restart-this`** — still marked review, never resolved.
-- **jig commits straight to `main`,** no branches. Decide whether jig adopts the
-  task-branch/PR flow for its own development.
 
 ## Next, in order
 
