@@ -1,10 +1,18 @@
 {
   "repo": "mobiustripper42/jig",
   "rosters": {
-    "CLAUDE.md": { "skills": true, "agents": true },
-    "docs/AGENTS.md": { "skills": true, "agents": true },
-    "scaffold/docs/AGENTS.md": { "skills": true, "agents": true },
-    "scaffold/docs/CHEATSHEET.md": { "skills": true, "agents": false }
+    "CLAUDE.md": {
+      "skills": true,
+      "agents": true
+    },
+    "docs/AGENTS.md": {
+      "skills": true,
+      "agents": true
+    },
+    "docs/CHEATSHEET.md": {
+      "skills": true,
+      "agents": false
+    }
   },
   "historical": {
     "docs/ANALYSIS.md": "the rebuild's working notes — cites seeds paths and binned machinery on purpose; that is what the analysis IS",

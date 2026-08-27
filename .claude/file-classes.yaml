@@ -81,4 +81,11 @@ file-classes:
   # apart by their directory when the mirror collapsed, so the split moved here.
   # A scaffold is compared to nothing, because jig's own filled-in `docs/SPEC.md`
   # and the `SPEC.md` it ships are unrelated documents sharing a filename.
+  # AGENTS.md and CHEATSHEET.md are NOT scaffolds and were briefly filed as such.
+  # They describe the seven skills and four agents, which are identical in every
+  # project, so a scaffold copy was a second copy of a shared file — the exact
+  # duplication DEC-J001 removed. It drifted immediately: 31 of check-docs` 53
+  # findings were that copy listing skills jig does not ship. One copy, in docs/.
+  - "docs/AGENTS.md": logic
+  - "docs/CHEATSHEET.md": logic
   - "scaffold/**": context
