@@ -38,7 +38,7 @@ Everything needed to develop safely. No user-facing changes. Do this phase first
 | 0.13 | Playwright test suite — [core flow 1] | 5 | Adjust per feature complexity |
 | 0.14 | Playwright test suite — [core flow 2] | 5 | |
 | 0.15 | Save @ui-reviewer agent spec to `.claude/agents/ui-reviewer.md` | 2 | Fill in project theme details |
-| 0.16 | Verify session skills installed (`/its-alive`, `/pause-this`, etc.) | 1 | Should already be in `.claude/skills/` in the project root |
+| 0.16 | Verify session skills installed (`/its-alive`, `/kill-this`, etc.) | 1 | Should already be in `.claude/skills/` in the project root |
 | 0.17 | Fill in CLAUDE.md, SPEC.md, `docs/decisions/`, AGENTS.md, BRAND.md | 3 | Done before first session if possible |
 
 **Phase 0 total: [sum] pts**
@@ -74,16 +74,16 @@ Everything needed to develop safely. No user-facing changes. Do this phase first
 
 ---
 
-## Velocity Table
+## Throughput
 
 Updated at end of each phase. Used by @pm to project remaining time.
 
-| Phase | Actual Hours | Effort Points | Hrs/Pt | Notes |
+| Phase | Closed | Points | Span | Throughput | Re-estimated | Net drift |
 |-------|-------------|---------------|--------|-------|
 | 0 | — | — | — | |
 | 1 | — | — | — | |
 
-**Lifetime velocity:** — hrs/pt
+**Throughput** is points per calendar week, or `burst` for a phase closing inside one week. Never reported without the calibration tally beside it: if points quietly shrink, throughput rises while nothing got faster.
 
 ---
 

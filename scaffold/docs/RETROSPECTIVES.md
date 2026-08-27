@@ -10,15 +10,15 @@ Format per entry: velocity, scope changes, what worked, what didn't, forecast up
 **Completed:** [date]
 **Sessions:** [range]
 
-### Velocity
+### Throughput
 
 | Metric | Value |
 |--------|-------|
 | Effort points | [N] pts |
-| Projected hours | ~[N] hrs |
-| Actual hours | ~[N] hrs |
-| **Hrs/point** | **[N.NN]** |
-| vs. prior baseline | [faster/slower/same] |
+| Span | [N] days |
+| **Throughput** | **[N] pts/wk — or `burst` if the phase spans <7 days** |
+| Re-estimated | [K] tasks |
+| Net drift | [+/-D] pts |
 
 **Why:** [One sentence on what drove the variance — infra investment paying off, heavier tasks than estimated, unexpected rework, etc.]
 
