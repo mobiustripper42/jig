@@ -34,6 +34,7 @@ Keep if yes. Bin if it's a paragraph hoping to be recalled at the right moment.
 | Decision records as a mechanism | **Kept, gated.** Schema v1 + dictionary gate, both being built in muster. Jig carries the mechanism, not the corpus. `DEC-J` prefix; ids burned, never reused. |
 | Agents | Keep, **except `@doc-consistency` and `@ideas`** — never invoked in a month of transcripts. Not coming to jig. |
 | Update scripts | **Keep.** Cost a lot to build and they work. |
+| Permission policy (`settings.json` + `settings-policy.mjs`) | **Keep, mostly as-is.** Master list plus the check that compares each machine against it. Caught the `sed -i` addition the day after it merged, with nobody remembering to look. |
 | Dictionary | **New.** Every term used in any skill, agent or CLAUDE.md must be defined. One line per term. Eric approves each one. If it can't be defined in one line, use plain words instead. |
 | "Don't re-do these" list | **No.** A list of warnings is prose hoping to be recalled — fails the filter. Items become checks or they don't come. The `Write()`/`Edit()` finding becomes a check in `settings-policy.mjs`. |
 | Expiry | **Required.** 78% of muster's reservations corpus was dead because nothing retired anything. `revisit_if` is mandatory; the build fails when its condition fires. This is the gap schema v1 doesn't close. |
