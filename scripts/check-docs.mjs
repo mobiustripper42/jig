@@ -90,15 +90,35 @@ export const REPO = CFG.repo
  *  intent: `docs/decisions/` is `check-decisions`' subject, an audit directory is a frozen record
  *  of findings-as-of-a-date (it cites dead paths deliberately — that is what a finding IS), and
  *  design directories are mockups. `docs/DECISIONS.md` is generated and already fully checked. */
-export const DOCS = [
-  ...(existsSync('docs')
-    ? readdirSync('docs')
+const topLevel = (dir) =>
+  existsSync(dir)
+    ? readdirSync(dir)
         .filter((f) => f.endsWith('.md') && f !== 'DECISIONS.md')
         .sort()
-        .map((f) => `docs/${f}`)
-    : []),
-  'CLAUDE.md',
-]
+        .map((f) => `${dir}/${f}`)
+    : []
+
+/**
+ * `scaffold/` is named here rather than reached by loosening the subdirectory rule above, because
+ * that rule is right and the reasons behind it still hold.
+ *
+ * WHY IT HAS TO BE COVERED AT ALL. Scaffolds are `context` class — copied once, then owned by the
+ * project — so nothing compares them to anything, and DEC-J001 originally took that to mean they
+ * needed no mechanism. Three defects found by hand on 2026-08-27 say otherwise, and none of them
+ * was drift between copies. Each was the scaffold disagreeing with JIG:
+ *
+ *   1. eleven `npx` invocations in the context template, while the shell denied `Bash(npx *)`
+ *      fleet-wide and named that exact shape as the trap;
+ *   2. `Hrs/Pt` and `Actual Hours` columns, on a velocity model retired for throughput;
+ *   3. `AGENTS.md` and `CHEATSHEET.md` documenting five skills and three agents jig does not ship.
+ *
+ * The third is what the roster check below already does, in both directions, and it would have
+ * caught it the day the roster changed. It was simply never pointed here.
+ *
+ * `scaffold/claude/` is excluded: `CLAUDE-context.md` is a placeholder skeleton whose citations
+ * are `<e.g. …>` examples, and `check-context.mjs` owns the real context files.
+ */
+export const DOCS = [...topLevel('docs'), ...topLevel('scaffold/docs'), 'CLAUDE.md']
 
 const NPM_SCRIPT = /`npm run ([a-z][a-z0-9:-]*)`/g
 const ISSUE_LINK = /\[(?:PR )?#(\d+)\]\((https:\/\/github\.com\/([^/\s]+\/[^/\s]+)\/(issues|pull)\/(\d+))\)/g
@@ -283,11 +303,27 @@ export function check(sources, world) {
       return d.text !== null
     })
 
+  /**
+   * A missing `.claude/skills` or `.claude/agents` is an empty roster, not a crash.
+   *
+   * `readdirSync` on an absent directory throws ENOENT, and the throw reached the top level: the
+   * gate died with a stack trace instead of reporting anything, including the several findings it
+   * had already computed. That is the same shape as `check-docs` refusing to start without
+   * `doc-check.json` — a gate that cannot run is indistinguishable from a gate nobody wired up.
+   *
+   * Empty is also the correct reading rather than a lenient one. A repo with no `.claude/agents`
+   * ships no agents, so a doc claiming a complete agent roster is wrong in exactly the way
+   * `checkRosters` exists to catch, and it now says so. jig hit this the moment `scaffold/docs`
+   * entered scope, before any skill had been carried over.
+   */
+  const dirNames = (dir, strip) =>
+    new Set(existsSync(dir) ? readdirSync(dir).map((f) => (strip ? f.replace(/\.md$/, '') : f)) : [])
+
   const w = world ?? {
     ids: new Set(load().keys()),
     scripts: existsSync('package.json') ? JSON.parse(readFileSync('package.json', 'utf8')).scripts : null,
-    skills: new Set(readdirSync('.claude/skills')),
-    agents: new Set(readdirSync('.claude/agents').map((f) => f.replace(/\.md$/, ''))),
+    skills: dirNames('.claude/skills', false),
+    agents: dirNames('.claude/agents', true),
   }
 
   return [

@@ -12,7 +12,8 @@
     "check:context": "node scripts/check-context.mjs",
     "check:docs": "node scripts/check-docs.mjs",
     "test": "vitest run",
-    "verify": "npm run check:decisions && npm run check:dictionary && npm run check:context && npm run check:docs && npm run test"
+    "verify": "npm run check:decisions && npm run check:dictionary && npm run check:denied && npm run check:context && npm run check:docs && npm run test",
+    "check:denied": "node scripts/check-denied.mjs"
   },
   "devDependencies": {
     "js-yaml": "^5.4.1",

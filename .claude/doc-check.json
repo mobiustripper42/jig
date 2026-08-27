@@ -1,0 +1,38 @@
+{
+  "repo": "mobiustripper42/jig",
+  "rosters": {
+    "CLAUDE.md": { "skills": true, "agents": true },
+    "docs/AGENTS.md": { "skills": true, "agents": true },
+    "scaffold/docs/AGENTS.md": { "skills": true, "agents": true },
+    "scaffold/docs/CHEATSHEET.md": { "skills": true, "agents": false }
+  },
+  "historical": {
+    "docs/ANALYSIS.md": "the rebuild's working notes — cites seeds paths and binned machinery on purpose; that is what the analysis IS",
+    "docs/RETROSPECTIVES.md": "per-phase record of what was true at phase close",
+    "docs/PROJECT_PLAN.md": "closed task rows cite what they retired",
+    "scaffold/docs/FUTURE_IDEAS.md": "parked ideas cite sketches that predate the current tree",
+    "scaffold/docs/RETROSPECTIVES.md": "a blank template whose example rows describe a project that does not exist",
+    "scaffold/docs/PROJECT_PLAN.md": "a blank template; its Phase 0 rows cite paths the installing project will create"
+  },
+  "knownForeign": [
+    "claude-api",
+    "code-review",
+    "config",
+    "clear",
+    "dataviz",
+    "fewer-permission-prompts",
+    "help",
+    "init",
+    "keybindings-help",
+    "loop",
+    "mcp",
+    "review",
+    "run",
+    "schedule",
+    "security-review",
+    "simplify",
+    "statusline-setup",
+    "ultrareview",
+    "update-config"
+  ]
+}

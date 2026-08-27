@@ -45,7 +45,7 @@ Everything needed to develop safely. No user-facing changes. Do this phase first
 
 **Ejection point:** Dev environment is professional-grade. Every future session is faster and safer. No user-facing value yet.
 
-**Demo:** `supabase db reset` → `npm run dev` → `supabase test db` (all green) → `npx playwright test` (all green)
+**Demo:** `supabase db reset` → `npm run dev` → `supabase test db` (all green) → `npm run test:e2e` (all green)
 
 ---
 
@@ -101,7 +101,7 @@ Unresolved estimate disagreements. Revisit when the task starts.
 
 At the end of every phase:
 1. All pgTAP tests green (`supabase test db`)
-2. All Playwright tests green (`npx playwright test`)
+2. All Playwright tests green (`npm run test:e2e`)
 3. @pm phase retrospective — velocity check, timeline update
 4. Write retrospective entry in `docs/RETROSPECTIVES.md` (velocity, scope changes, process notes, forecast update)
 5. Return to primary planning chat — review docs against intent

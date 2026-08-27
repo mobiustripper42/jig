@@ -182,6 +182,6 @@ Failure modes: **undefined values** give `HTTP 500` site-wide while local `npm r
 
 Project-specific debugging gotchas. The shell holds the universal rules.
 
-- **Before starting `npm run dev`:** `curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/` first. 200 means a server is already up — don't start another.
+- **Before starting `npm run dev`:** check whether one is already running before starting another — `curl` is denied, so use the Read/Bash tools you have or just try the port. Starting a second server on top of a live one is the failure this prevents — don't start another.
 - **Stale `next start` on port 3001:** Playwright reuses an existing server there, so an orphan from an earlier debug run serves the previous build's bundle to every test, producing phantom failures. Kill it once per session: `lsof -ti:3001 | xargs -r kill -9`, then re-check that the port is clean.
 - **Supabase OAuth redirect URLs — use `/**` not `/*`.** Single-star matches one path segment, so `/auth/callback` fails to match, and Supabase silently falls back to Site URL — landing the user on `/?code=…` with the callback route never running. The symptom is auth that "almost works" but never exchanges the code.
