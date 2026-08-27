@@ -1,0 +1,44 @@
+# The dictionary. Three keys per entry, no others.
+#
+#   term  the canonical name. Unique across the file.
+#   says  plain English, max 160 characters. May not lean on an unregistered term —
+#         definitions bottom out in ordinary English or they do not pass.
+#   not   forbidden alternates. Using one fails the build, naming the canonical term.
+#
+# `docs/DICTIONARY.md` is generated from this file by `npm run gen:dictionary`. This is the
+# source; the markdown is what a person reads. Never edit the markdown.
+#
+# The gate reads `docs/SPEC.md`, `docs/decisions/*.md` and `CLAUDE.md`. Not code, not commit
+# messages, not session logs.
+#
+# NO BASELINE, AND THAT IS THE DIFFERENCE FROM MUSTER. Muster froze the vocabulary that existed
+# the day its gate shipped into `docs/dictionary-baseline.txt`, because its corpus was already
+# 158 decisions deep and the rule fired 3,006 times against text nobody was going to rewrite.
+# jig started empty on 2026-08-27, so there is nothing to grandfather and the gate runs at full
+# strength against every word. `gen-dictionary-baseline.mjs` still ships — other repos adopting
+# the gate will need it — but jig must never generate one. A baseline here would be exempting
+# vocabulary that was written after the rule existed.
+#
+# THE BAR IS "WOULD A COMPETENT READER NEED THIS EXPLAINED", NOT "IS IT AN ACRONYM".
+#
+# The first pass registered PR, API, UI and SMS. All four are ordinary English, and defining SMS as
+# "an ordinary phone text message" in a file loaded every session tells the reader you think they
+# might not know. That is worse than saying nothing: it makes the dictionary furniture, and a
+# dictionary nobody respects is one nobody consults for the terms that do matter.
+#
+# So the rule is narrower than the gate is. The gate flags every unregistered acronym, which is
+# correct — it cannot know which are jargon. The answer to most of them is to write plain words,
+# not to register them. Registration is for a term with a specific local meaning that a reader
+# could otherwise guess wrong.
+#
+# Reworded rather than registered so far: PR → "pull request", API → "service", UI → "interface",
+# SMS → "text messaging", NNN → `DEC-<id>`, DB → "database", WIP → "work in progress", and the
+# shouted STOP and IN, whose capitals were doing work that bold and italics already do.
+
+- term: byte-identical
+  says: exactly the same file, character for character — not merely similar or kept in step by hand
+  not: []
+
+- term: md5
+  says: a short fingerprint of a file's contents — two files with the same one are the same file, and `md5sum <file>` prints it
+  not: []

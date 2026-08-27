@@ -51,7 +51,7 @@ Keep if yes. Bin if it's a paragraph hoping to be recalled at the right moment.
 | `its-alive` | keep, strip down | Next Steps works and stays as-is |
 | `its-dead` | keep, strip down | |
 | `kill-this` | keep, strip down | |
-| `pause-this` / `restart-this` | **review** | |
+| `pause-this` / `restart-this` | **bin** | Dropped 2026-08-27. Not carried to jig |
 | `read-the-tape` | **review** | ~$2/session, produced little Eric could use |
 | `workout` | **review** | its output was 20k characters nobody could read |
 
@@ -70,8 +70,13 @@ prompt-and-write branch, and `settings-policy.mjs` loses a check.
 
 ## Open questions
 
-1. Dictionary format — decide after the deep dive, so it covers the terms jig actually needs.
-2. Does the `dev/claude/` ↔ `.claude/` mirror split earn its keep?
+1. ~~Dictionary format~~ — **decided, in muster.** `docs/dictionary.yml`, three keys per entry
+   (`term` / `says` ≤160 chars / `not:` forbidden alternates), generated `DICTIONARY.md`,
+   `check-dictionary.mjs` in `verify`, scoped to SPEC + decisions + `CLAUDE.md` with a frozen
+   grandfather baseline. Shipped 2026-08-26. This unblocks the `CLAUDE.md` rewrite.
+2. ~~Does the `dev/claude/` ↔ `.claude/` mirror split earn its keep?~~ — **DEC-J001.** No.
+   One copy: `.claude/` is the template. `check-mirrors.mjs` does not come over; `drift.mjs`
+   and type-gating do, because jig↔project is a different question and survives intact.
 3. What exactly gets stripped out of its-alive / its-dead / kill-this?
 
 ## Carry over from elsewhere — don't lose these
@@ -198,19 +203,57 @@ workflow feels like describing the project. It is not. `ls` describes the projec
 ## Loose ends — open at 2026-08-27
 
 - `CLAUDE.md` + `CLAUDE-context.md` edits — jig **and** muster. Planned, not started.
-- Check scripts: muster is ahead, merge into jig before jig ships.
-- Dev name: removed in jig by omission.
-- **`settings-policy.mjs --write` leaves timestamped `.bak` files that nothing gitignores.**
-  Every write drops another and they would be committed. Fix in jig's copy.
-- **SessionEnd capture hook still installed** — already queued another session since the
-  drain. Remove it or accept the queue keeps growing.
-- **Dictionary format undecided** — it gates the CLAUDE.md rewrite.
-- **`pause-this` / `restart-this`** — still marked review, never resolved.
+- ~~Check scripts: muster is ahead~~ — **done.** All 13 are in `scripts/`: the four doc gates
+  and three generators from muster, `settings-policy.mjs` and `drift.mjs` from seeds. Not
+  coming: `check-mirrors.mjs` (DEC-J001), `tape-capture.sh`, `throughput.py`,
+  `split-decisions.mjs`, `dec_s_sweep.py`, `safe-supabase.sh` — the last stays in seeds
+  until a webapp project needs it.
+- Dev name: removed in jig by omission. The `~/.claude/devname` check went with it.
+- ~~**`settings-policy.mjs --write` leaves timestamped `.bak` files**~~ — fixed at both ends.
+  `.gitignore` covers `*.bak`, and the script now prunes to the newest 5 (`KEEP_BACKUPS`).
+  The backups themselves stay: a recovery from a stray `.bak` is the incident the script is
+  named after.
+- ~~**SessionEnd capture hook still installed**~~ — **removed 2026-08-27, jig's first action
+  on the world.** Both halves happened in one sitting and the order mattered: the check came
+  first, then the removal it argued for.
+  `settings-policy.mjs`'s hook check is inverted from seeds' — seeds verified the capture hook
+  was present and executable, jig reports it as retired machinery still wired — and the hook
+  itself is now out of `~/.claude/settings.json`. The `hooks` key held nothing else, so it was
+  deleted rather than left as `{}`. Backup at `~/.claude/settings.json.pre-jig-hook-removal.bak`.
+  **Fully removed the same day** — `~/.claude/tape-capture.sh` and the whole queue: 29 files,
+  86 MB, of which 24 were already-drained transcripts nothing would read again. mill-dev's
+  policy check now reports `current` at both levels, which is the baseline worth having before
+  bee-grace. The queue check stays in `settings-policy.mjs` — bee-grace still has the hook, so
+  it needs something to fire there.
+
+  Worth keeping as the worked example of ANALYSIS.md's own rule — *an observation becomes a
+  check, a deny, or a median-gap line, or it stays a note.* This one had been a note since
+  2026-08-26 and grew two more transcripts while being one.
+- ~~**Dictionary format undecided**~~ — **decided in muster 2026-08-26**, see Open questions 1.
+  The CLAUDE.md rewrite is unblocked.
+- ~~**`pause-this` / `restart-this`**~~ — **binned 2026-08-27.** Not carried to jig; their rows
+  are out of the shell's skills table.
+- **4 tests still red of 120, and 3 of 4 gates.** Every one is jig not having a file yet, not
+  a defect: no `docs/dictionary.yml` (`check-dictionary`), no `CLAUDE.md` or
+  `.claude/CLAUDE-context.md` (`check-context`), no `.claude/doc-check.json` (`check-docs`,
+  which crashes on import rather than reporting). Four earlier failures were mine — requiring
+  `revisit_if` invalidated a fixture that never mentions it — and are fixed, with the
+  divergence now asserted by a test rather than left in the JSON.
+- **`npm install` note.** Deps are installed except `js-yaml`: a verification symlink was
+  occupying `node_modules/js-yaml` during the first install, so npm skipped it. Symlink is
+  removed; the install needs one more run.
+
+- **The scaffolds are unverified until a project installs one.** The gates check them for
+  internal consistency — no roster naming a skill jig does not ship, no denied command spelled as
+  an instruction, no dead path. Nothing checks that installing one produces a working project,
+  because only installing one does. This is the same shape as seeds not being able to see its own
+  templates fail, and it is not fixable from inside jig: jig is not a webapp and never will be.
+  Expect the first new project to find things. That is the test.
 
 ## Next, in order
 
 1. **`CLAUDE.md`** — 6,576 words, loaded every request. Byte-identical across seeds, muster
-   and soundings (same md5, 2026-08-25): a LoRa firmware project and a Next.js booking app
+   and soundings (verified 2026-08-25): a LoRa firmware project and a Next.js booking app
    load the same file. It is the largest prose artifact in a system that just proved prose
    doesn't hold — mechanical deny obeyed 7/7, prose rule broken 11 times including 4 after
    it was written.

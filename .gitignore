@@ -1,0 +1,11 @@
+node_modules/
+.DS_Store
+*.log
+
+# `.claude/settings.local.json` is per-machine and never shared.
+.claude/settings.local.json
+
+# `settings-policy.mjs --write` drops a timestamped backup beside the file it edits.
+# Nothing gitignored them in seeds, so every write left another one staged for commit.
+*.bak
+*.bak.*

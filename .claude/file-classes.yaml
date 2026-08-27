@@ -1,0 +1,104 @@
+# What a manual copy actually needs to know about each template jig ships:
+# is this file identical in every project and safe to `cp` wholesale, or does
+# the project own its version and it must never be copied at all?
+#
+#   logic    → copy wholesale; jig is canonical, and a difference is staleness
+#   context  → never copy; the project owns its version and differing is correct
+#   hybrid   → copy the shell only; the paired `-context.md` file is project-owned
+#   presence → must exist; contents are never compared and never copied
+#   jig-only → lives here and a project never holds a copy; absence is not drift
+#
+# Read by `scripts/drift.mjs`. First match wins, so carve-outs precede globs.
+#
+# THIS LIVED IN `routine-config.yaml` IN SEEDS and does not any more. The Routine
+# was switched off (DEC-S038) and its scheduling keys described a mechanism that
+# no longer existed, so the one section anybody read sat inside 125 lines of dead
+# configuration. `## The Routine — OFF` was already marked "cut — describes a
+# thing that does not exist"; this is that cut, with the surviving part moved
+# somewhere its filename says what it is.
+
+file-classes:
+  # ── Live files — one copy, and jig runs the bytes it ships (DEC-J001) ────────
+  - ".claude/skills/**": logic
+
+  # THE `scripts/**` DEFAULT IS INVERTED FROM SEEDS, and this is the debt seeds
+  # recorded coming due rather than a new opinion.
+  #
+  # Seeds defaulted every script to `logic` — "every project holds a copy of
+  # this" — and that is backwards for anything a project never runs. Four tools
+  # got caught by it and corrected one at a time, after shipping: drift.mjs
+  # (PR #172), tape-capture.sh (PR #180), throughput.py, check-mirrors.mjs. On
+  # the fourth, the registry wrote down what to do next: "a fourth instance
+  # should invert it rather than add a fourth line here… invert this glob, and
+  # list the doc-integrity scripts as the `logic` exceptions."
+  #
+  # It was not done then because inverting inside a promotion PR has its own
+  # blast radius — every remaining script has to be individually re-asserted. A
+  # rewrite is exactly when that cost is already being paid, so it is done here.
+  # The default is now "jig runs this, a project does not," and the scripts a
+  # project genuinely runs are named.
+  # Test suites first: `check-*.mjs` would otherwise capture `check-*.test.mjs` on first match,
+  # asserting that every project holds jig's test files byte-identical. A project runs the gates,
+  # not their tests.
+  - "scripts/*.test.mjs": jig-only
+  - "scripts/fixtures/**": jig-only
+  - "scripts/check-*.mjs": logic
+  - "scripts/gen-*.mjs": logic
+  - "scripts/**": jig-only
+
+  # The permission policy (DEC-S023). Neither `logic` nor `context`: its CONTENTS
+  # are distributed by hand per machine and a project may legitimately carry a
+  # different revision, so comparing them would be noise and would imply jig's
+  # copy wins — an opinion the differ must never hold. Its PRESENCE is not a
+  # matter of opinion: a project without this file has no repo-level policy at
+  # all, and on phone/web sessions it is the only policy that reaches the
+  # container, so its absence is silent and total.
+  - ".claude/settings.json": presence
+
+  # Project-owned reviewers (DEC-S035). These reason about the project's
+  # substance — its architecture, its correctness rules, its design system — so a
+  # good one is necessarily project-specific and cannot come from a template.
+  # jig ships them as install-time starting points; after that each project owns
+  # its copy and nothing syncs it again.
+  #
+  # They were `hybrid` until 2026-07-24, which was a misclassification: hybrid
+  # means a generic shell plus a paired `.claude/<name>-context.md`, and no such
+  # file exists for an agent. So they fell through to full hunk classification
+  # and template edits were forward-ported into hand-adapted reviewers.
+  #
+  # Cost of `context`, accepted knowingly: a good idea that emerges in one
+  # project's reviewer never auto-surfaces for backporting. Harvesting it into
+  # jig's copy is a deliberate manual act.
+  - ".claude/agents/ui-reviewer.md": context
+  - ".claude/agents/architect.md": context
+  - ".claude/agents/code-review.md": context
+  - ".claude/agents/pm.md": context
+
+  # The shell (DEC-S019/DEC-S049). Byte-identical everywhere; everything specific
+  # to a project lives in the paired `.claude/CLAUDE-context.md`, which is the
+  # project's and never syncs.
+  - "CLAUDE.md": hybrid
+  # The project-owned half of that pair. Never copied, never compared — the template is a
+  # placeholder in `scaffold/claude/` and this is whatever the project wrote.
+  - ".claude/CLAUDE-context.md": context
+  # Project-owned config: the repo slug, the roster claims, the exemption lists.
+  - ".claude/doc-check.json": context
+
+  # ── jig's own documents — a project holds nothing at these paths ─────────────
+  #
+  # AGENTS.md and CHEATSHEET.md are the exception below: they describe the shared
+  # skills and agents, so they are one copy and a project's copy going stale is
+  # drift. Everything else under `docs/` is about jig.
+  - "docs/AGENTS.md": logic
+  - "docs/CHEATSHEET.md": logic
+  - "docs/VELOCITY_AND_POKER_GUIDE.md": logic
+  - "docs/**": jig-only
+
+  # ── Scaffolds — placeholders a project fills in once and then owns ───────────
+  #
+  # Every one of these is `context` by construction, which is the point of
+  # DEC-J001's second half: files with opposite sync rules stopped being told
+  # apart by their directory when the mirror collapsed, so the split moved here.
+  # A scaffold is compared to nothing, because jig's own filled-in `docs/SPEC.md`
+  # and the `SPEC.md` it ships are unrelated documents sharing a filename.
+  - "scaffold/**": context

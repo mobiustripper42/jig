@@ -1,0 +1,3 @@
+- term: reconciler
+  says: the job that compares two records and writes the difference
+  not: [sweeper]
