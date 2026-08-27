@@ -174,6 +174,17 @@ export function parseFrontmatter(text) {
         entry = null
         continue
       }
+      /**
+       * A NON-LIST KEY CLOSES ANY OPEN LIST. Without this, `list` stayed pointing at the last
+       * list key seen, so every `  - ` line after an unrelated key attached to THAT list.
+       *
+       * Reproduced: a mis-keyed `notes:` list written under `claims:` made `check:decisions`
+       * report `unknown key notes` — correctly — and then `gen:decisions` "repaired" the file by
+       * dropping the unknown key and writing its items into `claims:`. The failure disappeared
+       * and the record carried a claim its author never wrote. A gate finding laundered into a
+       * fabrication is worse than either half alone.
+       */
+      list = null
       meta[top[1]] = unquote(top[2])
       continue
     }
@@ -364,7 +375,20 @@ export function renderDecision(d) {
   //
   // Key order follows `decision-record.schema.json`'s properties, so a converted record and a
   // hand-written one are byte-identical and neither churns the other.
-  const v1 = String(d.schema) === '1'
+  /**
+   * TRIMMED, because one trailing space silently destroyed a record.
+   *
+   * `parseFrontmatter` does not trim values, so `schema: 1 ` parses as the string `'1 '`, missed
+   * this comparison, and the record took the legacy render branch — which writes only id, title
+   * and topic. Reproduced end to end: `ruling`, `claims`, `revisit_if`, `status` and `date` were
+   * deleted from a valid record, exit 0, "1 file rewritten". The gate's own remediation is what
+   * ate it.
+   *
+   * `hasSchemaKey` in check-decisions.mjs matches the KEY and is deliberately tolerant of the
+   * value's formatting, so the two halves disagreed: the checker said "opted in", the generator
+   * said "legacy", and the disagreement was a data loss rather than an error.
+   */
+  const v1 = String(d.schema).trim() === '1'
   const fm = ['---']
   if (v1) fm.push('schema: 1') // unquoted: the gate compares against the NUMBER 1
   fm.push(`id: ${d.id}`, `title: ${quote(d.title)}`, `topic: ${quote(d.topic)}`)
