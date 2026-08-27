@@ -51,7 +51,7 @@ Keep if yes. Bin if it's a paragraph hoping to be recalled at the right moment.
 | `its-alive` | keep, strip down | Next Steps works and stays as-is |
 | `its-dead` | keep, strip down | |
 | `kill-this` | keep, strip down | |
-| `pause-this` / `restart-this` | **review** | |
+| `pause-this` / `restart-this` | **bin** | Dropped 2026-08-27. Not carried to jig |
 | `read-the-tape` | **review** | ~$2/session, produced little Eric could use |
 | `workout` | **review** | its output was 20k characters nobody could read |
 
@@ -228,7 +228,8 @@ workflow feels like describing the project. It is not. `ls` describes the projec
   2026-08-26 and grew two more transcripts while being one.
 - ~~**Dictionary format undecided**~~ — **decided in muster 2026-08-26**, see Open questions 1.
   The CLAUDE.md rewrite is unblocked.
-- **`pause-this` / `restart-this`** — still marked review, never resolved.
+- ~~**`pause-this` / `restart-this`**~~ — **binned 2026-08-27.** Not carried to jig; their rows
+  are out of the shell's skills table.
 - **4 tests still red of 120, and 3 of 4 gates.** Every one is jig not having a file yet, not
   a defect: no `docs/dictionary.yml` (`check-dictionary`), no `CLAUDE.md` or
   `.claude/CLAUDE-context.md` (`check-context`), no `.claude/doc-check.json` (`check-docs`,
