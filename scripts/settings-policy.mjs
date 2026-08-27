@@ -258,12 +258,26 @@ function hookProblems(doc) {
     out.push(`      SessionEnd hook: still wired to ${c} — retired in jig, and it queues a transcript every session`)
   }
 
-  // Reported separately from the wiring: the queue outlives the hook. Removing the entry stops
-  // it growing and leaves whatever already accumulated sitting on disk unread.
+  /**
+   * Reported separately from the wiring: the queue outlives the hook. Removing the entry stops it
+   * growing and leaves whatever already accumulated sitting on disk unread.
+   *
+   * COUNTS CAPTURES, NOT DIRECTORY ENTRIES, and the difference is not cosmetic. The first version
+   * used a bare `readdirSync().length`, which counted `index.jsonl` and the `drained/`
+   * subdirectory alongside the transcripts and reported 6 where there were 4. That number was
+   * then quoted as evidence the queue had grown during a session — a claim about a real thing,
+   * inflated by 50%, produced by the check written to make the problem visible. A check nobody
+   * can trust the number of is worse than no check, because it gets argued with instead of acted
+   * on. Size is reported too: the point is not that files exist, it is that this is megabytes of
+   * transcript nothing will ever read.
+   */
   const queue = join(homedir(), '.claude', 'tape-queue')
   if (existsSync(queue)) {
-    const n = readdirSync(queue).length
-    out.push(`      ${queue}: present with ${n} item(s) — nothing in jig drains this`)
+    const captures = readdirSync(queue).filter((f) => f.endsWith('.jsonl') && f !== 'index.jsonl')
+    if (captures.length) {
+      const mb = captures.reduce((n, f) => n + statSync(join(queue, f)).size, 0) / 1e6
+      out.push(`      ${queue}: ${captures.length} captured transcript(s), ${mb.toFixed(1)} MB — nothing in jig drains this`)
+    }
   }
 
   if (out.length) out.push(`      Remove by hand, on this machine. Not repaired by --write.`)
