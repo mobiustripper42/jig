@@ -95,6 +95,17 @@ describe('classification', () => {
     expect(out).toMatch(/logic\s+\.claude\/output-styles\/one-piece\.md\s+absent here/)
   })
 
+  it('notices a style the project added that jig does not ship', () => {
+    // The registry says every project carries every style. A closed-set claim the script neither
+    // enforces nor observes is the shape this repo keeps finding defects in — and skills and
+    // agents already got this detector, so a style going unmentioned was asymmetric as well as
+    // wrong. Nothing stops a project writing one: the directory is writable and
+    // `settings.local.json` can point `outputStyle` at any name.
+    const p = project({ '.claude/output-styles/house.md': '---\nname: House\n---\n' })
+    const { out } = run(['--jig', JIG, p])
+    expect(out).toMatch(/\.claude\/output-styles\/house\.md\s+not a template/)
+  })
+
   it('never asks a project for a jig-only script', () => {
     const { out } = run(['--jig', JIG, project({})])
     expect(out).not.toMatch(/scripts\/drift\.mjs/)
