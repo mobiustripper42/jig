@@ -12,3 +12,7 @@ node_modules/
 
 # The sessions branch is checked out here by /its-alive.
 .sessions-worktree/
+
+# throughput.py is the only Python here; py_compile drops these beside it.
+__pycache__/
+*.pyc
