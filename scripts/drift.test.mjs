@@ -73,6 +73,19 @@ describe('classification', () => {
     expect(out).toMatch(/docs\/CHEATSHEET\.md/)
   })
 
+  it('ships the decision schema, which every project\'s gate reads', () => {
+    // `docs/**: jig-only` swallowed it, so no project ever received the file — while
+    // `check-decisions.mjs` reads it from the PROJECT's `docs/decisions/` the moment a record
+    // declares `schema: 1`. Not latent: a new v1 record failed with "declares `schema: 1` but
+    // docs/decisions/decision-record.schema.json does not exist", and a record without the key
+    // failed as not-in-baseline, so there was no way to add a decision record at all.
+    // Anchored to the bucket, not just the path. A bare path match passes when the file lands in
+    // UNCLASSIFIED too — which is exactly what happens if the registry line is reverted while the
+    // exclusion exception stays, so the loose version would have gone green on half the fix.
+    const { out } = run(['--jig', JIG, project({})])
+    expect(out).toMatch(/logic\s+docs\/decisions\/decision-record\.schema\.json\s+absent here/)
+  })
+
   it('never asks a project for a jig-only script', () => {
     const { out } = run(['--jig', JIG, project({})])
     expect(out).not.toMatch(/scripts\/drift\.mjs/)

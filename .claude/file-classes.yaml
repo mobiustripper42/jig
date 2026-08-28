@@ -92,6 +92,16 @@ file-classes:
   - "docs/AGENTS.md": logic
   - "docs/CHEATSHEET.md": logic
   - "docs/VELOCITY_AND_POKER_GUIDE.md": logic
+  # THE GATE READS THIS FROM THE PROJECT, so the project has to have it. `docs/**: jig-only`
+  # swallowed it and no project ever received the file, while `check-decisions.mjs` resolves
+  # `${DIR}/decision-record.schema.json` against the project's own `docs/decisions/`. The result
+  # was not a latent gap: a `schema: 1` record failed with "declares `schema: 1` but … does not
+  # exist" and a record without the key failed as not-in-baseline, so an adopting repo could not
+  # add a decision record at all.
+  #
+  # `logic` rather than `presence`: every project validates records against byte-identical rules,
+  # and a repo quietly evolving its own schema is how records stop being comparable across repos.
+  - "docs/decisions/decision-record.schema.json": logic
   - "docs/**": jig-only
 
   # ── Scaffolds — placeholders a project fills in once and then owns ───────────
