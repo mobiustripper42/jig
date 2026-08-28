@@ -71,7 +71,7 @@ Read once at launch, so a change applies at the next session start.
 
 | Style | What it adds |
 |-------|--------------|
-| `One piece` | Turn-taking on top of brevity: one idea per turn, ending where the reader would have an opinion, naming the next piece and stopping there. Written after a session stacked four decisions into one reply and the reader lost the thread |
+| `One piece` | Turn-taking and density, neither of which brevity alone covers. One idea per turn, ending where the reader would have an opinion, naming the next piece and stopping there — and one fact per sentence, because "make it shorter" removes sentences while keeping facts, which is how a short reply becomes an unreadable one. Written after a session stacked four decisions into one reply and the reader lost the thread |
 
 The machine default is set outside this repo and is not listed here — it is a preference, not part
 of the roster.
