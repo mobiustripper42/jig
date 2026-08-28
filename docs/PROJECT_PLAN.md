@@ -3,9 +3,9 @@
 Rebuilding the workflow system as a fixture. `docs/ANALYSIS.md` holds the reasoning and the
 measurements; this file holds the work.
 
-Phases here are units of migration, not release milestones. jig develops straight to `main` with
-limited ceremony — it ships the task-branch/PR flow and does not use it on itself — so a phase
-closes when its work is done and `/retro` runs, without PRs to merge.
+Phases here are units of migration, not release milestones. A phase closes when its work is done
+and `/retro` runs. jig uses the task-branch/PR flow it ships, so a phase closes with its pull
+requests merged like anywhere else.
 
 ## Estimation Method
 
