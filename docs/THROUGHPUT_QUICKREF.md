@@ -1,7 +1,7 @@
 # Throughput — quick reference
 
 Plain-language guide to the velocity numbers. This is the *how to read it* page;
-the *why* lives in `docs/DECISIONS.md` (DEC-S026). Tool: `dev/claude/scripts/throughput.py`.
+the *why* is DEC-S026. Tool: `scripts/throughput.py`.
 
 ## What changed (if you remember the old way)
 
@@ -13,13 +13,13 @@ recomputes from data GitHub already holds.
 
 ## Run it
 
-From your seeds checkout, point it at one or more project paths:
+Run it from this checkout, pointed at one or more project paths:
 
 ```bash
-python3 dev/claude/scripts/throughput.py ~/bushel
-python3 dev/claude/scripts/throughput.py ~/bushel ~/muster ~/helm   # cross-repo rollup
-python3 dev/claude/scripts/throughput.py --issues ~/bushel          # + points histogram
-python3 dev/claude/scripts/throughput.py --self-test                # offline sanity check
+python3 scripts/throughput.py ~/project-a
+python3 scripts/throughput.py ~/project-a ~/project-b   # cross-repo rollup
+python3 scripts/throughput.py --issues ~/project-a      # + points histogram
+python3 scripts/throughput.py --self-test               # offline sanity check
 ```
 
 Needs `gh` installed and authed. A project with no `points:N`-labelled closed issues
@@ -70,7 +70,11 @@ view (lots of 2s? any 13s?). Not joined to time.
 
 ## Where the rest lives
 
-- **Full rationale + what was tried and rejected:** `docs/DECISIONS.md` → DEC-S026.
-- **The phase-end ritual that records throughput:** `/retro` (Step 2).
-- **Methodology guide** (`docs/VELOCITY_AND_POKER_GUIDE.md`): Part 1 still describes the
-  old hrs/pt model — **stale, rewrite pending.** Trust this page until that's done.
+- **Full rationale + what was tried and rejected:** DEC-S026. Written in seeds and not
+  carried into this record, which starts at DEC-J001 — the id resolves in seeds' archive
+  and in muster's corpus, nowhere here.
+- **The phase-end ritual that records throughput:** `/retro` (Step 2). It computes phase
+  throughput itself from GitHub and never calls the extractor; this tool answers the
+  lifetime and cross-repo question instead.
+- **Methodology guide:** `docs/VELOCITY_AND_POKER_GUIDE.md`, which describes the same
+  throughput model at length. That page is the *why*; this one is the *how to read it*.
