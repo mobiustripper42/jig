@@ -158,10 +158,19 @@ const NOT_TEMPLATES = new Set(['.claude/settings.local.json', '.claude/file-clas
  * reaching `docs/` left both entries unreachable — the policing the move was for never happened.
  *
  * Everything else under `docs/` is jig's own and is classed `jig-only` in the registry.
- * `docs/decisions/` is excluded outright: it is `check-decisions`' subject, and a project's
- * record has nothing to do with jig's.
+ * `docs/decisions/` is excluded: it is `check-decisions`' subject, and a project's record has
+ * nothing to do with jig's.
+ *
+ * THE EXCLUSION WAS RIGHT ABOUT RECORDS AND WRONG ABOUT THE SCHEMA SITTING BESIDE THEM.
+ * `decision-record.schema.json` is not a decision — it is the rules every project validates its
+ * own records against, and `check-decisions.mjs` reads it from the PROJECT's `docs/decisions/`.
+ * Excluding the directory outright meant no project ever received it, so an adopting repo could
+ * not add a decision record at all: a `schema: 1` record failed for the missing schema, and one
+ * without the key failed as not-in-baseline. A directory-wide skip is too blunt an instrument for
+ * a directory holding two different kinds of thing.
  */
 const EXCLUDED_PREFIXES = ['docs/decisions/']
+const EXCLUSION_EXCEPTIONS = new Set(['docs/decisions/decision-record.schema.json'])
 
 /**
  * jig-side path → project-side path.
@@ -235,7 +244,11 @@ const templates = TEMPLATE_ROOTS.flatMap((root) => {
   const abs = join(JIG, root)
   if (!existsSync(abs)) return []
   return statSync(abs).isDirectory() ? walk(abs).map((r) => `${root}/${r}`) : [root]
-}).filter((rel) => !NOT_TEMPLATES.has(rel) && !EXCLUDED_PREFIXES.some((p) => rel.startsWith(p)))
+}).filter(
+  (rel) =>
+    !NOT_TEMPLATES.has(rel) &&
+    (EXCLUSION_EXCEPTIONS.has(rel) || !EXCLUDED_PREFIXES.some((p) => rel.startsWith(p))),
+)
 
 const rows = []
 const missing = []   // `presence` class — reported when absent, never diffed. See below.
