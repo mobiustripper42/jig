@@ -86,6 +86,15 @@ describe('classification', () => {
     expect(out).toMatch(/logic\s+docs\/decisions\/decision-record\.schema\.json\s+absent here/)
   })
 
+  it('ships output styles, which every project carries and none turns on by default', () => {
+    // The style file is shared vocabulary; the choice of which is ON lives in
+    // `.claude/settings.local.json`, gitignored and per-machine. Without a registry entry this
+    // path is UNCLASSIFIED — caught by the sibling test, but only as an absence, and the point
+    // here is that a project is positively told it is missing the file.
+    const { out } = run(['--jig', JIG, project({})])
+    expect(out).toMatch(/logic\s+\.claude\/output-styles\/one-piece\.md\s+absent here/)
+  })
+
   it('never asks a project for a jig-only script', () => {
     const { out } = run(['--jig', JIG, project({})])
     expect(out).not.toMatch(/scripts\/drift\.mjs/)
