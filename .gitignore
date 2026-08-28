@@ -9,6 +9,3 @@ node_modules/
 # Nothing gitignored them in seeds, so every write left another one staged for commit.
 *.bak
 *.bak.*
-
-# The sessions branch is checked out here by /its-alive.
-.sessions-worktree/

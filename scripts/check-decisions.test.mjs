@@ -26,7 +26,7 @@ import {
   specSections,
   stripSpecBlocks,
 } from './gen-decisions-index.mjs'
-import { check, fingerprint, hasSchemaKey, idOf, legacyVerdict, sizeOf, validateSchemaRecord } from './check-decisions.mjs'
+import { beforeAmendments, check, hasSchemaKey, idOf, sizeOf, validateSchemaRecord } from './check-decisions.mjs'
 
 const MAX = 2000
 
@@ -553,64 +553,33 @@ describe('renderDecision round-trips schema v1', () => {
   })
 })
 
-describe('sizeOf', () => {
+describe('sizeOf and beforeAmendments', () => {
   const head = '---\nschema: 1\nid: DEC-J001\n---\n\n## DEC-J001: A title\n\nThe decision.\n'
 
-  /**
-   * `beforeAmendments` IS GONE AND THESE TESTS INVERT ITS OLD ONES. It existed only so the byte
-   * cap could ignore `## Amendment` sections, and the amendment convention it served is retired
-   * (DEC-J003): a change of mind is a new record with `supersedes`, not a section appended to an
-   * old one. The carve-out was never free — a record that merely QUOTED the convention measured
-   * 21 bytes and escaped both the cap and the bold-lead-in rule.
-   *
-   * Whole-file measurement has no fence problem to solve, so the fence tests go with it.
-   */
-  it('measures the whole file, amendments included', () => {
+  it('measures the decision, not the amendments piled under it', () => {
     const amended = head + '\n## Amendment, 2026-08-27 (eric) — later\n\n' + 'x'.repeat(5000) + '\n'
-    expect(sizeOf(amended)).toBe(Buffer.byteLength(amended, 'utf8'))
-    expect(sizeOf(amended)).toBeGreaterThan(MAX)
+    expect(sizeOf(amended)).toBe(sizeOf(head))
+    expect(sizeOf(amended)).toBeLessThan(MAX)
   })
 
-  it('is not fooled by an `## Amendment` inside a fence, because it no longer looks for one', () => {
+  it('does not truncate at an `## Amendment` inside a fenced block', () => {
+    // The bug this pins: a record that QUOTES the amendment convention measured 21 bytes and
+    // passed a 2,000-byte cap, and the bold-lead-in rule was defeated the same way. A decision
+    // about how to write amendments is exactly the kind this repo writes.
     const quoting = '---\nschema: 1\n---\n\n```md\n## Amendment, YYYY-MM-DD (who)\n```\n\n' + 'y'.repeat(3000)
-    expect(sizeOf(quoting)).toBe(Buffer.byteLength(quoting, 'utf8'))
+    expect(sizeOf(quoting)).toBeGreaterThan(3000)
+    expect(beforeAmendments(quoting)).toContain('yyy')
+  })
+
+  it('handles a `~~~` fence too, and an unclosed one fails toward measuring more', () => {
+    const tilde = '~~~\n## Amendment, X\n~~~\n\n' + 'z'.repeat(500)
+    expect(sizeOf(tilde)).toBeGreaterThan(500)
+    const unclosed = '```\n## Amendment, X\n\n' + 'z'.repeat(500)
+    expect(sizeOf(unclosed)).toBeGreaterThan(500)
   })
 
   it('a record with no amendments measures the whole file', () => {
     expect(sizeOf(head)).toBe(Buffer.byteLength(head, 'utf8'))
-  })
-})
-
-describe('the legacy freeze', () => {
-  /**
-   * Omitting `schema:` used to be how a record opted OUT of every rule — the schema, the byte
-   * cap and the lead-in check all at once — and nothing told old history apart from a record
-   * written yesterday that forgot the key. The baseline is that distinction: a fixed list of ids
-   * and fingerprints, generated once at adoption. Getting on it takes a reviewable diff; getting
-   * off it takes an edit.
-   */
-  const legacy = '---\nid: DEC-001\ntitle: "Old"\n---\n\n## DEC-001: Old\n\nWritten before the schema.\n'
-  const listed = () => new Map([['DEC-001', fingerprint(legacy)]])
-
-  it('skips a listed record that has not changed', () => {
-    expect(legacyVerdict('DEC-001', legacy, listed())).toBe('frozen')
-  })
-
-  it('fails a record that is not listed — omission is not an opt-out', () => {
-    expect(legacyVerdict('DEC-099', legacy, listed())).toBe('not-listed')
-  })
-
-  it('fails a listed record that was edited, which is what forces conversion', () => {
-    expect(legacyVerdict('DEC-001', legacy + '\nOne more line.\n', listed())).toBe('edited')
-  })
-
-  it('an empty baseline grandfathers nothing — jig gets its strictness from having none', () => {
-    expect(legacyVerdict('DEC-001', legacy, new Map())).toBe('not-listed')
-  })
-
-  it('the fingerprint covers the whole file, frontmatter included', () => {
-    const reFrontmattered = legacy.replace('title: "Old"', 'title: "Renamed"')
-    expect(legacyVerdict('DEC-001', reFrontmattered, listed())).toBe('edited')
   })
 })
 

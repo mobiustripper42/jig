@@ -39,14 +39,6 @@ that never reached the spec is a red build rather than prose nobody cross-read.
 
 ### Template storage & distribution
 - DEC-J001 — One copy — `.claude/` is the template jig ships
-- DEC-J003 — Scaffolds are linted against jig, not diffed against a copy
-
-### Decision record & dictionary discipline
-- DEC-J004 — Records predating schema v1 are frozen by a generated baseline
-- DEC-J005 — Amending a record in place is retired
-
-### Session workflow & skills
-- DEC-J002 — A skill invocation approves the pushes inside its own ritual
 
 _**This file is GENERATED** by `npm run gen:decisions` —
 edit `docs/decisions/DEC-*.md`, not this file. `npm run check:decisions` fails on a stale index, a
