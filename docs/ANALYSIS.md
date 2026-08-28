@@ -39,7 +39,7 @@ Keep if yes. Bin if it's a paragraph hoping to be recalled at the right moment.
 | "Don't re-do these" list | **No.** A list of warnings is prose hoping to be recalled — fails the filter. Items become checks or they don't come. The `Write()`/`Edit()` finding becomes a check in `settings-policy.mjs`. |
 | Expiry | **Required.** 78% of muster's reservations corpus was dead because nothing retired anything. `revisit_if` is mandatory; the build fails when its condition fires. This is the gap schema v1 doesn't close. |
 | Branch freshness | **New check.** Fails when the working branch's base isn't current `origin/main`. Cost: an afternoon of evidence gathered against a 24-commit-stale tree, 2026-08-26. |
-| jig's own branching | **Straight to `main`.** Limited ceremony for notes and template edits. jig ships the task-branch/PR flow; it does not use it on itself. |
+| jig's own branching | **The flow it ships.** Straight-to-`main` was the seeds port only, and it ended by causing the thing it saved time on: a 400-line change to the gate every project runs, pushed to `main` unreviewed, recovered by reverting and re-landing through a pull request. A template library that does not use its own workflow cannot see it fail — the same argument DEC-J001 makes about templates. |
 
 ## Skills — first pass
 

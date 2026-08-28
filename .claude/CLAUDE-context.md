@@ -97,7 +97,5 @@ The word does mean something else here, and it is worth not confusing them: a *m
 
 ## Workflow Notes (project)
 
-- **jig develops straight to `main`.** Limited ceremony for notes and template edits. jig ships the task-branch/PR flow; it does not use it on itself.
-- **The tests came from muster and some are still coupled to its corpus.** `check-dictionary.test.mjs` looks up a term in a dictionary jig does not have; `check-docs.test.mjs` hardcodes muster URLs. Red there is expected until jig grows its own corpus — but check which kind of red before assuming.
 - **`npm install` is worth watching.** A symlink left in `node_modules/` during an install makes npm skip that package silently and report "changed 1 package".
 - **Seeds is archived, not deleted.** It is on disk and readable. `DEC-S###` ids appear in git history and in muster's records; jig's own record starts at `DEC-J001` with an empty corpus, and the two never mix.
