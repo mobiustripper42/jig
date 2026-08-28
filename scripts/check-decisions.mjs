@@ -15,7 +15,8 @@
 // Like its generator, this file is byte-identical across projects — every project-specific
 // knob is in `docs/decisions/_config.json`.
 
-import { readFileSync, readdirSync, existsSync, statSync } from 'node:fs'
+import { readFileSync, readdirSync, existsSync } from 'node:fs'
+import { createHash } from 'node:crypto'
 // Named import, not default: js-yaml is CommonJS, and `import yaml from 'js-yaml'` resolves
 // under vitest's transform but throws under plain node — which is how this script actually
 // runs. The test suite passing is not evidence the gate runs.
@@ -87,34 +88,106 @@ export const hasSchemaKey = (block) => /^schema:/m.test(block)
 export const idOf = (block) => block.match(/^id: *(\S+)/m)?.[1]
 
 /**
- * Bytes of frontmatter + decision, excluding any `## Amendment` sections.
+ * Bytes of the whole record.
  *
- * Measured as "the whole file minus the amendments" rather than by re-serializing, so the number
- * a reader is told still corresponds to something they can see on disk. `statSync` is not used
- * because it counts the amendments the cap deliberately ignores.
+ * IT USED TO SUBTRACT `## Amendment` SECTIONS, and that carve-out is gone with the convention it
+ * served (DEC-J003). A change of mind is a new record with `supersedes:`, not a section appended
+ * to an old one, so there is nothing left for the cap to forgive.
+ *
+ * The carve-out was never free. It needed a fence-aware scanner, because a bare
+ * `/^## Amendment\b/m` truncated at the first such line anywhere — and a record that merely
+ * QUOTED the convention measured 21 bytes, escaping both this cap and the bold-lead-in rule. A
+ * decision about how to write amendments is exactly the kind this repo writes. Whole-file
+ * measurement has no such hole to guard.
  */
-export const sizeOf = (text) => Buffer.byteLength(beforeAmendments(text), 'utf8')
+export const sizeOf = (text) => Buffer.byteLength(text, 'utf8')
 
 /**
- * Everything up to the first real `## Amendment` heading — one that is not inside a fenced block.
+ * ── The legacy freeze ────────────────────────────────────────────────────────
  *
- * THE FENCE CHECK IS THE WHOLE POINT. A bare `text.search(/^## Amendment\b/m)` truncates at the
- * first such line anywhere, including inside ```` ```md ```` — so a record that QUOTES the
- * amendment convention to explain it measures 21 bytes and passes a 2,000-byte cap, and
- * `BOLD_LEAD_IN` is defeated the same way. A decision about how to write amendments is exactly
- * the kind this repo writes, and it would have disabled both rules on itself.
+ * A record with no `schema:` key used to be skipped outright — past the schema, past the byte
+ * cap, past the lead-in rule. That is how a repo adopts this gate with a corpus written before
+ * it existed, and it is also how a record written yesterday dodges every rule by omitting one
+ * line. Nothing told the two apart. Muster still cannot.
  *
- * Fences are counted rather than matched in pairs: an unclosed fence leaves the rest of the file
- * "inside" one, which fails toward measuring MORE of the file, not less.
+ * `docs/decisions-baseline.txt` is that distinction: id and fingerprint, one line per record,
+ * generated ONCE at adoption by `gen-decisions-baseline.mjs`. Three consequences, all deliberate:
+ *
+ *   not listed        → fails. Omission stopped being an opt-out; getting on the list is a diff
+ *                       a reviewer sees.
+ *   listed, unchanged → skipped. Genuinely old, and left alone.
+ *   listed, edited    → fails. Legacy records are frozen. Needing to change one is the signal to
+ *                       convert it to v1 — splitting it if it turns out to be several decisions.
+ *
+ * jig's baseline is empty, so it grandfathers nothing. That is where its strictness comes from
+ * now: a fact about its corpus rather than a branch hardcoded to one repo's history.
  */
-export function beforeAmendments(text) {
-  const lines = text.split('\n')
-  let fenced = false
-  for (let i = 0; i < lines.length; i++) {
-    if (/^\s*(?:```|~~~)/.test(lines[i])) { fenced = !fenced; continue }
-    if (!fenced && /^## Amendment\b/.test(lines[i])) return lines.slice(0, i).join('\n')
-  }
-  return text
+export const BASELINE_PATH = 'docs/decisions-baseline.txt'
+
+/**
+ * Every directory holding records. BOTH scripts read this, and that is the point.
+ *
+ * The checker swept `docs/decisions/` and `docs/decisions/archive/`; the generator read only the
+ * first. So an archived legacy record — untouched, genuinely historical — got no baseline line
+ * and then failed as `not-listed`, permanently, on a file nobody had opened. Exactly the corpus
+ * this gate exists to let a project adopt.
+ */
+export const RECORD_DIRS = [DIR, `${DIR}/archive`]
+
+/**
+ * The frontmatter block, or `''` if there is none.
+ *
+ * ALSO SHARED BECAUSE THE TWO SCRIPTS DISAGREED. The checker required `---\n` at byte 0, so a
+ * CRLF file or a leading BOM produced an empty block: `idOf` returned undefined and the record
+ * failed as `not-listed` forever — while the generator's lenient split had written a correct
+ * baseline line for the very same file. The same strict guard also made `hasSchemaKey` false on a
+ * CRLF v1 record, routing something modern into the legacy path.
+ *
+ * Line endings are normalized before anything looks at the text, so a corpus written on Windows
+ * reads the same as one written here.
+ */
+const normalize = (text) => text.replace(/^﻿/, '').replace(/\r\n/g, '\n')
+
+export function frontmatterBlock(text) {
+  const t = normalize(text)
+  if (!t.startsWith('---\n')) return ''
+  const end = t.indexOf('\n---\n', 3)
+  return end === -1 ? '' : t.slice(4, end)
+}
+
+/** Everything after the frontmatter, off the SAME normalized text the block came from.
+ *
+ *  Half-normalizing was the first bug one layer down: `frontmatterBlock` normalized while the
+ *  body slice still ran on raw bytes, so a CRLF record's `indexOf('\n---\n')` missed and the
+ *  "body" handed to the prose rules was very nearly the whole file, frontmatter included. */
+export function recordBody(text) {
+  const t = normalize(text)
+  const end = t.indexOf('\n---\n', 3)
+  return end === -1 ? t : t.slice(end + 5)
+}
+
+export const fingerprint = (text) => createHash('md5').update(text, 'utf8').digest('hex')
+
+/** `Map<id, fingerprint>`. A missing file is an empty baseline, which is the correct reading for
+ *  a repo that never had legacy records — not an error. */
+export function loadBaseline(path = BASELINE_PATH) {
+  if (!existsSync(path)) return new Map()
+  return new Map(
+    readFileSync(path, 'utf8')
+      .split('\n')
+      .map((l) => l.replace(/#.*/, '').trim())
+      .filter(Boolean)
+      .map((l) => l.split(/\s+/))
+      .filter(([id, hash]) => id && hash)
+      .map(([id, hash]) => [id, hash]),
+  )
+}
+
+/** `frozen` — leave it alone. `not-listed` / `edited` — fail, with different advice. */
+export function legacyVerdict(id, text, baseline) {
+  const known = baseline.get(id)
+  if (!known) return 'not-listed'
+  return known === fingerprint(text) ? 'frozen' : 'edited'
 }
 
 /** The subset of draft 2020-12 the schema actually uses. Written out rather than pulled in
@@ -220,7 +293,7 @@ export function validateSchemaRecord(meta, body, bytes, schema = JSON.parse(read
    * So the first amendment written under this schema failed the gate for following the
    * instruction the gate's own repo gives. Both halves were right; the scope was wrong.
    */
-  const lead = beforeAmendments(body).match(BOLD_LEAD_IN)
+  const lead = body.match(BOLD_LEAD_IN)
   if (lead) {
     errs.push(`body opens a paragraph with \`**${lead[1]}:**\` — structure lives in frontmatter now, not in bold prose`)
   }
@@ -239,6 +312,7 @@ export function check() {
   // rescue the checks below `load()`, which stop for the whole corpus. See the blocker note
   // at the top of this section.
   const schemaFile = existsSync(SCHEMA_PATH) ? JSON.parse(readFileSync(SCHEMA_PATH, 'utf8')) : null
+  const baseline = loadBaseline()
   const seenIds = new Map()
   const rewritten = new Map()
   const sweep = (dir, label) => {
@@ -246,7 +320,7 @@ export function check() {
     for (const f of readdirSync(dir).filter((f) => f.endsWith('.md') && f !== '_preamble.md')) {
       const path = `${dir}/${f}`
       const text = readFileSync(path, 'utf8')
-      const block = text.startsWith('---\n') ? text.slice(4, text.indexOf('\n---\n', 3)) : ''
+      const block = frontmatterBlock(text)
 
       // One id may exist in exactly one file. `load()` catches a duplicate within its own
       // directory and stops there; an archived copy alongside the live record is the case it
@@ -265,19 +339,22 @@ export function check() {
       // whole gate exists to close. The cheap `^schema:` pre-filter keeps js-yaml off the
       // ~158 legacy blocks that have no such key.
       /**
-       * NO GRANDFATHERING IN JIG, and this line is where that stops being a comment.
+       * No `schema:` key — so this is either genuine history or a record that forgot the line.
+       * The baseline is the only thing that can tell them apart; see `legacyVerdict` above.
        *
-       * Muster skips a record with no `schema:` key, because its 158 legacy blocks convert one at
-       * a time. jig started empty on 2026-08-27, so a record without the key is not history — it
-       * is a record that was written after the rule existed and dodges every rule at once. A
-       * 4,188-byte file with a `**Decision:**` lead-in and no schema key passed clean while the
-       * comment forty lines above declared that path dead.
-       *
-       * A skip is the wrong shape for this repo regardless of the answer: `continue` is silent,
-       * and every defect this rebuild found was silent.
+       * This used to be an unconditional `fail`, which was right for jig and made the gate
+       * un-adoptable by every repo that already had records — and before that an unconditional
+       * skip, which is how a 4,188-byte record with a `**Decision:**` lead-in passed clean. Both
+       * were the same mistake: one repo's history hardcoded as everyone's.
        */
       if (!hasSchemaKey(block)) {
-        fail(path, 'has no `schema:` key — every record here is v1, and there is nothing to grandfather')
+        const verdict = legacyVerdict(id, text, baseline)
+        if (verdict === 'frozen') continue
+        if (verdict === 'edited') {
+          fail(path, `is frozen as legacy in ${BASELINE_PATH} and has been edited — convert it to schema v1 (splitting it if it is really several decisions) and drop its line from the baseline`)
+        } else {
+          fail(path, `has no \`schema:\` key and is not listed in ${BASELINE_PATH} — new records are v1, and omitting the key is not a way out of the schema, the byte cap or the lead-in rule`)
+        }
         continue
       }
       let meta
@@ -295,30 +372,25 @@ export function check() {
         fail(path, `declares \`schema: 1\` but ${SCHEMA_PATH} does not exist`)
         continue
       }
-      const body = text.slice(text.indexOf('\n---\n', 3) + 5)
       /**
-       * THE CAP MEASURES THE DECISION, NOT THE FILE. Two of this record's own rules collided the
-       * first time anything tried to amend one:
+       * THE CAP MEASURES THE WHOLE FILE, and the comment that used to sit here argued the
+       * opposite at length — that the cap must exclude amendments, or the 2,000-byte limit and
+       * the amendment rule together meant a record could be amended roughly never.
        *
-       *   "a decision that will not fit is more than one decision"  — the 2000-byte cap
-       *   "a change to what a decision decided goes IN that file"   — the amendment rule
+       * That was a fair reading of a real collision, and DEC-J005 resolved it the other way:
+       * amendments are retired, so nothing accumulates under a record and there is nothing for
+       * the cap to forgive. A change of mind is a new record carrying `supersedes`.
        *
-       * Together they mean a record can be amended roughly never. DEC-J001 sat at 1,986 bytes of
-       * 2,000, so its first amendment would have failed the gate, and the only ways out are the
-       * two this record explicitly forbids: open a second decision on the same subject, or delete
-       * argued reasoning to make room for later reasoning.
-       *
-       * The cap's own sentence says what it is for, and it is scope — one decision, one subject.
-       * That is a claim about the decision, not about how much history has accumulated under it.
-       * Amendments are the history, they are dated and append-only by design, and a cap on them
-       * would be a cap on recording what changed.
+       * The argument is kept here in past tense on purpose. It was correct given its premise,
+       * and someone will reach for it again the first time a record won't fit.
        */
-      for (const problem of validateSchemaRecord(meta, body, sizeOf(text), schemaFile)) fail(path, problem)
+      for (const problem of validateSchemaRecord(meta, recordBody(text), sizeOf(text), schemaFile)) fail(path, problem)
       rewritten.set(meta.id, { ...meta, path })
     }
   }
-  sweep(DIR, '')
-  sweep(`${DIR}/archive`, 'archive/')
+  // Same list the generator baselines. Drifting these apart is the bug that made an archived
+  // legacy record fail as `not-listed` on a file nobody had touched.
+  for (const dir of RECORD_DIRS) sweep(dir, dir === DIR ? '' : 'archive/')
 
   // `superseded_by` must land on a record that exists and is still the live one. Pointing at
   // a record that is itself superseded is a chain a reader has to walk, and pointing at

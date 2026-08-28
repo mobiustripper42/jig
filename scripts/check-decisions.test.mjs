@@ -26,7 +26,18 @@ import {
   specSections,
   stripSpecBlocks,
 } from './gen-decisions-index.mjs'
-import { beforeAmendments, check, hasSchemaKey, idOf, sizeOf, validateSchemaRecord } from './check-decisions.mjs'
+import {
+  RECORD_DIRS,
+  check,
+  fingerprint,
+  frontmatterBlock,
+  hasSchemaKey,
+  idOf,
+  legacyVerdict,
+  recordBody,
+  sizeOf,
+  validateSchemaRecord,
+} from './check-decisions.mjs'
 
 const MAX = 2000
 
@@ -553,33 +564,107 @@ describe('renderDecision round-trips schema v1', () => {
   })
 })
 
-describe('sizeOf and beforeAmendments', () => {
+describe('sizeOf', () => {
   const head = '---\nschema: 1\nid: DEC-J001\n---\n\n## DEC-J001: A title\n\nThe decision.\n'
 
-  it('measures the decision, not the amendments piled under it', () => {
+  /**
+   * `beforeAmendments` IS GONE AND THESE TESTS INVERT ITS OLD ONES. It existed only so the byte
+   * cap could ignore `## Amendment` sections, and the amendment convention it served is retired
+   * (DEC-J003): a change of mind is a new record with `supersedes`, not a section appended to an
+   * old one. The carve-out was never free — a record that merely QUOTED the convention measured
+   * 21 bytes and escaped both the cap and the bold-lead-in rule.
+   *
+   * Whole-file measurement has no fence problem to solve, so the fence tests go with it.
+   */
+  it('measures the whole file, amendments included', () => {
     const amended = head + '\n## Amendment, 2026-08-27 (eric) — later\n\n' + 'x'.repeat(5000) + '\n'
-    expect(sizeOf(amended)).toBe(sizeOf(head))
-    expect(sizeOf(amended)).toBeLessThan(MAX)
+    expect(sizeOf(amended)).toBe(Buffer.byteLength(amended, 'utf8'))
+    expect(sizeOf(amended)).toBeGreaterThan(MAX)
   })
 
-  it('does not truncate at an `## Amendment` inside a fenced block', () => {
-    // The bug this pins: a record that QUOTES the amendment convention measured 21 bytes and
-    // passed a 2,000-byte cap, and the bold-lead-in rule was defeated the same way. A decision
-    // about how to write amendments is exactly the kind this repo writes.
+  it('is not fooled by an `## Amendment` inside a fence, because it no longer looks for one', () => {
     const quoting = '---\nschema: 1\n---\n\n```md\n## Amendment, YYYY-MM-DD (who)\n```\n\n' + 'y'.repeat(3000)
-    expect(sizeOf(quoting)).toBeGreaterThan(3000)
-    expect(beforeAmendments(quoting)).toContain('yyy')
-  })
-
-  it('handles a `~~~` fence too, and an unclosed one fails toward measuring more', () => {
-    const tilde = '~~~\n## Amendment, X\n~~~\n\n' + 'z'.repeat(500)
-    expect(sizeOf(tilde)).toBeGreaterThan(500)
-    const unclosed = '```\n## Amendment, X\n\n' + 'z'.repeat(500)
-    expect(sizeOf(unclosed)).toBeGreaterThan(500)
+    expect(sizeOf(quoting)).toBe(Buffer.byteLength(quoting, 'utf8'))
   })
 
   it('a record with no amendments measures the whole file', () => {
     expect(sizeOf(head)).toBe(Buffer.byteLength(head, 'utf8'))
+  })
+})
+
+describe('the generator and the checker agree on what they are reading', () => {
+  /**
+   * BOTH BUGS HERE FAILED IN THE SAME DIRECTION: an untouched legacy record rejected as
+   * `not-listed`, which is the opposite of the class this gate closes and just as fatal to the
+   * adoption it exists for. Found by review before this shipped to other projects.
+   *
+   * They were two spellings of one mistake — the generator and the checker each deciding for
+   * themselves what "the corpus" and "the frontmatter" are. Shared functions, so they cannot
+   * drift again.
+   */
+  it('names both record directories — the checker sweeps archive/, so the generator must too', () => {
+    expect(RECORD_DIRS).toEqual(['docs/decisions', 'docs/decisions/archive'])
+  })
+
+  it('reads a block with CRLF line endings', () => {
+    // The checker demanded `---\n` at byte 0. A CRLF file made that false, so the block came back
+    // empty, `idOf` returned undefined, and the record failed forever as `not-listed` — while the
+    // generator's lenient split had written a correct baseline line for it.
+    expect(idOf(frontmatterBlock('---\r\nid: DEC-001\r\ntitle: "T"\r\n---\r\n\r\nBody.\r\n'))).toBe('DEC-001')
+  })
+
+  it('reads a block behind a UTF-8 BOM', () => {
+    expect(idOf(frontmatterBlock('﻿---\nid: DEC-002\ntitle: "T"\n---\n\nBody.\n'))).toBe('DEC-002')
+  })
+
+  it('still sees a `schema:` key through CRLF, so a v1 record is never mistaken for legacy', () => {
+    expect(hasSchemaKey(frontmatterBlock('---\r\nschema: 1\r\nid: DEC-003\r\n---\r\n\r\nBody.\r\n'))).toBe(true)
+  })
+
+  it('returns empty for a file with no frontmatter at all', () => {
+    expect(frontmatterBlock('# Just a heading\n\nBody.\n')).toBe('')
+  })
+
+  it('slices the body off the same normalized text the block came from', () => {
+    // Half-normalizing was the same mistake one layer down: `frontmatterBlock` normalized while
+    // the body slice still ran on raw text, so a CRLF record's `indexOf('\n---\n')` missed and
+    // `body` came back as very nearly the whole file — frontmatter included.
+    const crlf = '---\r\nschema: 1\r\nid: DEC-004\r\n---\r\n\r\n## DEC-004: T\r\n\r\nThe decision.\r\n'
+    expect(recordBody(crlf)).toBe('\n## DEC-004: T\n\nThe decision.\n')
+    expect(recordBody(crlf)).not.toContain('schema:')
+  })
+})
+
+describe('the legacy freeze', () => {
+  /**
+   * Omitting `schema:` used to be how a record opted OUT of every rule — the schema, the byte
+   * cap and the lead-in check all at once — and nothing told old history apart from a record
+   * written yesterday that forgot the key. The baseline is that distinction: a fixed list of ids
+   * and fingerprints, generated once at adoption. Getting on it takes a reviewable diff; getting
+   * off it takes an edit.
+   */
+  const legacy = '---\nid: DEC-001\ntitle: "Old"\n---\n\n## DEC-001: Old\n\nWritten before the schema.\n'
+  const listed = () => new Map([['DEC-001', fingerprint(legacy)]])
+
+  it('skips a listed record that has not changed', () => {
+    expect(legacyVerdict('DEC-001', legacy, listed())).toBe('frozen')
+  })
+
+  it('fails a record that is not listed — omission is not an opt-out', () => {
+    expect(legacyVerdict('DEC-099', legacy, listed())).toBe('not-listed')
+  })
+
+  it('fails a listed record that was edited, which is what forces conversion', () => {
+    expect(legacyVerdict('DEC-001', legacy + '\nOne more line.\n', listed())).toBe('edited')
+  })
+
+  it('an empty baseline grandfathers nothing — jig gets its strictness from having none', () => {
+    expect(legacyVerdict('DEC-001', legacy, new Map())).toBe('not-listed')
+  })
+
+  it('the fingerprint covers the whole file, frontmatter included', () => {
+    const reFrontmattered = legacy.replace('title: "Old"', 'title: "Renamed"')
+    expect(legacyVerdict('DEC-001', reFrontmattered, listed())).toBe('edited')
   })
 })
 
