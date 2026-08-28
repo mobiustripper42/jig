@@ -53,7 +53,7 @@
       "type": "string",
       "minLength": 10,
       "maxLength": 160,
-      "$comment": "The condition that makes this record worth re-opening, written so a person can tell whether it has fired. Required, and that is the whole point: nothing else in the schema retires a record, so an optional expiry is one nobody writes and a corpus that accumulates until most of it is dead and none of it is trusted. Measured once at 78%, still being cited."
+      "$comment": "The condition that makes this record worth re-opening, written so a person can tell whether it has fired. Required, and that is the whole point. `status` and `superseded_by` are how a record is *marked* retired; nothing but this field says what would *cause* anyone to go and mark it. An optional expiry is one nobody writes, and the corpus then accumulates until most of it is dead and none of it is trusted. Measured once at 78%, still being cited."
     },
     "amends_spec": {
       "type": "array",
