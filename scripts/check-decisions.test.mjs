@@ -34,6 +34,7 @@ import {
   hasSchemaKey,
   idOf,
   legacyVerdict,
+  recordBody,
   sizeOf,
   validateSchemaRecord,
 } from './check-decisions.mjs'
@@ -622,6 +623,15 @@ describe('the generator and the checker agree on what they are reading', () => {
 
   it('returns empty for a file with no frontmatter at all', () => {
     expect(frontmatterBlock('# Just a heading\n\nBody.\n')).toBe('')
+  })
+
+  it('slices the body off the same normalized text the block came from', () => {
+    // Half-normalizing was the same mistake one layer down: `frontmatterBlock` normalized while
+    // the body slice still ran on raw text, so a CRLF record's `indexOf('\n---\n')` missed and
+    // `body` came back as very nearly the whole file — frontmatter included.
+    const crlf = '---\r\nschema: 1\r\nid: DEC-004\r\n---\r\n\r\n## DEC-004: T\r\n\r\nThe decision.\r\n'
+    expect(recordBody(crlf)).toBe('\n## DEC-004: T\n\nThe decision.\n')
+    expect(recordBody(crlf)).not.toContain('schema:')
   })
 })
 

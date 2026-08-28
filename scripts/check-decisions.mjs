@@ -15,7 +15,7 @@
 // Like its generator, this file is byte-identical across projects — every project-specific
 // knob is in `docs/decisions/_config.json`.
 
-import { readFileSync, readdirSync, existsSync, statSync } from 'node:fs'
+import { readFileSync, readdirSync, existsSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 // Named import, not default: js-yaml is CommonJS, and `import yaml from 'js-yaml'` resolves
 // under vitest's transform but throws under plain node — which is how this script actually
@@ -146,11 +146,24 @@ export const RECORD_DIRS = [DIR, `${DIR}/archive`]
  * Line endings are normalized before anything looks at the text, so a corpus written on Windows
  * reads the same as one written here.
  */
+const normalize = (text) => text.replace(/^﻿/, '').replace(/\r\n/g, '\n')
+
 export function frontmatterBlock(text) {
-  const body = text.replace(/^﻿/, '').replace(/\r\n/g, '\n')
-  if (!body.startsWith('---\n')) return ''
-  const end = body.indexOf('\n---\n', 3)
-  return end === -1 ? '' : body.slice(4, end)
+  const t = normalize(text)
+  if (!t.startsWith('---\n')) return ''
+  const end = t.indexOf('\n---\n', 3)
+  return end === -1 ? '' : t.slice(4, end)
+}
+
+/** Everything after the frontmatter, off the SAME normalized text the block came from.
+ *
+ *  Half-normalizing was the first bug one layer down: `frontmatterBlock` normalized while the
+ *  body slice still ran on raw bytes, so a CRLF record's `indexOf('\n---\n')` missed and the
+ *  "body" handed to the prose rules was very nearly the whole file, frontmatter included. */
+export function recordBody(text) {
+  const t = normalize(text)
+  const end = t.indexOf('\n---\n', 3)
+  return end === -1 ? t : t.slice(end + 5)
 }
 
 export const fingerprint = (text) => createHash('md5').update(text, 'utf8').digest('hex')
@@ -359,25 +372,19 @@ export function check() {
         fail(path, `declares \`schema: 1\` but ${SCHEMA_PATH} does not exist`)
         continue
       }
-      const body = text.slice(text.indexOf('\n---\n', 3) + 5)
       /**
-       * THE CAP MEASURES THE DECISION, NOT THE FILE. Two of this record's own rules collided the
-       * first time anything tried to amend one:
+       * THE CAP MEASURES THE WHOLE FILE, and the comment that used to sit here argued the
+       * opposite at length — that the cap must exclude amendments, or the 2,000-byte limit and
+       * the amendment rule together meant a record could be amended roughly never.
        *
-       *   "a decision that will not fit is more than one decision"  — the 2000-byte cap
-       *   "a change to what a decision decided goes IN that file"   — the amendment rule
+       * That was a fair reading of a real collision, and DEC-J005 resolved it the other way:
+       * amendments are retired, so nothing accumulates under a record and there is nothing for
+       * the cap to forgive. A change of mind is a new record carrying `supersedes`.
        *
-       * Together they mean a record can be amended roughly never. DEC-J001 sat at 1,986 bytes of
-       * 2,000, so its first amendment would have failed the gate, and the only ways out are the
-       * two this record explicitly forbids: open a second decision on the same subject, or delete
-       * argued reasoning to make room for later reasoning.
-       *
-       * The cap's own sentence says what it is for, and it is scope — one decision, one subject.
-       * That is a claim about the decision, not about how much history has accumulated under it.
-       * Amendments are the history, they are dated and append-only by design, and a cap on them
-       * would be a cap on recording what changed.
+       * The argument is kept here in past tense on purpose. It was correct given its premise,
+       * and someone will reach for it again the first time a record won't fit.
        */
-      for (const problem of validateSchemaRecord(meta, body, sizeOf(text), schemaFile)) fail(path, problem)
+      for (const problem of validateSchemaRecord(meta, recordBody(text), sizeOf(text), schemaFile)) fail(path, problem)
       rewritten.set(meta.id, { ...meta, path })
     }
   }
