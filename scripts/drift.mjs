@@ -298,7 +298,12 @@ for (const rel of templates) {
 }
 
 // Present in the project, absent from the templates — a retired file nobody removed.
-for (const kind of ['skills', 'agents']) {
+//
+// `output-styles` joined this list with the class itself. The registry says every project carries
+// every style, and a closed-set claim the script neither enforces nor observes is the shape this
+// repo keeps finding defects in: a project-authored style would have been invisible here —
+// not drift, not unexpected, not mentioned — while the comment beside its class said otherwise.
+for (const kind of ['skills', 'agents', 'output-styles']) {
   const src = join(JIG, '.claude', kind)
   if (!existsSync(src)) continue
   const mine = new Set(readdirSync(src, { withFileTypes: true }).map((d) => d.name.replace(/\.md$/, '')))

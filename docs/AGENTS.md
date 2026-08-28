@@ -62,6 +62,25 @@ retained transcripts. It beats judgment about what feels useful, and it works an
 are kept. Zero is the meaningful number — `/retro` at 1 and `/promote-production` at 3 are low but
 plausible, because they fire at phase boundaries.
 
+## Output styles — one
+
+Styles ship in `.claude/output-styles/`, `logic` class like the skills: every project carries
+every one. Which is **on** is a per-machine choice in `.claude/settings.local.json`, gitignored and
+never travelling — `{ "outputStyle": "One piece" }`, deleted to fall back to the machine default.
+Read once at launch, so a change applies at the next session start.
+
+| Style | What it adds |
+|-------|--------------|
+| `One piece` | Turn-taking on top of brevity: one idea per turn, ending where the reader would have an opinion, naming the next piece and stopping there. Written after a session stacked four decisions into one reply and the reader lost the thread |
+
+The machine default is set outside this repo and is not listed here — it is a preference, not part
+of the roster.
+
+**A style with no entry here is an unclassified file**, same as a skill. Nothing checks that
+automatically: `.claude/doc-check.json` defines roster comparisons for `skills` and `agents` only,
+and `check-docs.mjs` has no styles concept, so this table and the directory can drift apart
+silently. It is written down because the gate cannot.
+
 ## Model selection
 
 Agents pin their model in frontmatter. `@architect` is Opus 5; the reviewers stay Sonnet. New

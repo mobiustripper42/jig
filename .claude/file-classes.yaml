@@ -21,6 +21,12 @@ file-classes:
   # ── Live files — one copy, and jig runs the bytes it ships (DEC-J001) ────────
   - ".claude/skills/**": logic
 
+  # Output styles. Every project carries every style; which one is ON is a per-machine
+  # choice living in `.claude/settings.local.json`, which is gitignored and never travels.
+  # That split is the point: the style file is shared vocabulary and worth reviewing once,
+  # while the choice is a preference nobody else should inherit.
+  - ".claude/output-styles/**": logic
+
   # THE `scripts/**` DEFAULT IS INVERTED FROM SEEDS, and this is the debt seeds
   # recorded coming due rather than a new opinion.
   #
