@@ -31,9 +31,11 @@ The one thing that makes a project invisible: no `points:N` labels. Throughput r
 ### Your overall number, and across projects
 
 For your lifetime number — or a combined number across several repos — run the **throughput
-extractor**, `scripts/throughput.py`. No project holds a copy: it answers a question about several
-repos at once, so it lives in the jig checkout and is run from there, pointed at one or more
-project paths:
+extractor**, scripts/throughput.py in the jig checkout. No project holds a copy: it answers a
+question about several repos at once, so it is run from there, pointed at one or more project
+paths. Written without backticks on purpose, for the reason given above about the quickref — a
+backticked path is read as a claim that it resolves in *this* repo, and this one deliberately
+does not.
 
 ```bash
 python3 <jig>/scripts/throughput.py ~/project-a
