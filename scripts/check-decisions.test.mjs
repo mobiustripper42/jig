@@ -26,7 +26,17 @@ import {
   specSections,
   stripSpecBlocks,
 } from './gen-decisions-index.mjs'
-import { check, fingerprint, hasSchemaKey, idOf, legacyVerdict, sizeOf, validateSchemaRecord } from './check-decisions.mjs'
+import {
+  RECORD_DIRS,
+  check,
+  fingerprint,
+  frontmatterBlock,
+  hasSchemaKey,
+  idOf,
+  legacyVerdict,
+  sizeOf,
+  validateSchemaRecord,
+} from './check-decisions.mjs'
 
 const MAX = 2000
 
@@ -578,6 +588,40 @@ describe('sizeOf', () => {
 
   it('a record with no amendments measures the whole file', () => {
     expect(sizeOf(head)).toBe(Buffer.byteLength(head, 'utf8'))
+  })
+})
+
+describe('the generator and the checker agree on what they are reading', () => {
+  /**
+   * BOTH BUGS HERE FAILED IN THE SAME DIRECTION: an untouched legacy record rejected as
+   * `not-listed`, which is the opposite of the class this gate closes and just as fatal to the
+   * adoption it exists for. Found by review before this shipped to other projects.
+   *
+   * They were two spellings of one mistake — the generator and the checker each deciding for
+   * themselves what "the corpus" and "the frontmatter" are. Shared functions, so they cannot
+   * drift again.
+   */
+  it('names both record directories — the checker sweeps archive/, so the generator must too', () => {
+    expect(RECORD_DIRS).toEqual(['docs/decisions', 'docs/decisions/archive'])
+  })
+
+  it('reads a block with CRLF line endings', () => {
+    // The checker demanded `---\n` at byte 0. A CRLF file made that false, so the block came back
+    // empty, `idOf` returned undefined, and the record failed forever as `not-listed` — while the
+    // generator's lenient split had written a correct baseline line for it.
+    expect(idOf(frontmatterBlock('---\r\nid: DEC-001\r\ntitle: "T"\r\n---\r\n\r\nBody.\r\n'))).toBe('DEC-001')
+  })
+
+  it('reads a block behind a UTF-8 BOM', () => {
+    expect(idOf(frontmatterBlock('﻿---\nid: DEC-002\ntitle: "T"\n---\n\nBody.\n'))).toBe('DEC-002')
+  })
+
+  it('still sees a `schema:` key through CRLF, so a v1 record is never mistaken for legacy', () => {
+    expect(hasSchemaKey(frontmatterBlock('---\r\nschema: 1\r\nid: DEC-003\r\n---\r\n\r\nBody.\r\n'))).toBe(true)
+  })
+
+  it('returns empty for a file with no frontmatter at all', () => {
+    expect(frontmatterBlock('# Just a heading\n\nBody.\n')).toBe('')
   })
 })
 

@@ -124,6 +124,35 @@ export const sizeOf = (text) => Buffer.byteLength(text, 'utf8')
  */
 export const BASELINE_PATH = 'docs/decisions-baseline.txt'
 
+/**
+ * Every directory holding records. BOTH scripts read this, and that is the point.
+ *
+ * The checker swept `docs/decisions/` and `docs/decisions/archive/`; the generator read only the
+ * first. So an archived legacy record — untouched, genuinely historical — got no baseline line
+ * and then failed as `not-listed`, permanently, on a file nobody had opened. Exactly the corpus
+ * this gate exists to let a project adopt.
+ */
+export const RECORD_DIRS = [DIR, `${DIR}/archive`]
+
+/**
+ * The frontmatter block, or `''` if there is none.
+ *
+ * ALSO SHARED BECAUSE THE TWO SCRIPTS DISAGREED. The checker required `---\n` at byte 0, so a
+ * CRLF file or a leading BOM produced an empty block: `idOf` returned undefined and the record
+ * failed as `not-listed` forever — while the generator's lenient split had written a correct
+ * baseline line for the very same file. The same strict guard also made `hasSchemaKey` false on a
+ * CRLF v1 record, routing something modern into the legacy path.
+ *
+ * Line endings are normalized before anything looks at the text, so a corpus written on Windows
+ * reads the same as one written here.
+ */
+export function frontmatterBlock(text) {
+  const body = text.replace(/^﻿/, '').replace(/\r\n/g, '\n')
+  if (!body.startsWith('---\n')) return ''
+  const end = body.indexOf('\n---\n', 3)
+  return end === -1 ? '' : body.slice(4, end)
+}
+
 export const fingerprint = (text) => createHash('md5').update(text, 'utf8').digest('hex')
 
 /** `Map<id, fingerprint>`. A missing file is an empty baseline, which is the correct reading for
@@ -278,7 +307,7 @@ export function check() {
     for (const f of readdirSync(dir).filter((f) => f.endsWith('.md') && f !== '_preamble.md')) {
       const path = `${dir}/${f}`
       const text = readFileSync(path, 'utf8')
-      const block = text.startsWith('---\n') ? text.slice(4, text.indexOf('\n---\n', 3)) : ''
+      const block = frontmatterBlock(text)
 
       // One id may exist in exactly one file. `load()` catches a duplicate within its own
       // directory and stops there; an archived copy alongside the live record is the case it
@@ -352,8 +381,9 @@ export function check() {
       rewritten.set(meta.id, { ...meta, path })
     }
   }
-  sweep(DIR, '')
-  sweep(`${DIR}/archive`, 'archive/')
+  // Same list the generator baselines. Drifting these apart is the bug that made an archived
+  // legacy record fail as `not-listed` on a file nobody had touched.
+  for (const dir of RECORD_DIRS) sweep(dir, dir === DIR ? '' : 'archive/')
 
   // `superseded_by` must land on a record that exists and is still the live one. Pointing at
   // a record that is itself superseded is a chain a reader has to walk, and pointing at
