@@ -107,6 +107,36 @@ describe("checkRosters", () => {
     expect(failures).toContainEqual(expect.stringMatching(/omits \/kill-this, which exists on disk/));
   });
 
+  it("`skills: mentions` checks names against disk without demanding the full list", () => {
+    // The context file is not a roster — it names a skill in passing. Both directions is right for
+    // `CLAUDE.md` and `AGENTS.md`, which promise to list everything; turning it on for a file that
+    // merely mentions one demands it enumerate all seven, which is a list to keep in sync and the
+    // reason nobody would accept the check.
+    const doc = [{ path: ".claude/CLAUDE-context.md", text: "The gate runs in `/kill-this`." }];
+    const cfg = { ".claude/CLAUDE-context.md": { skills: "mentions", agents: false } };
+    expect(checkRosters(doc, WORLD, cfg)).toEqual([]);
+  });
+
+  it("`skills: mentions` still catches a skill retired out from under the text", () => {
+    const doc = [{ path: ".claude/CLAUDE-context.md", text: "Run `/pause-this` when interrupted." }];
+    const cfg = { ".claude/CLAUDE-context.md": { skills: "mentions", agents: false } };
+    const failures = checkRosters(doc, WORLD, cfg);
+    expect(failures).toHaveLength(1);
+    expect(failures[0]).toMatch(/pause-this/);
+  });
+
+  it("refuses `agents: mentions` rather than accepting a value nothing acts on", () => {
+    // Review caught this shipping as a promise with nothing behind it: the config took the value
+    // and no code read it, so a retired `@agent` passed clean — the exact scenario the change was
+    // written to catch. There is no reverse check for agents, because `AGENT_MENTION` matches any
+    // `@word` and a real corpus is full of them (`@core` an import alias, `@theme` a CSS at-rule).
+    // Failing loudly is the honest state until a foreign-name list for agents exists.
+    const doc = [{ path: "X.md", text: "Reviewed by @pm." }];
+    const failures = checkRosters(doc, WORLD, { "X.md": { skills: false, agents: "mentions" } });
+    expect(failures).toHaveLength(1);
+    expect(failures[0]).toMatch(/not implemented/);
+  });
+
   it("catches a roster naming a skill that does not exist", () => {
     // Audit row 28: `/session-start-hook` sat in the CHEATSHEET's INFRA column with no file.
     const failures = checkRosters(roster("`/kill-this` `/no-such-skill` @pm"), WORLD);
@@ -198,6 +228,16 @@ describe("checkExemptions", () => {
 describe("check — the real doc set", () => {
   it("is clean", () => {
     expect(check()).toEqual([]);
+  });
+
+  it("reaches the context file, whose roster nothing else checks", () => {
+    // `.claude/CLAUDE-context.md` loads every session as ground truth and was the one always-loaded
+    // file whose skill and agent mentions nothing verified. Muster carried `/pause-this` twice and
+    // `@doc-consistency` once for a day after all three were deleted, and every gate stayed green.
+    //
+    // `check-context.mjs` reads this file too, for paths and § sections — the same overlap
+    // `CLAUDE.md` has always had with both gates. Rosters are this gate's job, so it needs the file.
+    expect(DOCS).toContain(".claude/CLAUDE-context.md");
   });
 
   it("covers every top-level doc, and no subdirectory", () => {
