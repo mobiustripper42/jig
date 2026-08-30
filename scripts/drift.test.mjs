@@ -179,6 +179,11 @@ describe('a jig-only file the project holds a copy of', () => {
   })
 
   it('says nothing about a project\'s decision records', () => {
+    // This one pins something narrower than its siblings, and saying so is the point: records are
+    // stripped from `templates` by EXCLUDED_PREFIXES long before the new loop runs, so what is
+    // guarded here is that the loop reuses that filtered array rather than walking the project
+    // itself. Re-walking is the obvious-looking implementation, and it would light up every record
+    // in the corpus.
     const p = project({ 'docs/decisions/DEC-001-a-choice.md': '---\nid: DEC-001\n---\n' })
     const { out } = run(['--jig', JIG, p])
     expect(out).not.toMatch(/DEC-001/)

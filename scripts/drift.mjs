@@ -333,6 +333,13 @@ for (const kind of ['skills', 'agents', 'output-styles']) {
  * to hold a file at the path is what makes the finding mean something: two copies exist, and one
  * of them was never supposed to.
  */
+/**
+ * Derived through `toProject` rather than from a hand-listed set of paths, so it cannot disagree
+ * with the mapping it exists to invert. `scaffold/templates/**` has no mapping and so contributes
+ * its own unmapped path as a key nothing can match — inert by construction, and left that way on
+ * purpose: filtering it out would mean naming the mapped prefixes in a second place, which is the
+ * drift this derivation avoids.
+ */
 const scaffolded = new Set(templates.filter((r) => r.startsWith('scaffold/')).map(toProject))
 const notYours = []
 for (const rel of templates) {

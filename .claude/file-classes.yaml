@@ -110,8 +110,10 @@ file-classes:
   - "docs/decisions/decision-record.schema.json": logic
 
   # THESE FOUR WERE CAUGHT BY `docs/**: jig-only`, WHICH CLAIMS A PROJECT NEVER HOLDS ONE.
-  # False for every project that has ever run `gen:decisions` or registered a term: muster and
-  # soundings each hold all four today. The claim was invisible while nothing looked at project-side
+  # False for every project that has ever run `gen:decisions` or registered a term — read off disk
+  # on 2026-08-30, `ls ../muster/docs` and `ls ../soundings/docs`, and both hold all four. Re-check
+  # by listing them; do not carry this forward as settled fact about another repo without looking.
+  # The claim was invisible while nothing looked at project-side
   # copies of jig-only files; the moment drift.mjs did, it produced four false findings per repo.
   #
   # `context` is the honest class — each is generated from or written about the project's own
