@@ -315,6 +315,47 @@ for (const kind of ['skills', 'agents', 'output-styles']) {
   }
 }
 
+/**
+ * The OTHER "present in the project, absent from the templates" question, and it is a second
+ * check rather than a generalization of the loop above.
+ *
+ * That loop asks: the project has it, jig does not — a retired skill nobody deleted. This asks the
+ * reverse: jig HAS the file, jig KEEPS it, and the project holds a copy anyway. Neither subsumes
+ * the other, so both exist. Muster carried four copies of jig's own gate test suites —
+ * `scripts/*.test.mjs` is `jig-only` and the registry says out loud that a project runs the gates,
+ * not their tests — and every drift run reported `nothing differs`. They surfaced when a full
+ * `verify` went red on fixtures that predated schema v1, four failures out of 2,531.
+ *
+ * IT WALKS JIG'S TEMPLATES, NOT THE PROJECT, and that is the whole design. Classifying arbitrary
+ * project paths looks equivalent and is not: `scripts/**` and `docs/**` are jig-only CATCH-ALLS,
+ * so every script and doc a project wrote for itself would come back as a retired jig file.
+ * Muster's `gen-icons.mjs` and `docs/RUNNING.md`, soundings' `split-decisions.mjs`. Requiring jig
+ * to hold a file at the path is what makes the finding mean something: two copies exist, and one
+ * of them was never supposed to.
+ */
+/**
+ * Derived through `toProject` rather than from a hand-listed set of paths, so it cannot disagree
+ * with the mapping it exists to invert. `scaffold/templates/**` has no mapping and so contributes
+ * its own unmapped path as a key nothing can match — inert by construction, and left that way on
+ * purpose: filtering it out would mean naming the mapped prefixes in a second place, which is the
+ * drift this derivation avoids.
+ */
+const scaffolded = new Set(templates.filter((r) => r.startsWith('scaffold/')).map(toProject))
+const notYours = []
+for (const rel of templates) {
+  if (classOf(rel) !== 'jig-only') continue
+  /**
+   * A scaffold installs to a path jig ALSO has its own unrelated file at, and jig's copy is
+   * jig-only. `scaffold/docs/SPEC.md` → `docs/SPEC.md`, where jig keeps the spec for jig; same for
+   * PROJECT_PLAN, RETROSPECTIVES and FUTURE_IDEAS. Four collisions, so without this every project
+   * gets four confident false findings on its first run — and they are the exact basename pair
+   * DEC-S049 proved must never be compared. The scaffold is `context`: the project owns what it
+   * filled in, and jig's file at that path is not a template for it.
+   */
+  if (scaffolded.has(rel)) continue
+  if (existsSync(join(PROJECT, rel))) notYours.push(rel)
+}
+
 const v = (p) => (existsSync(p) ? readFileSync(p, 'utf8').trim() : '?')
 const sv = v(join(JIG, 'jig-version'))
 const pv = v(join(PROJECT, '.claude', 'jig-version'))
@@ -362,6 +403,11 @@ if (missing.length) {
   console.log(`MISSING — no copy here, and nothing else reports it (${missing.length}):`)
   for (const p of missing.sort()) console.log(`  absent  ${p}`)
   console.log('  Contents are yours and are never compared. Only the absence is reported.\n')
+}
+if (notYours.length) {
+  console.log(`NOT YOURS — jig keeps these; a copy here is a silent fork (${notYours.length}):`)
+  for (const p of notYours.sort()) console.log(`  jig-only ${p}`)
+  console.log('  Nothing syncs them, so they drift until something they read changes underneath.\n')
 }
 show(`DRIFT — meant to be identical, and is not (${differs.length}):`, differs)
 show(`Also absent or unexpected (${other.length}) — often fine: one-time migrations, stack-specific tooling:`, other)
