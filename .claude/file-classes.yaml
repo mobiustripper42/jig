@@ -108,6 +108,20 @@ file-classes:
   # `logic` rather than `presence`: every project validates records against byte-identical rules,
   # and a repo quietly evolving its own schema is how records stop being comparable across repos.
   - "docs/decisions/decision-record.schema.json": logic
+
+  # THESE FOUR WERE CAUGHT BY `docs/**: jig-only`, WHICH CLAIMS A PROJECT NEVER HOLDS ONE.
+  # False for every project that has ever run `gen:decisions` or registered a term: muster and
+  # soundings each hold all four today. The claim was invisible while nothing looked at project-side
+  # copies of jig-only files; the moment drift.mjs did, it produced four false findings per repo.
+  #
+  # `context` is the honest class — each is generated from or written about the project's own
+  # corpus, so the project owns its version and differing is not just correct but the entire point.
+  # Comparing muster's 149-entry baseline against jig's would be claiming one of them is stale.
+  - "docs/DECISIONS.md": context
+  - "docs/decisions-baseline.txt": context
+  - "docs/dictionary.yml": context
+  - "docs/DICTIONARY.md": context
+
   - "docs/**": jig-only
 
   # ── Scaffolds — placeholders a project fills in once and then owns ───────────

@@ -140,6 +140,77 @@ describe('classification', () => {
   })
 })
 
+/**
+ * The second half of "present in the project, absent from the templates".
+ *
+ * The `skills`/`agents`/`output-styles` loop asks: the project has it, jig does not. This asks the
+ * other one: jig HAS it, jig keeps it, and the project holds a copy anyway. Neither subsumes the
+ * other, and only the first was ever built — so four copies of jig's own gate test suites sat in
+ * muster reporting `nothing differs` until a full `verify` went red on them.
+ */
+describe('a jig-only file the project holds a copy of', () => {
+  it('reports it in its own block, not among the harmless absences', () => {
+    // The bucket is the assertion. A bare path also appears in UNCLASSIFIED and in "also absent",
+    // and matching one of those would take this test green against the wrong mechanism entirely —
+    // which is exactly how PR #6's test passed while half its fix was missing.
+    const p = project({ 'scripts/check-context.test.mjs': 'stale copy of a jig test\n' })
+    const { out } = run(['--jig', JIG, p])
+    expect(out).toMatch(/NOT YOURS/)
+    expect(out).toMatch(/jig-only\s+scripts\/check-context\.test\.mjs/)
+  })
+
+  it('says nothing about a project script jig has no file at', () => {
+    // `scripts/**` is a jig-only CATCH-ALL, so classifying project paths directly would call every
+    // script a project wrote a retired jig file. muster's `gen-icons.mjs` and soundings'
+    // `split-decisions.mjs` are the real cases.
+    const p = project({ 'scripts/gen-icons.mjs': 'export default 1\n' })
+    const { out } = run(['--jig', JIG, p])
+    expect(out).not.toMatch(/gen-icons/)
+  })
+
+  it('says nothing about a doc whose template is a scaffold', () => {
+    // jig's own `docs/SPEC.md` is jig-only and sits at the path `scaffold/docs/SPEC.md` installs
+    // to. They are unrelated documents sharing a basename — the pair DEC-S049 proved must not be
+    // compared. Four docs collide this way; without the shadow set every project gets four
+    // confident false findings on its first run.
+    const p = project({ 'docs/SPEC.md': "this project's own spec\n" })
+    const { out } = run(['--jig', JIG, p])
+    expect(out).not.toMatch(/NOT YOURS/)
+  })
+
+  it('says nothing about a project\'s decision records', () => {
+    const p = project({ 'docs/decisions/DEC-001-a-choice.md': '---\nid: DEC-001\n---\n' })
+    const { out } = run(['--jig', JIG, p])
+    expect(out).not.toMatch(/DEC-001/)
+  })
+
+  it('says nothing about the generated index or the project\'s own dictionary', () => {
+    // Verified on disk: muster and soundings both hold all four. They were classed `jig-only`,
+    // which claims a project never has one — false for every project that has ever run
+    // `gen:decisions` or registered a term.
+    const p = project({
+      'docs/DECISIONS.md': '# Decisions\n',
+      'docs/decisions-baseline.txt': 'DEC-001 abc123\n',
+      'docs/dictionary.yml': 'terms: []\n',
+      'docs/DICTIONARY.md': '# Dictionary\n',
+    })
+    const { out } = run(['--jig', JIG, p])
+    expect(out).not.toMatch(/NOT YOURS/)
+  })
+
+  it('does not displace the question the skills loop asks', () => {
+    // Both blocks at once: a style jig does not ship, and a jig test suite the project should not
+    // hold. One check answering both would have to drop one of them.
+    const p = project({
+      '.claude/output-styles/house.md': '---\nname: House\n---\n',
+      'scripts/check-docs.test.mjs': 'stale\n',
+    })
+    const { out } = run(['--jig', JIG, p])
+    expect(out).toMatch(/\.claude\/output-styles\/house\.md\s+not a template/)
+    expect(out).toMatch(/jig-only\s+scripts\/check-docs\.test\.mjs/)
+  })
+})
+
 describe('what is deliberately not here', () => {
   it('does not gate by project type, because there is nothing to gate', () => {
     // Carried from seeds and removed: every manifest entry was `context` class, which this script
