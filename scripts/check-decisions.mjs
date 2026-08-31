@@ -371,7 +371,13 @@ export function supersessionProblems(rewritten, seenIds) {
   // The other direction: A claims it replaced B, and nobody ever told B.
   for (const [id, d] of rewritten) {
     if (selfPointing.has(id)) continue
-    for (const b of d.supersedes ?? []) {
+    // Deduped: `supersedes` declares no `uniqueItems`, so naming a record twice is schema-valid
+    // and an ordinary YAML copy/paste slip. It is one claim however many times it is written.
+    for (const b of new Set(d.supersedes ?? [])) {
+      // The incoming half of the self-pointer short-circuit. Loop 1 stopped looking at that
+      // record; without this, an unrelated claim drags it back and prints a second message about
+      // the same character.
+      if (selfPointing.has(b)) continue
       const target = rewritten.get(b)
       if (!target) {
         // Absent from the map AND absent from disk is a dangling claim. Absent from the map but
@@ -379,6 +385,14 @@ export function supersessionProblems(rewritten, seenIds) {
         if (!seenIds.has(b)) fail(d.path, `supersedes ${b}, which has no decision file`)
         continue
       }
+      /**
+       * ALREADY SAID BY RULE 1, and this is the likeliest shape of the whole defect: the new
+       * record written correctly, the old one never gone back to. Falling through to the
+       * reciprocity branch below printed `superseded_by undefined` and called a half that names
+       * nothing a disagreement between two named records — two messages for one omission, in the
+       * one case that actually happens.
+       */
+      if (target.status === 'superseded' && !target.superseded_by) continue
       if (target.status !== 'superseded') {
         fail(target.path, `status is \`${target.status}\`, but ${id} declares \`supersedes: [${b}]\` — flip it to \`superseded\` and set \`superseded_by: ${id}\``)
       } else if (target.superseded_by !== id) {

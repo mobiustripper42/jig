@@ -732,6 +732,43 @@ describe('supersession is a pair, or it is a dangling argument', () => {
     expect(msgs(m)).toEqual([expect.stringMatching(/itself/)])
   })
 
+  it('says the missing half once, when someone did claim the record', () => {
+    // THE MOST LIKELY SHAPE IN PRACTICE, and the one the isolated-record case above does not
+    // reach: the new record was written correctly and nobody went back to the old one. Rule 1
+    // already names it, so the reciprocity rule must not also complain — it would print
+    // `superseded_by undefined` and call a missing half a disagreement between two named records.
+    const m = corpus(rec('DEC-200', { supersedes: ['DEC-100'] }), rec('DEC-100', { status: 'superseded' }))
+    expect(msgs(m)).toHaveLength(1)
+    expect(msgs(m)[0]).toMatch(/no `superseded_by`/)
+    expect(msgs(m).join('\n')).not.toMatch(/undefined/)
+  })
+
+  it('says nothing extra about a self-pointer someone else also claims', () => {
+    // The incoming direction of the same typo. Loop 1 stops looking at the self-pointer; without
+    // the matching guard on the target side, an unrelated record's claim drags it back in.
+    const m = corpus(
+      rec('DEC-100', { status: 'superseded', superseded_by: 'DEC-100' }),
+      rec('DEC-300', { supersedes: ['DEC-100'] }),
+    )
+    expect(msgs(m)).toEqual([expect.stringMatching(/itself/)])
+  })
+
+  it('does not read a self-pointer\'s other claims either', () => {
+    // Pins the source-side guard, which was otherwise inert — every case that exercised it had no
+    // outgoing `supersedes` to skip, so deleting it changed nothing and the suite stayed green.
+    const m = corpus(
+      rec('DEC-100', { status: 'superseded', superseded_by: 'DEC-100', supersedes: ['DEC-050'] }),
+      rec('DEC-050'),
+    )
+    expect(msgs(m)).toEqual([expect.stringMatching(/itself/)])
+  })
+
+  it('says it once when a supersedes list names the same record twice', () => {
+    // Schema-valid — `supersedes` declares no `uniqueItems` — and an ordinary YAML copy/paste slip.
+    const m = corpus(rec('DEC-200', { supersedes: ['DEC-100', 'DEC-100'] }), rec('DEC-100'))
+    expect(msgs(m)).toHaveLength(1)
+  })
+
   it('rejects a superseded_by pointing at a record that is itself retired', () => {
     // Pre-existing rule, moved in with the rest. A chain is a thing a reader has to walk.
     const m = corpus(
