@@ -36,6 +36,7 @@ import {
   legacyVerdict,
   recordBody,
   sizeOf,
+  supersessionProblems,
   validateSchemaRecord,
 } from './check-decisions.mjs'
 
@@ -632,6 +633,113 @@ describe('the generator and the checker agree on what they are reading', () => {
     const crlf = '---\r\nschema: 1\r\nid: DEC-004\r\n---\r\n\r\n## DEC-004: T\r\n\r\nThe decision.\r\n'
     expect(recordBody(crlf)).toBe('\n## DEC-004: T\n\nThe decision.\n')
     expect(recordBody(crlf)).not.toContain('schema:')
+  })
+})
+
+/**
+ * Supersession is a PAIR, and the half that gets skipped is the one you have to go back for.
+ *
+ * `CLAUDE.md` states it: the new record carries `supersedes: [DEC-<id>]`, the old one flips to
+ * `status: superseded`. Writing the new record is the half you are already doing; returning to the
+ * old one is the half nothing enforced. Muster's DEC-107 is retired, carries its full original
+ * argument, and names no successor — and an agent hit it in a grep, read the title, and reported a
+ * spec contradiction that did not exist. Code cites it too, for the opposite of what it rules.
+ *
+ * Extracted as a pure function over the rewritten map so it can be tested at all. The
+ * `superseded_by` resolution below it moved in with the new rules and had no test before this —
+ * it could only run against the real corpus, which has never had a superseded record in it.
+ */
+describe('supersession is a pair, or it is a dangling argument', () => {
+  const rec = (id, extra = {}) => [id, { id, path: `docs/decisions/${id}-x.md`, status: 'active', ...extra }]
+  /** `seenIds` is every id on disk, including legacy files that never reach `rewritten`. */
+  const corpus = (...entries) => new Map(entries)
+  const ids = (m) => new Set(m.keys())
+  const msgs = (m, seen = ids(m)) => supersessionProblems(m, seen).map(([, msg]) => msg)
+  const paths = (m, seen = ids(m)) => supersessionProblems(m, seen).map(([p]) => p)
+
+  it('rejects a superseded record that names no successor', () => {
+    // muster's DEC-107 exactly. The record still greps, still quotes, and still reads as a live
+    // ruling to anything that finds it by title.
+    const m = corpus(rec('DEC-107', { status: 'superseded' }))
+    expect(msgs(m)).toEqual([expect.stringMatching(/superseded_by/)])
+    expect(paths(m)).toEqual(['docs/decisions/DEC-107-x.md'])
+  })
+
+  it('does not demand a successor for a withdrawn record', () => {
+    // `withdrawn` means retired with nothing replacing it. Demanding a pointer would force an
+    // invented one, which is worse than the gap it closes.
+    expect(msgs(corpus(rec('DEC-050', { status: 'withdrawn' })))).toEqual([])
+  })
+
+  it('rejects a one-sided pair, and reports it on the record that has to change', () => {
+    // A declares it; B never flipped. The fix is an edit to B, so the message lands on B's path
+    // and names A — pointing at A would name the file that is already correct.
+    const m = corpus(rec('DEC-200', { supersedes: ['DEC-100'] }), rec('DEC-100'))
+    expect(paths(m)).toEqual(['docs/decisions/DEC-100-x.md'])
+    expect(msgs(m)).toEqual([expect.stringMatching(/DEC-200 declares .*supersedes/)])
+  })
+
+  it('rejects a pair whose two halves name different records, on both files that need editing', () => {
+    // Two messages, not one, and that is the honest count: DEC-100 says it was replaced by
+    // DEC-201 while DEC-200 claims it replaced DEC-100. Three records disagree and there is no
+    // single one of them you can call wrong — so each gets the complaint that is actionable from
+    // where it sits, rather than one message asserting which of the three the author meant.
+    const m = corpus(
+      rec('DEC-200', { supersedes: ['DEC-100'] }),
+      rec('DEC-100', { status: 'superseded', superseded_by: 'DEC-201' }),
+      rec('DEC-201'),
+    )
+    expect(msgs(m).join('\n')).toMatch(/superseded_by DEC-201/)
+    expect(msgs(m).join('\n')).toMatch(/does not list DEC-100/)
+    expect(msgs(m)).toHaveLength(2)
+  })
+
+  it('rejects a successor that does not declare what it replaced', () => {
+    // The other direction: B points at A, A never listed B.
+    const m = corpus(rec('DEC-100', { status: 'superseded', superseded_by: 'DEC-200' }), rec('DEC-200'))
+    expect(paths(m)).toEqual(['docs/decisions/DEC-200-x.md'])
+    expect(msgs(m)).toEqual([expect.stringMatching(/does not list DEC-100/)])
+  })
+
+  it('accepts a pair whose halves agree', () => {
+    const m = corpus(
+      rec('DEC-200', { supersedes: ['DEC-100'] }),
+      rec('DEC-100', { status: 'superseded', superseded_by: 'DEC-200' }),
+    )
+    expect(msgs(m)).toEqual([])
+  })
+
+  it('says nothing about a frozen record it cannot ask anything of', () => {
+    // A frozen record is one editing fails the build over, so a rule demanding an edit to it is a
+    // rule with no compliant action — the trap the dictionary baseline already walked into. Frozen
+    // and legacy records never enter `rewritten`, so the exemption is structural rather than a
+    // list to maintain.
+    const m = corpus(rec('DEC-200', { supersedes: ['DEC-041'] }))
+    expect(msgs(m, new Set([...ids(m), 'DEC-041']))).toEqual([])
+  })
+
+  it('still catches a supersedes pointing at nothing at all', () => {
+    // Not in `rewritten` AND not on disk is a dangling reference, which is different from frozen.
+    const m = corpus(rec('DEC-200', { supersedes: ['DEC-999'] }))
+    expect(msgs(m)).toEqual([expect.stringMatching(/DEC-999/)])
+  })
+
+  it('rejects a record superseded by itself, and says it once', () => {
+    // A self-pointer makes three other rules true at the same time — the target is retired, the
+    // target does not list it, the chain never terminates — and all three are the same typo. One
+    // message, then stop looking at this record.
+    const m = corpus(rec('DEC-100', { status: 'superseded', superseded_by: 'DEC-100' }))
+    expect(msgs(m)).toEqual([expect.stringMatching(/itself/)])
+  })
+
+  it('rejects a superseded_by pointing at a record that is itself retired', () => {
+    // Pre-existing rule, moved in with the rest. A chain is a thing a reader has to walk.
+    const m = corpus(
+      rec('DEC-100', { status: 'superseded', superseded_by: 'DEC-200' }),
+      rec('DEC-200', { status: 'superseded', superseded_by: 'DEC-300', supersedes: ['DEC-100'] }),
+      rec('DEC-300', { supersedes: ['DEC-200'] }),
+    )
+    expect(msgs(m)).toEqual([expect.stringMatching(/whose status is superseded/)])
   })
 })
 
