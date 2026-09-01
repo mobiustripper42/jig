@@ -356,6 +356,53 @@ for (const rel of templates) {
   if (existsSync(join(PROJECT, rel))) notYours.push(rel)
 }
 
+/**
+ * A GATE THE PROJECT HOLDS AND NEVER RUNS.
+ *
+ * Muster took `check-denied.mjs` with the jig v6 sync and never added it to `verify`. Every other
+ * gate had been wired by the commit that created it; this one was not, and nothing noticed for
+ * three days. Drift reported the file byte-identical the whole time, and it was — the bytes were
+ * never the question. The gate was installed, correct, documented in the cheatsheet, and switched
+ * off.
+ *
+ * IT LIVES HERE RATHER THAN IN A GATE, and that is the entire argument for the placement: a check
+ * that runs inside `verify` cannot detect that `verify` never runs it. Only something looking from
+ * outside closes that hole, and this is the only thing that looks from outside.
+ *
+ * Still an enumerator, not a judge (DEC-S040). It reports that a gate jig ships is defined and
+ * unreferenced; it does not decide whether the project meant to leave it off. Scoped to gates JIG
+ * SHIPS for the same reason — a project's own tooling missing from its own `verify` is the
+ * project's business and not a difference from anything here.
+ *
+ * Known limit, stated rather than discovered: the parse is `npm run <name>` chains and nothing
+ * else. A gate reached indirectly through another script reads as absent, and so would one wired
+ * with `npm-run-all`, `run-s`, `yarn <script>` or bare `pnpm <script>` — that spelling would flag
+ * every gate at once, which is at least loud rather than silent. Acceptable while the fleet is
+ * plain `npm run` chains; revisit on the first project that is not.
+ */
+const gateScripts = new Set(
+  templates.filter((rel) => /^scripts\/check-[\w-]+\.mjs$/.test(rel) && classOf(rel) === 'logic'),
+)
+const notRun = []
+const pkgPath = join(PROJECT, 'package.json')
+if (existsSync(pkgPath)) {
+  let scripts = {}
+  try {
+    scripts = JSON.parse(readFileSync(pkgPath, 'utf8')).scripts ?? {}
+  } catch {
+    // A package.json this script cannot parse is not this script's finding to make. Every other
+    // tool in the project will say so louder, and guessing at a malformed file is how a differ
+    // starts having opinions.
+    scripts = {}
+  }
+  const referenced = new Set([...(scripts.verify ?? '').matchAll(/npm run ([\w:-]+)/g)].map((m) => m[1]))
+  for (const [name, cmd] of Object.entries(scripts)) {
+    if (name === 'verify') continue
+    if (![...gateScripts].some((g) => cmd.includes(g))) continue
+    if (!referenced.has(name)) notRun.push(name)
+  }
+}
+
 const v = (p) => (existsSync(p) ? readFileSync(p, 'utf8').trim() : '?')
 const sv = v(join(JIG, 'jig-version'))
 const pv = v(join(PROJECT, '.claude', 'jig-version'))
@@ -403,6 +450,11 @@ if (missing.length) {
   console.log(`MISSING — no copy here, and nothing else reports it (${missing.length}):`)
   for (const p of missing.sort()) console.log(`  absent  ${p}`)
   console.log('  Contents are yours and are never compared. Only the absence is reported.\n')
+}
+if (notRun.length) {
+  console.log(`NOT RUN — a gate this project holds and \`npm run verify\` never calls (${notRun.length}):`)
+  for (const n of notRun.sort()) console.log(`  gate    ${n}`)
+  console.log('  Installed, correct, and switched off. Add it to `verify`, or decide it does not apply here.\n')
 }
 if (notYours.length) {
   console.log(`NOT YOURS — jig keeps these; a copy here is a silent fork (${notYours.length}):`)

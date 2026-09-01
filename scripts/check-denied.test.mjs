@@ -9,7 +9,7 @@ import { describe, expect, it } from 'vitest'
 import { mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { check, deniedCommands, unsearchable } from './check-denied.mjs'
+import { check, deniedCommands, runbookProblems, unsearchable } from './check-denied.mjs'
 
 const dir = mkdtempSync(join(tmpdir(), 'denied-'))
 
@@ -133,5 +133,95 @@ describe('the run itself', () => {
 
   it('finds every distinct command on a line rather than stopping at the first', () => {
     expect(fired('```\nnpx a\ncurl b\nsed -i c\n```\n')).toEqual([2, 3, 4])
+  })
+})
+
+/**
+ * A runbook is documentation aimed at a PERSON, and this gate was built against jig's own docs,
+ * which have none. Muster is the first repo where it met one: nine `curl` smoke checks against a
+ * live domain and three quick-start installs, in `docs/DEPLOY.md`, `docs/HOSTING_MIGRATION.md`
+ * and `docs/RUNNING.md`. There is no rewording that clears them — the match is structural on
+ * purpose — so the only way out was deleting the code fence, which makes the runbook worse.
+ *
+ * The exemption goes in `.claude/doc-check.json`, which is project-owned and already carries
+ * per-file exemptions with reasons under `historical`. Reusing that file rather than inventing a
+ * marker syntax is the point: one place a project declares what its gates may skip.
+ *
+ * WHAT STOPS IT ROTTING is that an entry which exempts nothing FAILS. `check-docs.mjs` names the
+ * risk out loud — "reusing an exemption because it happens to silence the right lines is how an
+ * exemption list stops meaning anything" — and a list that must justify itself every run cannot
+ * quietly outlive the lines it was written for.
+ */
+describe('a runbook a person follows', () => {
+  const conf = (runbooks) => {
+    const p = join(dir, `cfg-${Math.random().toString(36).slice(2)}.json`)
+    writeFileSync(p, JSON.stringify({ runbooks }))
+    return p
+  }
+  const doc = (name, text) => {
+    const p = join(dir, name)
+    writeFileSync(p, text)
+    return p
+  }
+  const SMOKE = '# Deploy\n\n```bash\ncurl https://example.test/api/health\n```\n'
+
+  it('does not fail a file the project declared as a runbook', () => {
+    const path = doc('rb-ok.md', SMOKE)
+    expect(check(POLICY, [path], conf({ [path]: 'post-deploy smoke check, run by a person' })).problems).toEqual([])
+  })
+
+  it('still fails the same document when it is not declared', () => {
+    // The negative control. Without it, "exempt" and "the gate stopped working" look identical.
+    const path = doc('rb-undeclared.md', SMOKE)
+    expect(check(POLICY, [path], conf({})).problems).toHaveLength(1)
+  })
+
+  it('exempts only the file named, not its neighbours', () => {
+    const a = doc('rb-a.md', SMOKE)
+    const b = doc('rb-b.md', SMOKE)
+    expect(check(POLICY, [a, b], conf({ [a]: 'a reason' })).problems).toHaveLength(1)
+  })
+
+  it('fails an entry that exempts nothing, so the list cannot outlive its lines', () => {
+    const path = doc('rb-clean.md', '# Deploy\n\nNothing denied here.\n')
+    expect(runbookProblems(conf({ [path]: 'a reason' }), [path], POLICY)).toEqual([
+      expect.stringMatching(/exempts nothing/),
+    ])
+  })
+
+  it('fails an entry whose reason is missing or blank', () => {
+    const path = doc('rb-noreason.md', SMOKE)
+    expect(runbookProblems(conf({ [path]: '   ' }), [path], POLICY)).toEqual([expect.stringMatching(/reason/)])
+  })
+
+  it('fails an entry naming a file that does not exist', () => {
+    expect(runbookProblems(conf({ 'docs/GONE.md': 'a reason' }), [], POLICY)).toEqual([
+      expect.stringMatching(/does not exist/),
+    ])
+  })
+
+  it('is silent when a project declares no runbooks at all', () => {
+    // Every project that has never needed this — jig and soundings today.
+    expect(runbookProblems(conf({}), [], POLICY)).toEqual([])
+  })
+})
+
+describe('a runbook entry the gate would never have read anyway', () => {
+  const conf = (runbooks) => {
+    const p = join(dir, `cfg2-${Math.random().toString(36).slice(2)}.json`)
+    writeFileSync(p, JSON.stringify({ runbooks }))
+    return p
+  }
+
+  it('fails an entry for a file outside the gate\'s scope', () => {
+    // The hole in the anti-rot rule: an entry naming a file `check()` never scans exempts
+    // nothing and yet validates forever, because it exists and does spell a denied command.
+    // `docs/decisions/` is the live case — out of scope on purpose, since a record quotes a
+    // denied command to explain why it is denied.
+    const path = join(dir, 'rb-outofscope.md')
+    writeFileSync(path, '```bash\ncurl https://example.test\n```\n')
+    expect(runbookProblems(conf({ [path]: 'a reason' }), [], POLICY)).toEqual([
+      expect.stringMatching(/not.*(scope|gated)/i),
+    ])
   })
 })
