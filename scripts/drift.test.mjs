@@ -254,7 +254,9 @@ describe('a gate the project holds but never runs', () => {
     const { out } = run(['--jig', JIG, p])
     expect(out).toMatch(/NOT RUN/)
     expect(out).toMatch(/check:denied/)
-    expect(out).not.toMatch(/check:decisions\s+—/)
+    // Matched against the real `  gate    <name>` line. The first spelling of this assertion
+    // looked for an em dash the output never prints, so it could not fail whatever the code did.
+    expect(out).not.toMatch(/gate\s+check:decisions\b/)
   })
 
   it('says nothing when every gate it defines is in verify', () => {

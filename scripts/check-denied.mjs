@@ -235,6 +235,16 @@ export function runbookProblems(configPath = CONFIG, files = scope(), policyPath
       out.push(`${configPath} — runbook \`${path}\` does not exist`)
       continue
     }
+    /**
+     * An entry for a file this gate never reads exempts nothing and would have validated
+     * forever — the same rot the rule below exists to stop, one step earlier. `docs/decisions/`
+     * is the live case: out of scope on purpose, because a record quotes a denied command to
+     * explain why it is denied, so an entry naming one looks justified and does nothing.
+     */
+    if (!files.includes(path)) {
+      out.push(`${configPath} — runbook \`${path}\` is not gated by this check, so declaring it exempts nothing`)
+      continue
+    }
     if (!String(reason ?? '').trim()) {
       out.push(`${configPath} — runbook \`${path}\` has no reason. Say who runs these steps and why they cannot be a script`)
       continue
@@ -252,7 +262,11 @@ export function check(policyPath = POLICY, files = scope(), configPath = CONFIG)
   const runbooks = runbooksOf(configPath)
   const problems = []
   for (const path of files) {
-    if (path in runbooks) continue // declared as steps a person performs
+    // Whole-file, and deliberately: a runbook is a document whose commands are all performed by a
+    // person, so exempting it line by line would mean re-declaring every step. The cost is that a
+    // denied command added to a declared file later inherits the pass without re-justification —
+    // acceptable for a runbook, and the reason to declare the runbook rather than the directory.
+    if (path in runbooks) continue
     const text = readFileSync(path, 'utf8')
     for (const cmd of denied) {
       for (const line of spellings(text, cmd)) {

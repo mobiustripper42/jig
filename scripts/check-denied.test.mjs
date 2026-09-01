@@ -205,3 +205,23 @@ describe('a runbook a person follows', () => {
     expect(runbookProblems(conf({}), [], POLICY)).toEqual([])
   })
 })
+
+describe('a runbook entry the gate would never have read anyway', () => {
+  const conf = (runbooks) => {
+    const p = join(dir, `cfg2-${Math.random().toString(36).slice(2)}.json`)
+    writeFileSync(p, JSON.stringify({ runbooks }))
+    return p
+  }
+
+  it('fails an entry for a file outside the gate\'s scope', () => {
+    // The hole in the anti-rot rule: an entry naming a file `check()` never scans exempts
+    // nothing and yet validates forever, because it exists and does spell a denied command.
+    // `docs/decisions/` is the live case — out of scope on purpose, since a record quotes a
+    // denied command to explain why it is denied.
+    const path = join(dir, 'rb-outofscope.md')
+    writeFileSync(path, '```bash\ncurl https://example.test\n```\n')
+    expect(runbookProblems(conf({ [path]: 'a reason' }), [], POLICY)).toEqual([
+      expect.stringMatching(/not.*(scope|gated)/i),
+    ])
+  })
+})

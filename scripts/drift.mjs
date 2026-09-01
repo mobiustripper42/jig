@@ -374,8 +374,11 @@ for (const rel of templates) {
  * SHIPS for the same reason — a project's own tooling missing from its own `verify` is the
  * project's business and not a difference from anything here.
  *
- * Known limit, stated rather than discovered: `verify` is read for `npm run <name>` spellings, so
- * a gate reached indirectly through some other script reads as absent.
+ * Known limit, stated rather than discovered: the parse is `npm run <name>` chains and nothing
+ * else. A gate reached indirectly through another script reads as absent, and so would one wired
+ * with `npm-run-all`, `run-s`, `yarn <script>` or bare `pnpm <script>` — that spelling would flag
+ * every gate at once, which is at least loud rather than silent. Acceptable while the fleet is
+ * plain `npm run` chains; revisit on the first project that is not.
  */
 const gateScripts = new Set(
   templates.filter((rel) => /^scripts\/check-[\w-]+\.mjs$/.test(rel) && classOf(rel) === 'logic'),
