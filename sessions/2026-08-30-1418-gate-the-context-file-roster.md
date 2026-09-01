@@ -5,7 +5,7 @@ branch: task/gate-the-context-file-roster
 started: 2026-08-30T14:18:36Z
 ended:
 points:
-pr_numbers: [18, 19]
+pr_numbers: [18, 19, 20]
 status: open
 transcript: /home/eric/.claude/projects/-home-eric-jig/907444e1-3e5d-5014-89a2-b6693eebb5ae.jsonl
 ---
@@ -49,6 +49,29 @@ transcript: /home/eric/.claude/projects/-home-eric-jig/907444e1-3e5d-5014-89a2-b
 **Points:** 3
 **Branch:** task/supersession-must-be-a-pair
 **Opened at:** 2026-08-31T11:50:00Z
+
+## Task 3: Give a runbook somewhere to be declared, and report a gate nobody runs
+
+**Completed:**
+- `scripts/check-denied.mjs` — `runbooks` map in `.claude/doc-check.json` exempts a file whose commands are performed by a person. `runbookProblems()` fails an entry that does not exist, has a blank reason, is outside the gate's scope, or exempts nothing — so the list justifies itself on every run
+- `scripts/drift.mjs` — reports a gate the project defines that `verify` never calls. In drift and not in a gate, because a check inside `verify` cannot detect that `verify` never runs it
+- `.claude/CLAUDE-context.md` — one median-gap row: a sibling repo's state is `origin/main`, not its working tree
+- 13 new cases, 242/242 in `verify`
+
+**How this came up:** an unrelated muster session reported `check:denied` red on main. It turned out the gate shipped with jig v6 and muster never wired it into `verify` — installed, correct, documented, switched off for three days while drift reported the file byte-identical. It was. The bytes were never the question.
+
+**Scope discipline, badly:** I escalated a one-line `package.json` omission into an architecture three separate times — a marker syntax, "a project's verify chain is invisible to every check jig has" (false; `check-docs.mjs:373` reads it), and "jig cannot run its gates against a sibling". Each was wrong about the size. The user cut it back to what the evidence supported and that is what got built: ~15 lines in each of two scripts. **Note for next time: the first framing that arrives after a surprising report is the one to distrust.**
+
+**Code review:** 5 findings. Two real, both fixed. The exemption list had the exact hole it was built to close — an entry naming a file outside `scope()` exempted nothing and validated forever. And a test of mine could not fail: it asserted against an em dash the output never prints, confirmed by the reviewer mutating the code and watching it stay green. Three comment-level notes addressed.
+
+**Also found, not fixed:** the Blast-Radius Triggers table's first row is titled "Anything a project installs" and lists three globs, but `check-*.mjs` is `logic` and installs everywhere. The table is narrower than its own title. Worth its own issue.
+
+**Correction shipped:** PR #19's body claimed muster's DEC-107 and DEC-124 would go red on sync. Both are `withdrawn` on muster's `origin/main` and always were during this session — I read a 26-behind task branch. Correcting comment posted on that PR; the median-gap row above is the mechanism half.
+
+**PR:** [PR #20](https://github.com/mobiustripper42/jig/pull/20)
+**Points:** 5
+**Branch:** task/runbook-exemption-and-unwired-gates
+**Opened at:** 2026-09-01T14:05:00Z
 
 **Next Steps:**
 
