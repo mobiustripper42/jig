@@ -73,6 +73,30 @@ transcript: /home/eric/.claude/projects/-home-eric-jig/907444e1-3e5d-5014-89a2-b
 **Branch:** task/runbook-exemption-and-unwired-gates
 **Opened at:** 2026-09-01T14:05:00Z
 
+## Task 4: Sync the gates into muster and soundings
+
+**Not a jig task — two PRs in other repos, recorded here because this session did the work and nothing else would show it.** Their numbers are deliberately kept out of `pr_numbers:`, which `/retro` queries against jig's GitHub.
+
+**muster — [PR #882](https://github.com/mobiustripper42/muster/pull/882), `task/wire-the-denied-gate`:**
+- `check:denied` added to `verify`. It arrived with the jig v6 sync and was never wired, so it sat installed, correct and switched off while nothing ran it
+- Of the 15 findings: 4 were real. Three `npx playwright` → `./node_modules/.bin/playwright`; the ui-reviewer's port probe told the *agent* to run `curl`, now `npm run probe:ui` (exits 0 and prints `000` when nothing is listening — for a probe, down is an answer)
+- 11 declared under `runbooks` in `doc-check.json` across DEPLOY, HOSTING_MIGRATION and RUNNING — production smoke checks and quick-start installs, all person-run
+- Synced `check-denied.mjs` + `check-decisions.mjs`. Decision corpus passes the new supersession rules unchanged, 162 records
+- Also merged muster PR #880 on request after watching its CI green (e2e 29m33s)
+
+**soundings — [PR #93](https://github.com/mobiustripper42/soundings/pull/93), `task/sync-jig-gates`:**
+- Synced three scripts; jig was ahead on all of them, including the context-file roster check from jig PR #15 that soundings never picked up
+- **Syncing `check-docs.mjs` alone would have installed that gate inert** — a file with no roster declaration is never roster-checked. Declared `.claude/CLAUDE-context.md` too, and mutation-checked it: a `/pause-this` mention now goes red, and on `main` the same mutation passes silently
+- Needed no `runbooks` entry; review grepped every doc for person-only command shapes and found none. That is why this never surfaced in soundings
+
+**Code review:** ran on both. muster 2 cleanup findings, neither actioned, both explained in the PR. soundings 2, same. The soundings review turned up the finding that became issue #21.
+
+**Method note worth keeping:** every claim about these repos was read from `origin/main`, not the working tree. Both checkouts were parked on stale task branches — muster 26 commits behind — which is the mistake that put a false claim in PR #19 earlier this session.
+
+**Points:** 3
+**Branch:** n/a — work landed in muster and soundings
+**Opened at:** 2026-09-01T15:20:00Z
+
 **Next Steps:**
 
 **Context:**
