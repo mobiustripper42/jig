@@ -227,3 +227,62 @@ describe('what is deliberately not here', () => {
     expect(stripName(tool.out)).toBe(stripName(webapp.out))
   })
 })
+
+/**
+ * A gate the project HOLDS and never RUNS.
+ *
+ * Muster synced `check-denied.mjs` with jig v6 and never added it to `verify`. Every other gate
+ * was wired by the commit that created it; this one was not, and nothing noticed for three days —
+ * drift reported the file byte-identical the whole time, which it was. The bytes were never the
+ * question.
+ *
+ * IT HAS TO BE HERE RATHER THAN IN A GATE, and that is the whole argument: a check that runs
+ * inside `verify` cannot detect that `verify` does not run it. Only something looking from outside
+ * closes that hole, and drift is the only thing that looks from outside.
+ */
+describe('a gate the project holds but never runs', () => {
+  const pkg = (scripts) => JSON.stringify({ name: 'p', scripts }, null, 2)
+  const GATES = {
+    'check:decisions': 'node scripts/check-decisions.mjs',
+    'check:denied': 'node scripts/check-denied.mjs',
+  }
+
+  it('reports a gate that is defined and left out of verify', () => {
+    const p = project({
+      'package.json': pkg({ ...GATES, verify: 'npm run check:decisions && npm run test' }),
+    })
+    const { out } = run(['--jig', JIG, p])
+    expect(out).toMatch(/NOT RUN/)
+    expect(out).toMatch(/check:denied/)
+    expect(out).not.toMatch(/check:decisions\s+—/)
+  })
+
+  it('says nothing when every gate it defines is in verify', () => {
+    const p = project({
+      'package.json': pkg({ ...GATES, verify: 'npm run check:decisions && npm run check:denied' }),
+    })
+    expect(run(['--jig', JIG, p]).out).not.toMatch(/NOT RUN/)
+  })
+
+  it('reports every gate when there is no verify script at all', () => {
+    const p = project({ 'package.json': pkg(GATES) })
+    const { out } = run(['--jig', JIG, p])
+    expect(out).toMatch(/NOT RUN/)
+    expect(out).toMatch(/check:decisions/)
+    expect(out).toMatch(/check:denied/)
+  })
+
+  it('says nothing about a project with no package.json', () => {
+    // A markdown-only or domain project. Nothing to wire, so nothing to report.
+    expect(run(['--jig', JIG, project({})]).out).not.toMatch(/NOT RUN/)
+  })
+
+  it('ignores a script that is not one of the gates jig ships', () => {
+    // drift enumerates what a project's copies differ from jig. A project's own tooling being
+    // absent from verify is the project's business and not a difference from anything here.
+    const p = project({
+      'package.json': pkg({ ...GATES, lint: 'eslint .', verify: 'npm run check:decisions && npm run check:denied' }),
+    })
+    expect(run(['--jig', JIG, p]).out).not.toMatch(/lint/)
+  })
+})
