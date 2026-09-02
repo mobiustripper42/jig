@@ -48,6 +48,18 @@ file-classes:
   # not their tests.
   - "scripts/*.test.mjs": jig-only
   - "scripts/fixtures/**": jig-only
+
+  # A LIBRARY TWO SHIPPED GATES IMPORT, so it ships or they crash on a missing module.
+  # `check-decisions.mjs` and `check-dictionary.mjs` are both `logic` and both read decision
+  # records; this is the one definition of what "frozen" means, extracted so the second gate could
+  # honour it without importing the first. `scripts/**: jig-only` would have swallowed it and every
+  # project's `check:decisions` would fail at import — the same defect as the decision schema
+  # before PR #6, one directory over.
+  #
+  # The carve-out is this exact path, not `scripts/lib/**`: `prune-backups.mjs` beside it is
+  # imported only by `settings-policy.mjs`, which is jig-only, and `records.test.mjs` is a test
+  # suite a project runs no more than it runs the others.
+  - "scripts/lib/records.mjs": logic
   - "scripts/check-*.mjs": logic
   - "scripts/gen-*.mjs": logic
   - "scripts/**": jig-only
