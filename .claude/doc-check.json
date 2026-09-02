@@ -12,6 +12,10 @@
     "docs/CHEATSHEET.md": {
       "skills": true,
       "agents": false
+    },
+    "scaffold/docs/FUTURE_IDEAS.md": {
+      "skills": false,
+      "agents": "mentions"
     }
   },
   "historical": {

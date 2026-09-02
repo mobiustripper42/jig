@@ -288,3 +288,17 @@ describe('a gate the project holds but never runs', () => {
     expect(run(['--jig', JIG, p]).out).not.toMatch(/lint/)
   })
 })
+
+describe('which jig it compared against', () => {
+  /**
+   * A muster session opened and its briefing said `scripts/check-docs.mjs` differed from jig's
+   * template. The file was byte-identical to jig's `main` — the difference was an unfinished
+   * branch in the jig checkout. Every repo's session-open briefing reads this output, so
+   * "your copy is stale" and "somebody has work in progress over there" printed the same, and
+   * only the first is something a reader can act on.
+   */
+  it('names the branch and revision in the header', () => {
+    const { out } = run(['--jig', JIG, project({})])
+    expect(out).toMatch(/^jig at \S+ [0-9a-f]{7,}/m)
+  })
+})
