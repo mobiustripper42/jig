@@ -5,7 +5,7 @@ branch: task/gate-the-context-file-roster
 started: 2026-08-30T14:18:36Z
 ended:
 points:
-pr_numbers: [18, 19, 20, 22]
+pr_numbers: [18, 19, 20, 22, 23]
 status: open
 transcript: /home/eric/.claude/projects/-home-eric-jig/907444e1-3e5d-5014-89a2-b6693eebb5ae.jsonl
 ---
@@ -119,6 +119,27 @@ transcript: /home/eric/.claude/projects/-home-eric-jig/907444e1-3e5d-5014-89a2-b
 **Points:** 5
 **Branch:** task/catch-a-retired-agent-mention
 **Opened at:** 2026-09-01T22:40:00Z
+
+## Task 6: Make "frozen" mean frozen to every gate
+
+**Completed:**
+- `scripts/lib/records.mjs` — new. The record-format cluster moved out of `check-decisions.mjs`, plus `frozenRecords()`. `check-decisions` re-exports it, so its surface and all 91 of its tests are untouched
+- `scripts/check-dictionary.mjs` — `gatedFiles()` excludes frozen records; the ✓ line reports the count
+- `.claude/file-classes.yaml` — `scripts/lib/records.mjs` as `logic`. Without it `scripts/**: jig-only` swallows it and every project's `check:decisions` fails at import
+- 10 cases across two suites, 259/259 in `verify`
+
+**Why a new file rather than importing the gate that owns the baseline:** `check-decisions.mjs` imports the generator and reads `_config.json` at module scope, and `check-dictionary` currently degrades gracefully when that file is absent. Coupling one gate's ability to *run* to another gate's config is worse than one shipped file.
+
+**Scope was narrower than the issue's title.** "The others" is one gate — `check-denied` and `check-docs` both already exclude `docs/decisions/`. The shared lib is for the next gate, which is the issue's actual argument.
+
+**Frozen means listed AND unmodified.** An `edited` record already fails `check:decisions` and stays gated here; exempting it would be agreeing to ignore a file somebody changed. Proven by writing `frozenRecords` with bare membership first and watching that case break.
+
+**Code review:** 4 findings, all cleanup, all fixed. The one worth keeping: `gatedFiles`' own frozen filter had **no test** — every case went through `check()`, whose second filter absorbed anything the first got wrong, so a path-construction mismatch would have been invisible in the suite and in production. Now isolated and mutation-checked. Also: the CLI re-swept the corpus for a number `check()` had returned; `frozen: frozen.size` counts records that exist rather than records skipped; and the `archive/` omission was correct but unstated.
+
+**PR:** [PR #23](https://github.com/mobiustripper42/jig/pull/23)
+**Points:** 5
+**Branch:** task/frozen-means-frozen-everywhere
+**Opened at:** 2026-09-02T14:10:00Z
 
 **Next Steps:**
 
