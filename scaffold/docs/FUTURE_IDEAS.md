@@ -9,7 +9,7 @@ This is not a backlog you're committed to. It's a holding pen so a new idea can 
 - Don't design it here. A title + a sentence is enough to stop it rattling around your head.
 - When a batch is genuinely ready to fold in, that's a deliberate spec revision — not a drip.
 - Be honest in the "Verdict" column over time: most shiny objects are correctly *never built*.
-- `@ideas` tends this file — it captures, dedupes, cross-references, and keeps the index in sync.
+- Nothing tends this file for you. Dedupe it, cross-reference it, and keep the index below in sync by hand — or let it get untidy, which costs less than the tidying does.
 
 ## Prioritized index
 

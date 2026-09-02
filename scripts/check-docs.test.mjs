@@ -125,16 +125,49 @@ describe("checkRosters", () => {
     expect(failures[0]).toMatch(/pause-this/);
   });
 
-  it("refuses `agents: mentions` rather than accepting a value nothing acts on", () => {
-    // Review caught this shipping as a promise with nothing behind it: the config took the value
-    // and no code read it, so a retired `@agent` passed clean — the exact scenario the change was
-    // written to catch. There is no reverse check for agents, because `AGENT_MENTION` matches any
-    // `@word` and a real corpus is full of them (`@core` an import alias, `@theme` a CSS at-rule).
-    // Failing loudly is the honest state until a foreign-name list for agents exists.
-    const doc = [{ path: "X.md", text: "Reviewed by @pm." }];
-    const failures = checkRosters(doc, WORLD, { "X.md": { skills: false, agents: "mentions" } });
+  /**
+   * `agents: "mentions"` WAS REFUSED, AND THE REFUSAL WAS RIGHT UNTIL NOW. It shipped once as a
+   * value the config accepted and no code read — a rule that looks applied and is not, which is
+   * the class this gate exists to close. The refusal replaced it, with a stated condition:
+   * catching a retired `@agent` needs a foreign-name list of its own.
+   *
+   * This is that list, plus the thing the earlier reasoning missed. The objection was that
+   * `AGENT_MENTION` matches any `@word` and a real corpus is full of them. Measured across jig's
+   * whole gated set there are nine distinct names, and the noise is not import aliases — eight of
+   * the nine sit in RETIREMENT RECORDS (`docs/AGENTS.md`, `docs/ANALYSIS.md`, `docs/CHEATSHEET.md`)
+   * whose entire job is naming what was retired. A global rule would flag all eight to catch one.
+   *
+   * Per-file opt-in is what makes it work, and roster claims were already per-file. A retirement
+   * record declares nothing and stays silent; a file that claims its names are live has to mean it.
+   */
+  const MENTIONS = { "X.md": { skills: false, agents: "mentions" } };
+
+  it("`agents: mentions` accepts a doc naming an agent that exists", () => {
+    expect(checkRosters([{ path: "X.md", text: "Reviewed by @pm." }], WORLD, MENTIONS)).toEqual([]);
+  });
+
+  it("`agents: mentions` catches an agent retired out from under the text", () => {
+    // The live case: `scaffold/docs/FUTURE_IDEAS.md` shipped "`@ideas` tends this file" into every
+    // project, naming an agent `docs/ANALYSIS.md:35` records as decided against.
+    const doc = [{ path: "X.md", text: "`@ideas` tends this file and keeps the index in sync." }];
+    const failures = checkRosters(doc, WORLD, MENTIONS);
     expect(failures).toHaveLength(1);
-    expect(failures[0]).toMatch(/not implemented/);
+    expect(failures[0]).toMatch(/@ideas, which has no \.claude\/agents\//);
+  });
+
+  it("`agents: mentions` forgives a name the project declared foreign", () => {
+    // The escape hatch, and the reason it is a list rather than a heuristic: `@me` in a template
+    // is a placeholder, not a claim about an agent. Declaring it is a diff somebody reads.
+    const doc = [{ path: "X.md", text: "Assign to @me before handing off." }];
+    expect(checkRosters(doc, WORLD, MENTIONS, new Set(["me"]))).toEqual([]);
+  });
+
+  it("says nothing about a dead agent in a file that claims nothing", () => {
+    // The whole reason this is per-file. `docs/AGENTS.md` names @workout, @doc-consistency,
+    // @ideas and @tape-reader on purpose — it is the record OF their retirement. A gate that
+    // cannot tell that apart from a live claim is a gate nobody will leave switched on.
+    const doc = [{ path: "docs/AGENTS.md", text: "| `@tape-reader` | Read the tape, which is gone |" }];
+    expect(checkRosters(doc, WORLD, { "docs/AGENTS.md": { skills: false, agents: false } })).toEqual([]);
   });
 
   it("catches a roster naming a skill that does not exist", () => {

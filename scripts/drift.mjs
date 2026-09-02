@@ -19,6 +19,7 @@
  *   node scripts/drift.mjs            # defaults to cwd, run from inside a project
  */
 
+import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import { basename, join, resolve } from 'node:path'
 import { createHash } from 'node:crypto'
@@ -407,7 +408,35 @@ const v = (p) => (existsSync(p) ? readFileSync(p, 'utf8').trim() : '?')
 const sv = v(join(JIG, 'jig-version'))
 const pv = v(join(PROJECT, '.claude', 'jig-version'))
 
+/**
+ * WHICH JIG. This compares against the bytes in the jig checkout right now — its branch, and any
+ * uncommitted edit sitting in it — and until this line existed it never said so.
+ *
+ * The report that produced this: a muster session opened, its briefing said
+ * `scripts/check-docs.mjs differs from jig's template`, and the file was byte-identical to jig's
+ * `main`. The difference was an unfinished branch in the jig checkout. Every other repo's
+ * session-open briefing reads this output, so "your copy is stale" and "somebody has work in
+ * progress over there" were the same sentence, and the first is the one a reader acts on.
+ *
+ * Deliberately not a refusal or a warning. Comparing against a branch is exactly right when you
+ * are about to sync a project to work you have not merged yet; the defect was never saying which
+ * of the two you were looking at. Naming the revision is the whole fix.
+ */
+const jigRev = (() => {
+  try {
+    const at = (cmd) => execFileSync('git', ['-C', JIG, ...cmd], { encoding: 'utf8' }).trim()
+    const dirty = at(['status', '--porcelain']) ? ', uncommitted changes' : ''
+    return `${at(['rev-parse', '--abbrev-ref', 'HEAD'])} ${at(['rev-parse', '--short', 'HEAD'])}${dirty}`
+  } catch {
+    // Not a git checkout, or no git. A tarball copy of jig is a legitimate way to hold the
+    // templates, and refusing to report at all because provenance is unavailable would trade a
+    // useful comparison for a missing one.
+    return 'revision unknown'
+  }
+})()
+
 console.log(`\ndrift — ${basename(PROJECT)} vs jig`)
+console.log(`jig at ${jigRev}`)
 console.log(`jig-version ${pv} vs ${sv}${pv !== sv ? '  ← owes a migration' : ''}\n`)
 /**
  * Split, because the two groups need different amounts of attention. A file that DIFFERS is drift:
