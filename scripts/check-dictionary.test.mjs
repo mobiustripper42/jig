@@ -5,6 +5,9 @@
 // block asserts the real corpus passes — that IS the thing being guarded, and it is cheap.
 
 import { describe, expect, it } from 'vitest'
+import { mkdtempSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { ACRONYM, altPattern, check, excluded, loadDictionary, prose, render } from './check-dictionary.mjs'
 
 const FAMILIES = ['DATA', 'MSG', 'ROLE']
@@ -184,5 +187,52 @@ describe('the says-recursion self-reference hatch', () => {
     // The hatch forgives a term's definition mentioning the term itself, and nothing shorter.
     // Asserted against the live corpus, which must always be clean of this.
     expect(check().failures.filter((f) => f.includes('leans on'))).toEqual([])
+  })
+})
+
+/**
+ * A frozen decision record is one that editing fails the build over, so every rule this gate has
+ * is unactionable against it — both of them demand an edit.
+ *
+ * Muster is where the cost showed up: registering one term with a forbidden alternate produced 13
+ * failures, and 5 were inside DEC-041, DEC-077 and DEC-145, all frozen, one of them a record's own
+ * title. The sanctioned fix is converting three records to schema v1 — authoring `ruling`,
+ * `claims` and `revisit_if` apiece and retitling a decision — to register a single word.
+ *
+ * The dictionary's own baseline cannot absorb it: `gen-dictionary-baseline.mjs` writes `alt:` lines
+ * only for alternates of terms registered when it ran, and re-running it is the disarming its own
+ * header forbids. So the baseline carries an unstated ordering assumption — every forbidden
+ * alternate you will ever want must exist at adoption time — and in a 149-record corpus `not:` is
+ * effectively unavailable for anything new.
+ */
+describe('a frozen record this gate cannot ask anything of', () => {
+  const fixture = (text) => {
+    const dir = mkdtempSync(join(tmpdir(), 'dictfrozen-'))
+    const dict = join(dir, 'dictionary.yml')
+    writeFileSync(dict, '- term: tension\n  says: what a sensor reads\n')
+    const doc = join(dir, 'DEC-041-frozen.md')
+    writeFileSync(doc, text)
+    return { dict, doc }
+  }
+  const TEXT = 'The SCADA loop is the subject here.\n'
+
+  it('does not gate a record the decisions baseline froze', () => {
+    const { dict, doc } = fixture(TEXT)
+    const { failures } = check({ dict, files: [doc], frozen: new Set([doc]) })
+    expect(failures.filter((f) => f.includes('SCADA'))).toEqual([])
+  })
+
+  it('still gates the same record when it is not frozen', () => {
+    // The negative control. Without it, "exempt" and "the gate stopped working" look identical —
+    // and catching a word nobody registered is this gate's entire job.
+    const { dict, doc } = fixture(TEXT)
+    const { failures } = check({ dict, files: [doc], frozen: new Set() })
+    expect(failures).toContainEqual(expect.stringMatching(/SCADA/))
+  })
+
+  it('gates every file when nothing is frozen, which is jig\'s own corpus', () => {
+    const { dict, doc } = fixture(TEXT)
+    const { failures } = check({ dict, files: [doc] })
+    expect(failures).toContainEqual(expect.stringMatching(/SCADA/))
   })
 })
