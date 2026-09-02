@@ -5,7 +5,7 @@ branch: task/gate-the-context-file-roster
 started: 2026-08-30T14:18:36Z
 ended:
 points:
-pr_numbers: [18, 19, 20]
+pr_numbers: [18, 19, 20, 22]
 status: open
 transcript: /home/eric/.claude/projects/-home-eric-jig/907444e1-3e5d-5014-89a2-b6693eebb5ae.jsonl
 ---
@@ -96,6 +96,29 @@ transcript: /home/eric/.claude/projects/-home-eric-jig/907444e1-3e5d-5014-89a2-b
 **Points:** 3
 **Branch:** n/a — work landed in muster and soundings
 **Opened at:** 2026-09-01T15:20:00Z
+
+## Task 5: Catch a retired agent named in a shipped doc, and say which jig drift read
+
+**Completed:**
+- `scripts/check-docs.mjs` — `agents: "mentions"` implemented rather than refused, backed by `knownForeignAgents`. Reverse check runs for `"mentions"` and **not** `true`: those are opposite claims (disk→doc completeness vs doc→disk liveness), and `docs/AGENTS.md` honestly makes the first and not the second
+- `scaffold/docs/FUTURE_IDEAS.md` — the bug it was filed for, shipping into every project since the scaffold was written: *"`@ideas` tends this file"*, naming an agent `docs/ANALYSIS.md:35` records as decided against
+- `scripts/drift.mjs` — prints `jig at <branch> <sha>[, uncommitted changes]`. It compares against whatever the jig checkout holds and never said so
+- `.claude/doc-check.json`, both test suites — 8 cases, 249/249 in `verify`
+
+**Where it came from:** reviewing soundings PR #93 turned up `@ideas` in its context file with no agent behind it. Filed as issue #21, fixed here.
+
+**The design point worth keeping:** the deferral was recorded in the code — *"catching a retired `@agent` needs a foreign-name list of its own"* — and the list was the smaller half. The stated objection was that `AGENT_MENTION` matches any `@word` and a corpus is full of them. Measured: nine distinct names in jig's whole gated set, eight of them in **retirement records** whose job is naming what was retired. A global rule flags eight to catch one; per-file opt-in, which roster claims already were, flags one.
+
+**Learned from the corpus, not guessed:** running the reverse on `agents: true` turned jig's own gate red on three rows doing their job. That is what produced the `"mentions"`/`true` split rather than a rule I invented.
+
+**Code review:** 6 findings, 2 real, both fixed. The important one is a class, not an instance: I declared a roster for `scaffold/claude/CLAUDE-context.md` and it was **inert** — the file exists, `scaffold/claude/` is excluded from DOCS, `checkRosters` skipped it, nothing failed. I found it by hand-mutating the config; removing my entry fixed the instance and left the class open, so `checkRosterDocsExist` now fails a roster path that resolves but is not gated. Second: drift's git probes leaked `fatal:` to stderr on a commitless jig even though the fallback was correct.
+
+**Third occurrence in one session of "declared but never read"** — `check-denied`'s runbook list fails an entry that exempts nothing, then gained a scope check for the same reason, now this. At three it stopped being a note and became a check.
+
+**PR:** [PR #22](https://github.com/mobiustripper42/jig/pull/22)
+**Points:** 5
+**Branch:** task/catch-a-retired-agent-mention
+**Opened at:** 2026-09-01T22:40:00Z
 
 **Next Steps:**
 
