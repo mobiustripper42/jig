@@ -118,6 +118,13 @@ export function loadDictionary(path = DICT) {
  * Not specific to the dictionary, which is why the definition moved to a shared lib: this is the
  * shape of ANY check applied to a corpus containing frozen records, and muster froze 149 of them.
  */
+/**
+ * `[DECISIONS]` and not `docs/decisions/archive` — consistent with the sweep below, which has
+ * never recursed either. `check-decisions` uses `RECORD_DIRS` for the same concept and DOES read
+ * archive, so the two differ on purpose: each looks at what its own gate reads. A gate that starts
+ * reading `archive/` has to widen both, and copying this call verbatim would leak archived frozen
+ * records straight through.
+ */
 export function gatedFiles(frozen = frozenRecords([DECISIONS])) {
   const files = ['docs/SPEC.md', 'CLAUDE.md'].filter(existsSync)
   if (existsSync(DECISIONS)) {
@@ -258,6 +265,10 @@ export function check(inject) {
     else if (have !== want) fail(OUT, 'is stale — run `npm run gen:dictionary`')
   }
 
+  // `frozen.size` is how many frozen records EXIST, not how many this call skipped. The two are
+  // the same for every real invocation — which is the only path that reaches the ✓ line — and come
+  // apart only when a test injects `files`. Said here because the difference is invisible at the
+  // call site and a reader building on this return value would not expect it.
   return { failures, warnings, frozen: frozen.size }
 }
 
@@ -266,7 +277,8 @@ export function check(inject) {
 // printed nothing and exited 0, which `npm run verify` reads as a pass. jig installs into
 // arbitrary project checkouts, so that is a realistic path, not a hypothetical one.
 if (process.argv[1]?.endsWith('check-dictionary.mjs')) {
-  const { failures, warnings, frozen } = check()
+  const frozenSet = frozenRecords([DECISIONS])
+  const { failures, warnings, frozen } = check({ frozen: frozenSet })
   for (const w of warnings) console.log(`  ⚠ ${w}`)
   if (warnings.length) {
     console.log(`\n⚠ dictionary — ${warnings.length} grandfathered alternate${warnings.length === 1 ? '' : 's'} to clean up when convenient\n`)
@@ -282,5 +294,7 @@ if (process.argv[1]?.endsWith('check-dictionary.mjs')) {
   // like a gate with nothing to find, and the whole reason to skip them is that somebody decided
   // they are unreachable — a decision worth seeing every run.
   const fz = frozen ? `, ${frozen} frozen record${frozen === 1 ? '' : 's'} not gated` : ''
-  console.log(`✓ dictionary — ${entries.length} terms registered, ${gatedFiles().length} files gated${fz}, no unregistered vocabulary`)
+  // `gatedFiles()` bare would re-run the whole baseline parse and directory sweep `check()` just
+  // did. Harmless in one process and pure waste at muster's 149 records.
+  console.log(`✓ dictionary — ${entries.length} terms registered, ${gatedFiles(frozenSet).length} files gated${fz}, no unregistered vocabulary`)
 }

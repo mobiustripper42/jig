@@ -8,7 +8,7 @@ import { describe, expect, it } from 'vitest'
 import { mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { ACRONYM, altPattern, check, excluded, loadDictionary, prose, render } from './check-dictionary.mjs'
+import { ACRONYM, altPattern, check, excluded, gatedFiles, loadDictionary, prose, render } from './check-dictionary.mjs'
 
 const FAMILIES = ['DATA', 'MSG', 'ROLE']
 /** The frozen shout-list, as the committed baseline supplies it — uppercase, not lowercase.
@@ -234,5 +234,28 @@ describe('a frozen record this gate cannot ask anything of', () => {
     const { dict, doc } = fixture(TEXT)
     const { failures } = check({ dict, files: [doc] })
     expect(failures).toContainEqual(expect.stringMatching(/SCADA/))
+  })
+})
+
+describe('gatedFiles on its own', () => {
+  /**
+   * The frozen filter exists in TWO places — here and again in `check()`, because an injected file
+   * list bypasses this function entirely. Every frozen test above goes through `check()`, so the
+   * outer filter was absorbing anything this one got wrong: a relative-vs-absolute path mismatch
+   * in the `${DECISIONS}/${f}` construction would have been invisible, in production and in the
+   * suite both. Caught by review, not by me.
+   */
+  it('drops a frozen record from the list it returns', () => {
+    const all = gatedFiles(new Set())
+    const record = all.find((f) => f.startsWith('docs/decisions/'))
+    expect(record).toBeDefined() // the corpus has records to drop; otherwise this proves nothing
+    const kept = gatedFiles(new Set([record]))
+    expect(kept).not.toContain(record)
+    expect(kept).toHaveLength(all.length - 1)
+  })
+
+  it('returns everything when nothing is frozen', () => {
+    expect(gatedFiles(new Set())).toEqual(gatedFiles(new Set()))
+    expect(gatedFiles(new Set()).length).toBeGreaterThan(1)
   })
 })
