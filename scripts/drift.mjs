@@ -424,7 +424,12 @@ const pv = v(join(PROJECT, '.claude', 'jig-version'))
  */
 const jigRev = (() => {
   try {
-    const at = (cmd) => execFileSync('git', ['-C', JIG, ...cmd], { encoding: 'utf8' }).trim()
+    // stderr ignored, not inherited. These probes are EXPECTED to fail on a jig with no commits or
+    // no git, and the caught failure is handled below — but `execFileSync` passes the subprocess's
+    // stderr straight through, so `fatal: ambiguous argument 'HEAD'` printed above the banner of a
+    // report that then rendered correctly. Scary git internals in a clean report train a reader to
+    // skim it.
+    const at = (cmd) => execFileSync('git', ['-C', JIG, ...cmd], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim()
     const dirty = at(['status', '--porcelain']) ? ', uncommitted changes' : ''
     return `${at(['rev-parse', '--abbrev-ref', 'HEAD'])} ${at(['rev-parse', '--short', 'HEAD'])}${dirty}`
   } catch {

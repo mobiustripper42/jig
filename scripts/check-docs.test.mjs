@@ -297,3 +297,31 @@ describe("check — the real doc set", () => {
     expect(failures.join("\n")).toMatch(/scripts\/gone\.mjs/);
   });
 });
+
+describe("a roster declared for a document the gate never reads", () => {
+  /**
+   * THIRD TIME THIS CLASS SHOWED UP IN ONE SESSION, which is why it stopped being a note.
+   *
+   * `check-denied`'s runbook list fails an entry that exempts nothing; `runbookProblems` gained a
+   * scope check for the same reason. Then this branch declared a roster for
+   * `scaffold/claude/CLAUDE-context.md` — a real file, excluded from `DOCS` — and it was inert.
+   * `checkRosters` skips a roster it has no document for (`if (!doc) continue`), and
+   * `checkRosterDocsExist` only asked whether the path exists on disk. It does. Nothing failed.
+   *
+   * A declared rule nothing reads is the exact defect this gate exists to close, and it was
+   * caught by hand-mutating the config rather than by any check.
+   */
+  it("fails a roster path that exists but is outside the gated set", () => {
+    const failures = checkRosterDocsExist({ "scaffold/claude/CLAUDE-context.md": { skills: true } });
+    expect(failures).toEqual([expect.stringMatching(/not one of the documents this gate reads/)]);
+  });
+
+  it("says nothing about a roster path the gate does read", () => {
+    expect(checkRosterDocsExist({ "CLAUDE.md": { skills: true } })).toEqual([]);
+  });
+
+  it("still reports a roster path that does not exist at all", () => {
+    const failures = checkRosterDocsExist({ "docs/NO-SUCH-DOC.md": { skills: true } });
+    expect(failures).toEqual([expect.stringMatching(/does not exist/)]);
+  });
+});

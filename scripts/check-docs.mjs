@@ -361,10 +361,24 @@ export function checkExemptions() {
  * whole file exists to close, so the completeness claim needs its own assertion rather than
  * riding on a doc happening to be present.
  */
-export function checkRosterDocsExist() {
-  return Object.keys(ROSTERS)
-    .filter((p) => !existsSync(p))
-    .map((p) => `${p} — named in ${CONFIG} as a roster but does not exist`)
+export function checkRosterDocsExist(rosters = ROSTERS, docs = DOCS) {
+  const gated = new Set(docs)
+  return Object.keys(rosters).flatMap((p) => {
+    if (!existsSync(p)) return [`${p} — named in ${CONFIG} as a roster but does not exist`]
+    /**
+     * EXISTING ON DISK IS NOT ENOUGH, and this branch is here because a roster declared for
+     * `scaffold/claude/CLAUDE-context.md` was inert: the file is real, and `scaffold/claude/` is
+     * excluded from `DOCS`, so `checkRosters` hit `if (!doc) continue` and nothing failed
+     * anywhere. A declared rule nothing reads is precisely the defect this gate exists to close,
+     * and it was found by hand-mutating the config rather than by any check.
+     *
+     * Third time in one session for this shape — `check-denied`'s runbook list fails an entry that
+     * exempts nothing, then gained a scope check for the same reason. At three it stops being a
+     * note and becomes a rule.
+     */
+    if (!gated.has(p)) return [`${p} — named in ${CONFIG} as a roster but is not one of the documents this gate reads, so the claim is never checked`]
+    return []
+  })
 }
 
 /**
