@@ -141,6 +141,28 @@ transcript: /home/eric/.claude/projects/-home-eric-jig/907444e1-3e5d-5014-89a2-b
 **Branch:** task/frozen-means-frozen-everywhere
 **Opened at:** 2026-09-02T14:10:00Z
 
+## Task 7: Migrate sheepdog from seeds 5 to jig 6
+
+**Not a jig task — a PR in another repo, recorded here because this session did the work.** `/kill-this` could not ship it: it reads the current directory, jig's tree was clean, and its own rule is *no PR for no code*. `@code-review` ran, which is the part of that ritual that matters. Number kept out of `pr_numbers:`, which `/retro` queries against jig's GitHub.
+
+**sheepdog — [PR #63](https://github.com/mobiustripper42/sheepdog/pull/63), `task/migrate-to-jig-v6`, 51 files:**
+- 23 files updated or added, 11 removed (4 agents, 6 skills, and jig's own test suite this repo held), `jig-version 6`, `seeds-version` gone
+- `npm run verify` green: five doc gates, typecheck, lint, 364 tests, build. `drift` reports `nothing differs`
+- **66 retired-name references, 65 of them in files the copy overwrites.** The user predicted this before I measured it; only one needed hand-editing
+- **Dictionary authored by measuring, not guessing** — `target` (46 uses) beats `site` (23) and `host` (13). Four terms registered, four candidates rejected with reasons recorded in the file: `property` is also plain English, `tier` is a *different* concept (criticality, DEC-013), `probe` and `vantage` have three referents each
+- **The permission policy was at a quarter strength** — 16 deny rules against everyone else's 63. `settings-policy --write` surfaced 7 more findings on top of the original 10
+- **Three records blocked the parser** with a seeds-era `amends:` key. Not converted to v1: all ~2× the byte cap, and the excess is the evidence behind the alert-independence rule. Stripped the key, moved each relationship to `**See also**` — the move seeds made for its own 25 banners
+
+**Two wrong turns, both caught before landing:** I tried to patch jig's `LISTS` to accept `amends`, which would have undone a deliberate decision documented in a test — the throw *is* the migration signal. And my first strip regex ate a newline and welded `topic:` onto the closing `---`.
+
+**Code review:** 5 findings. Both bugs were mine and **neither was catchable by any gate**: a `**See also**` link to a filename I invented (`check:decisions` validates ids, not link targets), and the gate command filed where `/kill-this` does not look. The second is a jig defect — **jig's own context file contradicts its scaffold**, which says name the gate under `## Commands`; I copied the habit rather than the instruction.
+
+**Also found, not fixed:** `CLAUDE.md` sits in the dictionary's gated set but is jig's shell, replaced wholesale and not a project's to edit — a future sync adding a seventh generic "test" fails `check:dictionary` for a reason unrelated to the project's vocabulary.
+
+**Points:** 8
+**Branch:** task/migrate-to-jig-v6 (sheepdog)
+**Opened at:** 2026-09-08T14:05:00Z
+
 **Next Steps:**
 
 **Context:**
