@@ -5,7 +5,7 @@ branch: task/gate-the-context-file-roster
 started: 2026-08-30T14:18:36Z
 ended:
 points:
-pr_numbers: [18, 19, 20, 22, 23, 27]
+pr_numbers: [18, 19, 20, 22, 23, 27, 28]
 status: open
 transcript: /home/eric/.claude/projects/-home-eric-jig/907444e1-3e5d-5014-89a2-b6693eebb5ae.jsonl
 ---
@@ -188,6 +188,25 @@ transcript: /home/eric/.claude/projects/-home-eric-jig/907444e1-3e5d-5014-89a2-b
 **Points:** 3
 **Branch:** task/archive-keeps-references-resolving
 **Opened at:** 2026-09-09T13:20:00Z
+
+## Task 9: Adopt muster's lint fix, and stop a test depending on the branch name
+
+**Completed:**
+- `scripts/check-decisions.mjs` — dropped the unused `createHash` import (left behind when the record-format cluster moved to `scripts/lib/records.mjs`), and adopted muster's `eslint-disable-next-line` for the re-exported `fingerprint` specifier (muster issue #908). jig's copy now differs from muster's only by PR #27's archive hunks.
+- `scripts/drift.test.mjs:288` — the `/lint/` assertion matched drift's provenance header, which prints jig's branch name, so the test went red purely because this branch is `task/adopt-musters-lint-fix`. Scoped to `/gate\s+lint\b/`, the shape its neighbour at `:259` already uses.
+
+**Found by:** muster's eslint, which lints `scripts/check-*.mjs`. jig has no eslint config at all, so neither line was visible here — a fix that can only be found downstream and can only be made upstream.
+
+**Proof:** mutated `drift.mjs:402` to drop the `gateScripts` filter — the tightened assertion went red and was the only one that moved; reverted. The `createHash` removal proves itself by `node scripts/check-decisions.mjs` still running.
+
+**Code review:** Clean — @code-review verified `createHash` has no remaining refs, `fingerprint` is genuinely re-exported at `:162`, the disable comment's position is valid inside a specifier list, and the tightened regex still matches `drift.mjs:490`'s output.
+
+**Noted, not acted on:** `.claude/CLAUDE-context.md:79` names the trigger "Anything a project installs" but lists only `.claude/agents/**`, `.claude/skills/**` and `CLAUDE.md` — omitting every `logic`-class script, which projects also install. The row's name covers more than its path list.
+
+**PR:** [PR #28](https://github.com/mobiustripper42/jig/pull/28)
+**Points:** 1
+**Branch:** task/adopt-musters-lint-fix
+**Opened at:** 2026-09-09T17:20:00Z
 
 **Next Steps:**
 
