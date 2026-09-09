@@ -11,6 +11,7 @@
 // against — a muted guard is worse than none, because the docs claim it is covered.
 
 import { describe, expect, it } from "vitest";
+import { existsSync, mkdirSync, renameSync } from "node:fs";
 import {
   DOCS,
   HISTORICAL,
@@ -323,5 +324,51 @@ describe("a roster declared for a document the gate never reads", () => {
   it("still reports a roster path that does not exist at all", () => {
     const failures = checkRosterDocsExist({ "docs/NO-SUCH-DOC.md": { skills: true } });
     expect(failures).toEqual([expect.stringMatching(/does not exist/)]);
+  });
+});
+
+describe("a doc citing a record that has been archived", () => {
+  /**
+   * TWO GATES RESOLVE `DEC-xxx`, AND ONLY ONE OF THEM LEARNED ABOUT `archive/`.
+   *
+   * `check-decisions` was taught to resolve citations against `docs/decisions/archive/`, which is
+   * what made archiving usable at all. This gate resolves the same ids in every OTHER document —
+   * `CLAUDE.md`, `SPEC.md`, the guides — and it builds its id set from `load()`, which reads the
+   * record directory non-recursively. So the fix covered records citing an archived record and
+   * missed documents citing one, which is the larger half by a wide margin.
+   *
+   * Measured in muster before this landed: archiving `DEC-038` left `check:decisions` green at 164
+   * records and turned `check:docs` red with six findings — four in `SPEC.md`, two in
+   * `FUTURE_IDEAS.md`. A project could archive a record, watch the gate it expected to care say
+   * yes, and be stopped by a different one.
+   *
+   * Run against the real corpus rather than a fixture, because the defect is in how the DEFAULT
+   * world is built. `check(docs, world)` takes an injected `world`, so every fixture-based test in
+   * this file passes an id set directly and cannot see this. `CLAUDE.md:61` citing `DEC-J005` is a
+   * real pair on disk. Restored in `finally`, so a failure here cannot leave the record moved.
+   */
+  it("resolves, the same as it does for a record citing one", () => {
+    const src = "docs/decisions/DEC-J005-amending-a-record-in-place-is-retired.md";
+    const dstDir = "docs/decisions/archive";
+    const dst = `${dstDir}/DEC-J005-amending-a-record-in-place-is-retired.md`;
+    mkdirSync(dstDir, { recursive: true });
+    // A clear message beats ENOENT if a previous run was killed between the move and the finally.
+    if (!existsSync(src) && existsSync(dst)) {
+      throw new Error(`${dst} is still in archive/ from an interrupted run — move it back to ${src}`);
+    }
+    renameSync(src, dst);
+    try {
+      // `docs/DECISIONS.md` is deliberately NOT regenerated: this gate does not read the generated
+      // index (that is `check-decisions`' job), so regenerating would mutate a tracked file and
+      // assert nothing. Before the fix this filter returned exactly
+      // `CLAUDE.md:61 — cites DEC-J005, which has no decision file`.
+      expect(check().filter((f) => /DEC-J005/.test(f))).toEqual([]);
+    } finally {
+      // Move the record back and leave the DIRECTORY alone. `archive/` is tracked — it holds a
+      // `.gitkeep` so `CLAUDE.md` can cite it and `check:context` can resolve it — and an earlier
+      // teardown in the sibling suite removed it recursively, turning `check:context` red on the
+      // very sentence that branch had added.
+      renameSync(dst, src);
+    }
   });
 });
