@@ -538,6 +538,34 @@ export function check() {
     }
   }
 
+  /**
+   * AN ARCHIVED RECORD STILL EXISTS — it is only unindexed.
+   *
+   * `load()` reads `DIR` non-recursively, which is exactly right for building `DECISIONS.md`:
+   * that non-recursion is the whole mechanism by which `docs/decisions/archive/` shortens an
+   * index that has grown too long to load. It was wrong as the set that CITATIONS resolve
+   * against, and that made `archive/` unusable from the day `RECORD_DIRS` named it.
+   *
+   * Archiving broke every citation of the archived record, and the records that cite a dead one
+   * are almost always the two closest to it — the one it superseded and the one that superseded
+   * it, which is the pair a retirement produces. Measured in muster: removing DEC-038, a
+   * click-through log that was never a decision, created four dangling references in DEC-031 and
+   * DEC-039. Both frozen, and both citations correct — "supersedes the DEC-038 single
+   * always-bailing Remove button" is history doing its job. The corpus could not shed a record
+   * that was never a decision without converting two records nobody had a complaint about.
+   *
+   * This is why archiving rather than deletion is the retirement path: a citation to a deleted
+   * record genuinely points at nothing, while a citation to an archived one still lands on a file.
+   */
+  const resolvable = new Set(decisions.keys())
+  for (const dir of RECORD_DIRS) {
+    if (dir === DIR || !existsSync(dir)) continue
+    for (const f of readdirSync(dir).filter((f) => f.startsWith('DEC-') && f.endsWith('.md'))) {
+      const id = idOf(frontmatterBlock(readFileSync(`${dir}/${f}`, 'utf8')))
+      if (id) resolvable.add(id)
+    }
+  }
+
   // Every decision id mentioned in a decision file or the index resolves to a real decision.
   const sources = [
     ...readdirSync(DIR)
@@ -548,7 +576,7 @@ export function check() {
   for (const [path, text] of sources) {
     text.split('\n').forEach((line, i) => {
       for (const ref of line.matchAll(REFERENCE)) {
-        if (!decisions.has(ref[0])) fail(`${path}:${i + 1}`, `reference to ${ref[0]}, which has no decision file`)
+        if (!resolvable.has(ref[0])) fail(`${path}:${i + 1}`, `reference to ${ref[0]}, which has no decision file`)
       }
     })
   }

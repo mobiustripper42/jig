@@ -14,8 +14,10 @@
 // Drop this file if the project has no test runner — the scripts stand alone.
 
 import { describe, expect, it } from 'vitest'
+import { mkdirSync, renameSync } from 'node:fs'
 import {
   TOPICS,
+  generate,
   compareDecisionIds,
   parseFrontmatter,
   rank,
@@ -825,5 +827,53 @@ describe('the frontmatter predicates the sweep runs on', () => {
     expect(idOf('id: DEC-J042\ntitle: "T"\n')).toBe('DEC-J042')
     expect(idOf('schema: 1\nid: DEC-J107a\nstatus: active\n')).toBe('DEC-J107a')
     expect(idOf('title: "no id here"\n')).toBeUndefined()
+  })
+})
+
+describe('a record in archive/ that a live record cites', () => {
+  /**
+   * `docs/decisions/archive/` has existed as a concept since `RECORD_DIRS` was written, and could
+   * not be used. Archiving a record broke every citation of it — and the records that cite a dead
+   * one are almost always the two most closely related: the one it superseded and the one that
+   * superseded it, which is exactly the pair a retirement produces.
+   *
+   * Measured in muster: removing DEC-038, a click-through log that was never a decision, created
+   * four dangling references in DEC-031 and DEC-039. Both are frozen and both citations are
+   * correct — "supersedes the DEC-038 single always-bailing Remove button" is history doing its
+   * job. So the corpus could not shed a record that was never a decision without converting two
+   * records nobody had a complaint about.
+   *
+   * The index generator stays non-recursive; that is what keeps an archived record out of
+   * `DECISIONS.md` and is the whole point. Only the reference resolver was wrong: it read `DIR`
+   * alone while `RECORD_DIRS` two hundred lines above it already knew `archive/` exists. An
+   * archived record still exists — it is just not indexed.
+   *
+   * Run against the real corpus rather than a fixture, because the pair has to be real: DEC-J005
+   * cites DEC-J004. Restored in `finally`, so a failure here cannot leave the record moved.
+   */
+  it('still resolves, while dropping out of the generated index', () => {
+    const src = 'docs/decisions/DEC-J004-records-predating-schema-v1-are-frozen.md'
+    const dstDir = 'docs/decisions/archive'
+    const dst = `${dstDir}/DEC-J004-records-predating-schema-v1-are-frozen.md`
+    mkdirSync(dstDir, { recursive: true })
+    renameSync(src, dst)
+    try {
+      // The index must NOT carry it — that is what archiving is for.
+      expect(generate().index).not.toMatch(/DEC-J004/)
+      // …and DEC-J005's citation of it must NOT be reported as dangling.
+      // Record files only. The on-disk index still names DEC-J004 because this test does not
+      // regenerate it — in real use `npm run gen:decisions` follows the move, and the
+      // `generate()` assertion above already proves the fresh index drops it.
+      const dangling = check().filter(
+        (f) => /reference to DEC-J004/.test(f) && !f.startsWith('docs/DECISIONS.md'),
+      )
+      expect(dangling).toEqual([])
+    } finally {
+      // Move the record back and leave the DIRECTORY alone. `archive/` is tracked (it holds a
+      // `.gitkeep` so `CLAUDE.md` can cite it and `check:context` can resolve it), and an earlier
+      // version of this finally block removed it recursively — so running the suite deleted a
+      // tracked directory and turned `check:context` red on the very sentence this fix added.
+      renameSync(dst, src)
+    }
   })
 })
