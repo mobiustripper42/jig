@@ -5,7 +5,7 @@ branch: task/gate-the-context-file-roster
 started: 2026-08-30T14:18:36Z
 ended:
 points:
-pr_numbers: [18, 19, 20, 22, 23, 27, 28]
+pr_numbers: [18, 19, 20, 22, 23, 27, 28, 29]
 status: open
 transcript: /home/eric/.claude/projects/-home-eric-jig/907444e1-3e5d-5014-89a2-b6693eebb5ae.jsonl
 ---
@@ -207,6 +207,27 @@ transcript: /home/eric/.claude/projects/-home-eric-jig/907444e1-3e5d-5014-89a2-b
 **Points:** 1
 **Branch:** task/adopt-musters-lint-fix
 **Opened at:** 2026-09-09T17:20:00Z
+
+## Task 10: Teach the other gate that resolves DEC ids about archive/ too
+
+**Completed:**
+- `scripts/lib/records.mjs` — new `archivedIds(dirs)`, the scan both citation resolvers now share.
+- `scripts/check-decisions.mjs` — PR #27's inline loop replaced by the shared call; new `ARCHIVE_DIRS` export so the `!== DIR` filter exists once instead of at two call sites in two files.
+- `scripts/check-docs.mjs:413` — the default world's id set is now `load()` **plus** `archivedIds(ARCHIVE_DIRS)`.
+- `scripts/check-docs.test.mjs` — new case against the real corpus.
+
+**The defect:** two gates resolve `DEC-xxx` and PR #27 widened one. `check-decisions` covers citations inside record files; `check-docs` covers the same ids in `CLAUDE.md`, `SPEC.md` and every other document — the larger half, and the one that was missed. Measured in muster: archiving `DEC-038` left `check:decisions` green at 164 records and turned `check:docs` red with 6 findings (`SPEC.md:901, :905, :1020, :1106`, `FUTURE_IDEAS.md:57, :123`).
+
+**Proof:** test-first. Every existing case in `check-docs.test.mjs` injects its own `world`, so none of them could see a defect that lives in how the *default* world is built. The new case runs against the real corpus and was watched failing with exactly `CLAUDE.md:61 — cites DEC-J005, which has no decision file`. Surface check archived `DEC-J005` for real: both gates green after, index correctly 5 → 4.
+
+**Code review:** Clean — verified no import cycle (ran the script under plain node *and* vitest, per the known transform-vs-node gotcha), that `archivedIds` is both locally imported and re-exported, that the refactor keeps the missing-`archive/` tolerance, and that the test leaves `git status` empty with `.gitkeep` intact.
+
+**Noted twice now:** `.claude/CLAUDE-context.md:79` names the trigger "Anything a project installs" but lists only `.claude/agents/**`, `.claude/skills/**` and `CLAUDE.md` — omitting every `logic`-class script. Wants a one-line fix.
+
+**PR:** [PR #29](https://github.com/mobiustripper42/jig/pull/29)
+**Points:** 2
+**Branch:** task/check-docs-resolves-archived-records
+**Opened at:** 2026-09-09T17:55:00Z
 
 **Next Steps:**
 
