@@ -285,7 +285,11 @@ describe('a gate the project holds but never runs', () => {
     const p = project({
       'package.json': pkg({ ...GATES, lint: 'eslint .', verify: 'npm run check:decisions && npm run check:denied' }),
     })
-    expect(run(['--jig', JIG, p]).out).not.toMatch(/lint/)
+    // Scoped to the real `  gate    <name>` row, not a bare /lint/ over the whole output. The
+    // provenance header prints jig's branch name, so the loose spelling failed on a branch that
+    // happened to be called `task/adopt-musters-lint-fix` — a gate whose colour depends on what
+    // you named your branch. Same defect the assertion at the end of the previous block fixed.
+    expect(run(['--jig', JIG, p]).out).not.toMatch(/gate\s+lint\b/)
   })
 })
 
