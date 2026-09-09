@@ -5,7 +5,7 @@ branch: task/gate-the-context-file-roster
 started: 2026-08-30T14:18:36Z
 ended:
 points:
-pr_numbers: [18, 19, 20, 22, 23]
+pr_numbers: [18, 19, 20, 22, 23, 27]
 status: open
 transcript: /home/eric/.claude/projects/-home-eric-jig/907444e1-3e5d-5014-89a2-b6693eebb5ae.jsonl
 ---
@@ -162,6 +162,32 @@ transcript: /home/eric/.claude/projects/-home-eric-jig/907444e1-3e5d-5014-89a2-b
 **Points:** 8
 **Branch:** task/migrate-to-jig-v6 (sheepdog)
 **Opened at:** 2026-09-08T14:05:00Z
+
+## Task 8: Let a record be archived without breaking the citations that name it
+
+**Completed:**
+- `scripts/check-decisions.mjs` — a `resolvable` set spanning every `RECORD_DIRS` entry, so a citation to an archived record still resolves; `sources` widened so citations written *inside* an archived record are checked too
+- `CLAUDE.md` — `--exclude-dir=archive` on the search line, a paragraph documenting what `archive/` is for, and a corrected citation
+- `docs/decisions/archive/.gitkeep`, `scripts/check-decisions.test.mjs` — 260/260 in `verify`
+
+**Where it came from:** the operator's decision index had grown too long for Sonnet to load, so the corpus was split — but there was no way to make a dead record go away. A brief arrived from muster asking for a *withdraw exemption*; it named its own hole, which is that a status tag does not stop `grep -rli` returning the file.
+
+**The answer was already half-built.** `archive/` has been in `RECORD_DIRS` since it was written and was unusable, because archiving broke every citation of the archived record — and the records citing a dead one are the two closest to it, its predecessor and its successor. The index generator's non-recursion is not a bug; it is the mechanism. Only the resolver was wrong.
+
+**Measured before proposing:** removing muster's DEC-038 creates four dangling references in DEC-031 and DEC-039, both frozen, both citations correct. Fixing it their way meant converting two records nobody had a complaint about, at 4,153 and 2,726 bytes against a 2,000 cap.
+
+**Code review:** 3 findings. The important one is a gap *this PR opened* — `sources` read `DIR` only, so a citation written inside an archived record was never checked; harmless while `archive/` was empty, live the moment archiving works. Mutation-checked both halves. Also fixed a wrong citation in `CLAUDE.md`: DEC-J004 was credited with DEC-J005's holding, in the document that governs citing. **I nearly "corrected" the reviewer on that one** — my first verification printed the two titles in the wrong order.
+
+**Security review ran** (`CLAUDE.md` is a blast-radius trigger): 0 findings. Its useful correction was that `archive/` was already read on `main` via `sweep()`, including through js-yaml — this diff adds a strictly weaker parse and no new surface.
+
+**Three things the gates caught mid-build:** a backticked path in `CLAUDE.md` is a claim `check:context` enforces; `archive/` may hold only records, so a README there fails as an unrecognised decision file; and an early version of the test deleted `archive/` recursively in teardown, wiping the tracked `.gitkeep` and reddening the very sentence the PR adds.
+
+**Left open deliberately:** issue #26 step 4 — whether an archived record may be edited. DEC-038 is frozen, so even archived it cannot be trimmed to a signpost. That wants a decision record, not code.
+
+**PR:** [PR #27](https://github.com/mobiustripper42/jig/pull/27)
+**Points:** 3
+**Branch:** task/archive-keeps-references-resolving
+**Opened at:** 2026-09-09T13:20:00Z
 
 **Next Steps:**
 
