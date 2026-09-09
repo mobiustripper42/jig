@@ -14,7 +14,7 @@
 // Drop this file if the project has no test runner — the scripts stand alone.
 
 import { describe, expect, it } from 'vitest'
-import { mkdirSync, renameSync } from 'node:fs'
+import { existsSync, mkdirSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import {
   TOPICS,
   generate,
@@ -856,6 +856,10 @@ describe('a record in archive/ that a live record cites', () => {
     const dstDir = 'docs/decisions/archive'
     const dst = `${dstDir}/DEC-J004-records-predating-schema-v1-are-frozen.md`
     mkdirSync(dstDir, { recursive: true })
+    // A clear message beats ENOENT if a previous run was killed between the move and the finally.
+    if (!existsSync(src) && existsSync(dst)) {
+      throw new Error(`${dst} is still in archive/ from an interrupted run — move it back to ${src}`)
+    }
     renameSync(src, dst)
     try {
       // The index must NOT carry it — that is what archiving is for.
@@ -868,6 +872,25 @@ describe('a record in archive/ that a live record cites', () => {
         (f) => /reference to DEC-J004/.test(f) && !f.startsWith('docs/DECISIONS.md'),
       )
       expect(dangling).toEqual([])
+
+      // …and a citation written INSIDE an archived record is still checked. Making references TO
+      // archive durable without reading the ones FROM it would fix half the defect: a record can
+      // now sit there for years, so a citation that rots inside one would never be reported.
+      const stray = `${dstDir}/DEC-J900-scratch.md`
+      writeFileSync(
+        stray,
+        '---\nschema: 1\nid: DEC-J900\ntitle: "Scratch"\ntopic: ' +
+          JSON.stringify(TOPICS[0]) +
+          '\nstatus: "active"\ndate: "2026-09-09"\nruling: "Scratch record, removed by this test."\n' +
+          'claims:\n  - kind: "file"\n    target: "scratch"\n' +
+          'revisit_if: "Never — this file does not outlive the assertion below."\n---\n\n' +
+          '## DEC-J900: Scratch\n\nCites DEC-J998, which does not exist.\n',
+      )
+      try {
+        expect(check().join('\n')).toMatch(/DEC-J900-scratch\.md.*reference to DEC-J998/)
+      } finally {
+        rmSync(stray, { force: true })
+      }
     } finally {
       // Move the record back and leave the DIRECTORY alone. `archive/` is tracked (it holds a
       // `.gitkeep` so `CLAUDE.md` can cite it and `check:context` can resolve it), and an earlier

@@ -566,11 +566,21 @@ export function check() {
     }
   }
 
-  // Every decision id mentioned in a decision file or the index resolves to a real decision.
+  /**
+   * Every decision id mentioned in a decision file or the index resolves to a real decision.
+   *
+   * ARCHIVED RECORDS ARE SCANNED TOO, and that is new with archiving becoming usable. Before it,
+   * `archive/` held nothing and reading only `DIR` cost nothing. Now a record can live there for
+   * years, so a citation written INSIDE one — to a record later deleted, or mistyped when it was
+   * archived — would sit undetected for exactly as long as the file survives. Making citations TO
+   * an archived record durable without checking the ones FROM it would fix half a defect.
+   */
   const sources = [
-    ...readdirSync(DIR)
-      .filter((f) => f.endsWith('.md'))
-      .map((f) => [`${DIR}/${f}`, readFileSync(`${DIR}/${f}`, 'utf8')]),
+    ...RECORD_DIRS.filter(existsSync).flatMap((dir) =>
+      readdirSync(dir)
+        .filter((f) => f.endsWith('.md'))
+        .map((f) => [`${dir}/${f}`, readFileSync(`${dir}/${f}`, 'utf8')]),
+    ),
     [OUT, readFileSync(OUT, 'utf8')],
   ]
   for (const [path, text] of sources) {
