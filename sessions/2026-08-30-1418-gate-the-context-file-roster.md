@@ -5,7 +5,7 @@ branch: task/gate-the-context-file-roster
 started: 2026-08-30T14:18:36Z
 ended:
 points:
-pr_numbers: [18, 19, 20, 22, 23, 27, 28, 29]
+pr_numbers: [18, 19, 20, 22, 23, 27, 28, 29, 33]
 status: open
 transcript: /home/eric/.claude/projects/-home-eric-jig/907444e1-3e5d-5014-89a2-b6693eebb5ae.jsonl
 ---
@@ -228,6 +228,31 @@ transcript: /home/eric/.claude/projects/-home-eric-jig/907444e1-3e5d-5014-89a2-b
 **Points:** 2
 **Branch:** task/check-docs-resolves-archived-records
 **Opened at:** 2026-09-09T17:55:00Z
+
+## Task 11: Issue #30 — keep every session's transcript, with nothing reading it
+
+**Completed:**
+- `scripts/keep-tape.mjs` + test (jig-only) — SessionEnd hook, copies `transcript_path` from its own payload to `~/.claude/tape/`. Never globs, never assumes one live session.
+- `scripts/settings-policy.mjs` + test — reports the hook **absent**, which is what makes "installed by hand per machine" observable. Main body guarded so the file could be imported at all.
+- `.claude/skills/its-dead/SKILL.md` Step 4.8 — declares the name in `~/.claude/tape/.names/<uuid>`; it can't do the copy because it runs before the session ends.
+- `.claude/skills/its-alive/SKILL.md` Step 4 — `$CLAUDE_CODE_SESSION_ID` instead of `result[0]` of a glob.
+- `scripts/check-dictionary.mjs` — `SKILL` joins the doc-filename exemption.
+- `docs/decisions/DEC-J006-transcripts-are-kept-with-no-reader.md`.
+
+**Spec'd before building, per the ask.** Read the hooks documentation and quoted the payload fields rather than inferring them from the event name — which is what dissolved the concurrency constraint (`transcript_path` is a common field, so the hook is handed its own transcript) and made requirement 3 free (*"Exit codes and output do not affect anything"*).
+
+**Proof:** both suites written against stubs so the first red was an assertion, never a missing module — keep-tape 11 red → 14 green, settings-policy 5 red → 9 green. Five gates green, 285 tests (261 before).
+
+**Code review:** 3 findings, all fixed. The real one: `copyFileSync` truncates its target first, so an interrupted copy destroyed a complete earlier capture while reporting `skipped`. Now `.part-` + `renameSync`. `/security-review` ran (two blast-radius rows hit) — 0 findings at confidence ≥8; it tried to defeat the name-file traversal guard specifically.
+
+**Found and filed, not fixed here:** issue #32 — `npm run verify` is flaky ~1 run in 3, because the archive tests from PRs #27 and #29 rename real corpus records while sibling suites read the corpus in parallel. Both are mine. A flaky gate undermines every proof in this repo.
+
+**Also corrected:** the issue's own file-class table said `logic` for the hook; `scripts/**` is `jig-only` by default here.
+
+**PR:** [PR #33](https://github.com/mobiustripper42/jig/pull/33)
+**Points:** 5
+**Branch:** task/30-keep-tape
+**Opened at:** 2026-09-12T20:05:00Z
 
 **Next Steps:**
 
