@@ -42,6 +42,15 @@ export const prose = (s) =>
  *     eats the first digit of the number. Requirement ids (`REQ-CLAIM-1`) are the same class and
  *     are worse: the pattern cannot even see them whole, splitting them into `REQ` and `CLAIM-1`.
  *  2. DOC FILENAMES — `SPEC`, `CLAUDE`, `BRAND`. A filename is not a term.
+ *
+ *     `SKILL` joined the list on 2026-09-12, and the gap is worth recording because the list read
+ *     as complete. Every skill in this repo is defined in a `SKILL.md`, and no gated file had ever
+ *     written that path — the gate reads `docs/SPEC.md`, `docs/decisions/*.md` and `CLAUDE.md`, and
+ *     those talk about `.claude/skills/` as a directory. The first decision record to cite one by
+ *     path (DEC-J006) was told `SKILL` is unregistered vocabulary. The dictionary's own rule says
+ *     not to register it — "registration is for a term with a specific local meaning that a reader
+ *     could otherwise guess wrong" — so the exemption is the right place and this is what the
+ *     clause above already intended.
  *  3. ORDINARY WORDS SHOUTED FOR EMPHASIS — `**NOT**`, `**NEVER**`, `GET`, `DEAD`. House style
  *     in this repo, 160 matches, and every one of them is English.
  *
@@ -54,7 +63,7 @@ export const prose = (s) =>
 export function excluded(token, families, shouted) {
   if (/^(?:DEC|REQ)$/.test(token)) return true
   if (families.some((f) => new RegExp(`^${f}(?:-[A-Z0-9])?$`).test(token))) return true
-  if (/^(?:SPEC|CLAUDE|BRAND|DECISIONS|README|AGENTS|DICTIONARY|CHANGELOG)$/.test(token)) return true
+  if (/^(?:SPEC|CLAUDE|BRAND|DECISIONS|README|AGENTS|DICTIONARY|CHANGELOG|SKILL)$/.test(token)) return true
   return shouted.has(token.toUpperCase())
 }
 

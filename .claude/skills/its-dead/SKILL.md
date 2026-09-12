@@ -106,6 +106,23 @@ For each, display:
 
 Report only. Don't open the review yourself and don't backfill a `## Task` block for it — the user decides whether the PR is worth a retrospective pass. If every session PR is in `pr_numbers:`, say nothing.
 
+## Step 4.8 — Declare the tape's name
+
+```
+mkdir -p ~/.claude/tape/.names
+basename "$SESSION_FILE" .md > ~/.claude/tape/.names/$CLAUDE_CODE_SESSION_ID
+```
+
+One line, no output to report. If `$CLAUDE_CODE_SESSION_ID` is empty, skip it silently — the tape still gets kept, named by uuid.
+
+**What this is for.** Claude Code deletes transcripts on a rolling window, so a `SessionEnd` hook (`scripts/keep-tape.mjs` in jig) copies this session's `.jsonl` to `~/.claude/tape/`. The hook is handed its own `transcript_path` and knows the uuid; it does **not** know this session file's name. This step is the only place both are known, so it writes the one down for the other to find.
+
+**Why the copy isn't done here.** This skill runs *before* the session ends. The transcript is still being appended to, so a copy taken now loses every turn after it — including the closing summary. The hook fires at the right moment and reads the name left for it.
+
+**Nothing reads the tape automatically.** No skill, no agent, no index, no drain. A human opens one in a chat session occasionally. Do not offer to read it, summarize it, or build anything that does.
+
+If the hook isn't installed on this machine the name file is simply never consumed, and `/its-alive` Step 7.6's policy check is what tells you — `settings-policy.mjs` reports the hook absent.
+
 ## Step 5 — Commit + push the sessions branch (from the worktree)
 
 ```

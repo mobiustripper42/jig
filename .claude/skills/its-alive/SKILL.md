@@ -140,10 +140,16 @@ Use the **Glob** tool with `path: .sessions-worktree/sessions` and `pattern: *.m
 ## Step 4 — Capture the transcript path
 
 ```
-echo "$HOME/.claude/projects/$(pwd | tr '/' '-')"
+echo "$HOME/.claude/projects/$(pwd | tr '/' '-')/$CLAUDE_CODE_SESSION_ID.jsonl"
 ```
 
-Capture as `JSONL_DIR`. Use the **Glob** tool with `path: <JSONL_DIR>` and `pattern: *.jsonl`. `TRANSCRIPT = result[0]`. If empty, leave `transcript:` blank.
+Capture as `TRANSCRIPT`. If `$CLAUDE_CODE_SESSION_ID` is empty, leave `transcript:` blank rather than guessing.
+
+**The session's own id, never a directory listing.** This step used to glob `*.jsonl` in that directory and take `result[0]`, which identifies a file by its position in a list and relies on an ordering nothing states. The id is sitting in the environment and the transcript is named after it, so there is no reason to search.
+
+It breaks on **two windows in the same checkout** — the case Step 2's concurrent-session check exists to handle, which means the skill anticipated the collision and then resolved the transcript in a way that could not survive it. (It does *not* break across linked worktrees: `JSONL_DIR` is derived from `pwd`, so each worktree reads its own project directory.) Either way the old `transcript:` values are unverifiable — nothing downstream could tell a right answer from a wrong one.
+
+`/its-dead` uses this same id to name the captured tape, so a wrong value here is a tape filed under the wrong session.
 
 ## Step 5 — Write the open session file (in the worktree)
 
