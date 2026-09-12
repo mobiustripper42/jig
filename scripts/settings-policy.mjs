@@ -246,8 +246,22 @@ function machineKeyProblems(doc) {
  * has, and `--write` touches `permissions` plus the machine keys by design. Deleting entries out
  * of `hooks` is a different and more dangerous operation, done by hand, once.
  */
-function hookProblems(doc) {
+export function hookProblems(doc, { tapeQueue = join(homedir(), '.claude', 'tape-queue'), jig = JIG } = {}) {
   const out = []
+  /**
+   * THREE DEAD NAMES, and `keep-tape` is deliberately not one of them.
+   *
+   * The distinction is not the hook — it is what the hook feeds. The retired mechanism was a QUEUE
+   * FEEDING A PAID READER: `tape-capture` piled transcripts into `~/.claude/tape-queue/` for
+   * `read-the-tape` (~$2 a session) and `@workout` to consume, and when those were binned the hook
+   * kept filling a queue nothing drained. `keep-tape` is A COPY WITH NO READER — different
+   * directory (`~/.claude/tape/`), no index, no drain, no model call, and a human opens one
+   * occasionally. Reporting it as retired would be wrong, and it is checked for BELOW.
+   *
+   * Written down because the evasion was luck. `keep-tape` does not match this regex by accident
+   * of naming; `tape-capture.mjs` is the obvious name for the new script and would have been
+   * reported as dead machinery on every machine that installed it correctly.
+   */
   const retired = /tape-capture|read-the-tape|workout/
 
   const commands = (doc.hooks?.SessionEnd ?? [])
@@ -272,16 +286,45 @@ function hookProblems(doc) {
    * on. Size is reported too: the point is not that files exist, it is that this is megabytes of
    * transcript nothing will ever read.
    */
-  const queue = join(homedir(), '.claude', 'tape-queue')
-  if (existsSync(queue)) {
-    const captures = readdirSync(queue).filter((f) => f.endsWith('.jsonl') && f !== 'index.jsonl')
+  if (existsSync(tapeQueue)) {
+    const captures = readdirSync(tapeQueue).filter((f) => f.endsWith('.jsonl') && f !== 'index.jsonl')
     if (captures.length) {
-      const mb = captures.reduce((n, f) => n + statSync(join(queue, f)).size, 0) / 1e6
-      out.push(`      ${queue}: ${captures.length} captured transcript(s), ${mb.toFixed(1)} MB — nothing in jig drains this`)
+      const mb = captures.reduce((n, f) => n + statSync(join(tapeQueue, f)).size, 0) / 1e6
+      out.push(`      ${tapeQueue}: ${captures.length} captured transcript(s), ${mb.toFixed(1)} MB — nothing in jig drains this`)
     }
   }
 
   if (out.length) out.push(`      Remove by hand, on this machine. Not repaired by --write.`)
+
+  /**
+   * THE OPPOSITE POLARITY TO EVERYTHING ABOVE, and it belongs here rather than in its own check
+   * because it is the same question: does this machine's `hooks` key match what jig expects.
+   *
+   * `keep-tape` copies the ending session's transcript to `~/.claude/tape/`, because Claude Code
+   * deletes transcripts on a rolling window. It is installed BY HAND, per machine, with no sync —
+   * so its failure mode is a machine where it was never installed or got clobbered, and nobody
+   * finds out until they go looking for a tape that is not there. That is the identical silence the
+   * tape exists to end, so "installed by hand" is not allowed to also mean "remembered".
+   *
+   * The precedent is at the top of this file: a settings merge "killed the SessionEnd capture hook
+   * on mill-dev for four" sessions, invisibly.
+   *
+   * MATCHED ON THE SCRIPT NAME, NOT AN ABSOLUTE PATH. The header says why `hooks` is excluded from
+   * the managed machine keys — the command embeds a home directory that differs per machine
+   * (`/home/eric/…` here, `/home/estoffer/…` on bee-grace, both confirmed on disk). A check
+   * comparing full paths would report every machine but one as wrong, which is the failure mode
+   * that made `hooks` unmanageable in the first place.
+   *
+   * The fix line carries the JSON. This fires on a machine that is otherwise entirely correct, and
+   * a finding that makes the operator reconstruct a nested hooks object is one that gets skipped.
+   */
+  if (!commands.some((c) => c.includes('keep-tape'))) {
+    const cmd = `node ${join(jig, 'scripts', 'keep-tape.mjs')}`
+    out.push(`      SessionEnd hook: keep-tape is not installed — Claude Code deletes transcripts on a rolling window, so every session here ends unrecoverable`)
+    out.push(`      Add under "hooks": {"SessionEnd":[{"hooks":[{"type":"command","command":"${cmd}"}]}]}`)
+    out.push(`      By hand, on this machine. Not repaired by --write — it edits the key carrying every hook you have.`)
+  }
+
   return out
 }
 
@@ -389,19 +432,29 @@ function write(path) {
   process.exit(0)
 }
 
-console.log(`\nsettings-policy — against ${rel(new URL(`file://${MASTER}`))}`)
-console.log(`  master: ${masterPerms.allow?.length ?? 0} allow, ${masterPerms.deny?.length ?? 0} deny, defaultMode ${JSON.stringify(masterPerms.defaultMode)}\n`)
+/**
+ * GUARDED so the checks above can be imported and tested, which they could not be before.
+ *
+ * Everything below ran at module load and ended in `process.exit()`, so `import` from a test
+ * killed the runner. That is why this file had no test suite while every gate beside it has one —
+ * not a decision, a side effect. The same guard is on `check-docs.mjs` and `check-decisions.mjs`;
+ * this file is now the third rather than the exception.
+ */
+if (process.argv[1]?.endsWith('settings-policy.mjs')) {
+  console.log(`\nsettings-policy — against ${rel(new URL(`file://${MASTER}`))}`)
+  console.log(`  master: ${masterPerms.allow?.length ?? 0} allow, ${masterPerms.deny?.length ?? 0} deny, defaultMode ${JSON.stringify(masterPerms.defaultMode)}\n`)
 
-if (mode === 'write') write(resolve(writeTarget ?? USER_SETTINGS)) // exits
+  if (mode === 'write') write(resolve(writeTarget ?? USER_SETTINGS)) // exits
 
-const results = []
-if (mode === 'user' || mode === 'all') results.push(check('user settings   (this machine, every project)', USER_SETTINGS, { style: true }))
-if (mode === 'repo' || mode === 'all') results.push(check('shared project  (committed; travels with the repo)', REPO_SETTINGS))
+  const results = []
+  if (mode === 'user' || mode === 'all') results.push(check('user settings   (this machine, every project)', USER_SETTINGS, { style: true }))
+  if (mode === 'repo' || mode === 'all') results.push(check('shared project  (committed; travels with the repo)', REPO_SETTINGS))
 
-const bad = results.filter((r) => r !== 'current').length
-console.log(
-  bad
-    ? `\n${bad} of ${results.length} not current. Per-project exceptions belong in .claude/settings.local.json, not here.\n`
-    : `\nCurrent.\n`
-)
-process.exit(bad ? 1 : 0)
+  const bad = results.filter((r) => r !== 'current').length
+  console.log(
+    bad
+      ? `\n${bad} of ${results.length} not current. Per-project exceptions belong in .claude/settings.local.json, not here.\n`
+      : `\nCurrent.\n`
+  )
+  process.exit(bad ? 1 : 0)
+}

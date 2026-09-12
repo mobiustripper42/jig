@@ -41,6 +41,17 @@ describe('the three approved exclusions', () => {
     for (const f of ['SPEC', 'CLAUDE', 'BRAND', 'DECISIONS']) expect(excluded(f, FAMILIES, LOWER)).toBe(true)
   })
 
+  /**
+   * `SKILL` was missing from a list that read as complete. Every skill here is defined in a
+   * `SKILL.md`, but the gate reads only `docs/SPEC.md`, `docs/decisions/*.md` and `CLAUDE.md`, and
+   * those refer to `.claude/skills/` as a directory — so no gated file had ever written the path.
+   * The first decision record to cite one (DEC-J006, in a `claims` target) was told `SKILL` is
+   * unregistered vocabulary, which is the gate misreading a filename as jargon.
+   */
+  it('excludes SKILL, the filename every skill in this repo is defined in', () => {
+    expect(excluded('SKILL', FAMILIES, LOWER)).toBe(true)
+  })
+
   it('excludes ordinary words shouted for emphasis, from the frozen baseline list', () => {
     for (const w of ['NOT', 'GET', 'DEAD', 'NEVER', 'ONE']) expect(excluded(w, FAMILIES, LOWER)).toBe(true)
   })
