@@ -60,6 +60,18 @@ describe('the capture hook this machine is supposed to have', () => {
   })
 
   /**
+   * The match is anchored on the end for this. A bare `includes('keep-tape')` is satisfied by a
+   * path that merely mentions the name — a backup, or a stale entry pointing at a checkout that
+   * has moved — and a check that silences itself on a path that will never run is worse than no
+   * check, because reporting absence is the only thing it does.
+   */
+  it('is not satisfied by a command that merely mentions the name', () => {
+    for (const c of ['node /backups/keep-tape.mjs.old', 'echo keep-tape', 'ls ~/jig/scripts/keep-tape.mjs.bak']) {
+      expect(hookProblems(wired(c), noQueue()).join('\n')).toMatch(/not installed/)
+    }
+  })
+
+  /**
    * The fix line has to be pasteable. A finding that says "install the hook" and makes the operator
    * reconstruct the JSON is the kind of check that gets ignored, and this one fires on a machine
    * that is otherwise entirely correct.

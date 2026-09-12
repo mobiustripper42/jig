@@ -11,7 +11,7 @@
 // indistinguishable from the hook running, and the fourth case deliberately corrupts a name file.
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { keep } from './keep-tape.mjs'
@@ -159,6 +159,40 @@ describe('running twice', () => {
     expect(r.status).toBe('skipped')
     expect(r.reason).toMatch(/larger/)
     expect(statSync(first.target).size).toBe(before)
+  })
+})
+
+describe('a copy that fails', () => {
+  /**
+   * THE ONE PATH BY WHICH THIS HOOK COULD DESTROY WHAT IT EXISTS TO PRESERVE, and the reason the
+   * copy goes to a `.part-` file and is renamed into place.
+   *
+   * `copyFileSync` onto an existing target truncates it first. A copy that dies partway — disk
+   * full, the process killed at session end, an I/O error — would leave a complete earlier capture
+   * short or empty, and the `catch` would report `skipped`, which reads as "nothing happened".
+   * `renameSync` in the same directory is atomic, so the target is the old capture or the new one
+   * and never a truncated half.
+   *
+   * A directory as the source is the cheapest way to make `copyFileSync` throw after the guards
+   * have passed: it exists, so the `not on disk` check lets it through, and EISDIR lands inside
+   * the try.
+   */
+  it('leaves the existing capture whole', () => {
+    const good = keep(payload(), { tapeDir: tape })
+    const before = readFileSync(good.target, 'utf8')
+
+    const asDir = join(dir, 'projects', `${UUID}-dir`)
+    mkdirSync(asDir)
+    const r = keep(payload({ transcript_path: asDir }), { tapeDir: tape })
+
+    expect(r.status).toBe('skipped')
+    expect(r.reason).toMatch(/copy failed/)
+    expect(readFileSync(good.target, 'utf8')).toBe(before)
+  })
+
+  it('leaves no part file behind on success', () => {
+    keep(payload(), { tapeDir: tape })
+    expect(readdirSync(tape).filter((f) => f.startsWith('.part-'))).toEqual([])
   })
 })
 

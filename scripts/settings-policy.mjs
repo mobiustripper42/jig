@@ -318,7 +318,13 @@ export function hookProblems(doc, { tapeQueue = join(homedir(), '.claude', 'tape
    * The fix line carries the JSON. This fires on a machine that is otherwise entirely correct, and
    * a finding that makes the operator reconstruct a nested hooks object is one that gets skipped.
    */
-  if (!commands.some((c) => c.includes('keep-tape'))) {
+  /**
+   * Anchored on the end rather than a bare `includes('keep-tape')`. An unanchored substring is
+   * satisfied by a path that merely mentions the name — `/backups/keep-tape.mjs.old`, or a stale
+   * entry pointing at a checkout that has moved — and a check that silences itself on a wrong path
+   * is worse than no check, because absence is the only thing it exists to report.
+   */
+  if (!commands.some((c) => /keep-tape\.mjs$/.test(c.trim()))) {
     const cmd = `node ${join(jig, 'scripts', 'keep-tape.mjs')}`
     out.push(`      SessionEnd hook: keep-tape is not installed — Claude Code deletes transcripts on a rolling window, so every session here ends unrecoverable`)
     out.push(`      Add under "hooks": {"SessionEnd":[{"hooks":[{"type":"command","command":"${cmd}"}]}]}`)

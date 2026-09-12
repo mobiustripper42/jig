@@ -34,7 +34,7 @@
 // `prompt_input_exit`, `other`). A session ending via `clear` still had a transcript worth keeping,
 // and a repeat costs one `cp` because the copy is idempotent.
 
-import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, statSync } from 'node:fs'
+import { copyFileSync, existsSync, mkdirSync, readFileSync, renameSync, rmSync, statSync } from 'node:fs'
 import { appendFileSync } from 'node:fs'
 import { basename, join } from 'node:path'
 import { homedir } from 'node:os'
@@ -46,6 +46,12 @@ export const TAPE_DIR = join(homedir(), '.claude', 'tape')
  * instructions, and they become a path — `../../../etc/cron.d/x` would put a copy wherever it
  * liked. Refused rather than sanitised: a stem that needed cleaning up is not a stem anyone chose,
  * and falling back to the uuid still keeps the tape, which is the thing that matters.
+ *
+ * THE CHARACTER CLASS IS WHAT CLOSES TRAVERSAL, not the `..` check beside it. `PLAIN` admits no
+ * `/` and no `\`, so nothing matching it can address anything outside `tapeDir` however many dots
+ * it contains. The `..` check is belt-and-braces against a future edit that relaxes the class —
+ * which is the edit to be careful about, because removing a separator from the class is the change
+ * that silently reopens this while the `..` line sits above it looking like the guard.
  */
 const PLAIN = /^[A-Za-z0-9][A-Za-z0-9._-]*$/
 const isPlainName = (s) => PLAIN.test(s) && !s.includes('..')
@@ -100,10 +106,29 @@ export function keep(payload, { tapeDir = TAPE_DIR } = {}) {
     }
   }
 
+  /**
+   * COPY ASIDE, THEN RENAME. `copyFileSync` onto an existing target truncates it first, so a copy
+   * that dies partway — disk full, the process killed at session end, an I/O error — leaves the
+   * destination short or empty. On a session whose earlier capture was complete, that destroys the
+   * thing this hook exists to preserve, in exactly the interrupted-write case the size guard above
+   * is already watching for. And the `catch` would report `skipped`, which reads as "nothing
+   * happened" while the good copy is already gone.
+   *
+   * `renameSync` within the same directory is atomic, so the target is either the old capture or
+   * the new one and never a truncated half. A failed copy leaves a `.part-` file behind, which is
+   * visible and harmless; the next run overwrites it.
+   */
+  const part = join(tapeDir, `.part-${stem}-${process.pid}`)
   try {
     mkdirSync(tapeDir, { recursive: true })
-    copyFileSync(src, target)
+    copyFileSync(src, part)
+    renameSync(part, target)
   } catch (e) {
+    try {
+      rmSync(part, { force: true })
+    } catch {
+      // Leaving a `.part-` file is the lesser problem; it is not worth masking the real error.
+    }
     return { status: 'skipped', reason: `copy failed: ${e.message}`, note }
   }
 
