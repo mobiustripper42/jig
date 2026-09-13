@@ -98,6 +98,6 @@ The word does mean something else here, and it is worth not confusing them: a *m
 
 ## Workflow Notes (project)
 
-- **Test files run one at a time, on purpose.** `npm run test` passes `--no-file-parallelism` because two suites rename a real record into `docs/decisions/archive/` while five others read the corpus off disk. In parallel that was ENOENT one run in three (issue #32). The pair has to be real, so the tests stay and the parallelism goes; it costs about a second and a half. `describe.sequential` would not have done it — that orders tests within a file, and the collision is across files.
+- **Test files run one at a time, on purpose.** `npm run test` passes `--no-file-parallelism` because two suites rename a real record into `docs/decisions/archive/` while any suite that runs a gate against the repo rather than a fixture reads the corpus off disk. In parallel that was ENOENT one run in three (issue #32). The pair has to be real, so the tests stay and the parallelism goes; it costs about a second and a half. `describe.sequential` would not have done it — that orders tests within a file, and the collision is across files.
 - **`npm install` is worth watching.** A symlink left in `node_modules/` during an install makes npm skip that package silently and report "changed 1 package".
 - **Seeds is archived, not deleted.** It is on disk and readable. `DEC-S###` ids appear in git history and in muster's records; jig's own record starts at `DEC-J001` with an empty corpus, and the two never mix.
