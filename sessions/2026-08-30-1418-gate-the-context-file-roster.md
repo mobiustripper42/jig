@@ -3,10 +3,10 @@ session: 2
 slug: gate-the-context-file-roster
 branch: task/gate-the-context-file-roster
 started: 2026-08-30T14:18:36Z
-ended:
-points:
+ended: 2026-09-13T00:35:31Z
+points: 43
 pr_numbers: [18, 19, 20, 22, 23, 27, 28, 29, 33]
-status: open
+status: closed
 transcript: /home/eric/.claude/projects/-home-eric-jig/907444e1-3e5d-5014-89a2-b6693eebb5ae.jsonl
 ---
 
@@ -266,6 +266,23 @@ Everything this session opened is merged: jig PRs #18, #19, #20, #22, #23, #27; 
 - **jig issue #24** is open and not from this session — nothing checks a code comment.
 - **sheepdog has two dictionary decisions parked**, with the reasoning recorded in `docs/dictionary.yml` itself: `probe` has three referents (the two frozen predecessors, a deployed instance, a check) and `vantage` has three (a field on every incident, a box, plain English in "vantage point"). `location` is probably the clearer name for the `vantage` field, but renaming reaches code.
 
+### Superseding the list above — written at close, 2026-09-13
+
+Everything in the block above shipped. The sync landed, `DEC-038` is archived, and four of the ten dead records went with it. What is actually next:
+
+- **Hold the model discussion, then wire it.** Two documents were read at the end of this session: Anthropic's *Prompting Claude Fable 5.1* and Claude Code's *Model configuration*. The decision — which model, which effort, for which work — is a judgement about behaviour and belongs in a chat session with those two documents. Bringing the answer back to a jig session is what needs the files. Four things that carry:
+  - `.claude/CLAUDE-context.md`'s Model Selection table pins `claude-fable-5`, but the `fable` alias now resolves to **Fable 5.1** (`model-config.md:53`).
+  - The standing *"Opus 5 lands within half a percent of Fable's peak at half the cost"* was measured against **Fable 5 at `max`**. Fable 5.1's gains are largest at *high* effort, and at `low` it reportedly beats Opus and Sonnet on cost per task — the opposite shape of that comparison. Neither document prices Fable 5.1, so no new numbers are available.
+  - **Nothing in jig sets `effort:` in frontmatter**, though both skills and subagents support it (`model-config.md:611`). Four agents set `model:` only; `grep -rn "^effort:" .claude/` returns nothing. This is the cheapest untouched lever in the repo.
+  - `settings-policy.mjs:216` watches `effortLevel`, but `/effort` saves per-model levels under **`modelSettings`** (`model-config.md:547`) — so it can report `Current.` while the live effort comes from a key it does not read. Unverified against the actual file.
+  - Against adopting Fable 5.1 at `low` as a default: at that level it *"is less likely … to call a search or retrieval tool, and more likely to answer from memory"* (`prompting-claude-fable-5-1.md:849`), which is the failure mode most of this repo's rules exist to prevent.
+- **The transcript capture's first real test is the next session's end.** The hook was installed into `~/.claude/settings.json` at 2026-09-12T20:05Z, and settings are read at launch — so **this** session is not captured. Next session: work, `/its-dead`, exit, then look for a stem-named `.jsonl` in `~/.claude/tape/`. A uuid-named one means Step 4.8 did not run.
+- **jig issue #32 — `npm run verify` is flaky, ~1 run in 3.** Filed this session and it is the most corrosive thing open: the archive tests from PRs #27 and #29 rename real corpus records while sibling suites read the corpus in parallel. Every proof in this repo cites that command.
+- **Three repos owe a sync, and the debt is no longer identical.** Measured at close: **soundings 7**, **sheepdog 7**, **muster 4**. Muster's list includes `.claude/output-styles/one-piece.md`, which is **ahead of jig on purpose** — v3 is being evaluated in place and muster's own context file records it. Do not sync that one down.
+- **Still open and not from this session:** jig #31 (a SPEC section naming a third party must cite its docs), #25, #24.
+- **Six dead muster records remain**, from the ten: `DEC-006, 039, 117, 143, 148, 150, MSG-2` minus the ones read and kept. Three were read and are **alive** — `DEC-006` decides Tier states do *not* exist, `DEC-143` is implemented in a jig template that cannot carry a muster id, `DEC-MSG-2` decides not to build the native app. All three are uncitable from code by construction, which is why the sweep found them.
+- **Two live muster behaviours now have no record behind them** — the cockpit "deadline" label and its absence from the board. `SPEC.md` asserts both; `DEC-031` points into the archive. Thin rather than broken.
+
 **Context:**
 
 - **Read a sibling repo at `origin/main`, never its working tree.** Added to `.claude/CLAUDE-context.md` § Median gaps this session because it cost real money: muster was parked on a task branch **26 commits behind** and a merged PR body described its decision records as needing a fix they already had. `git -C ../<repo> fetch` then `git show origin/main:<path>`.
@@ -276,3 +293,8 @@ Everything this session opened is merged: jig PRs #18, #19, #20, #22, #23, #27; 
 - **A backticked path in `CLAUDE.md` is a claim `check:context` enforces.** Citing `docs/decisions/archive/` reddened the gate until the directory existed.
 - **jig's own context file contradicted its scaffold** on where to name the gate command. `scaffold/claude/CLAUDE-context.md` says `## Commands`; jig's own file has it under Workflow Mechanisms. Copying the habit rather than the instruction broke `/kill-this`'s build-check lookup in sheepdog. Worth an issue.
 - **muster and sheepdog were both far behind on the permission policy** — sheepdog had 16 deny rules against the master's 63. `node scripts/settings-policy.mjs --all ../<repo>` reports it; `--write` fixes it and will surface new `check:denied` findings.
+- **Five PRs to delete one file.** jig #28 → muster #959 → jig #29 → muster #961 → muster #962, to archive `DEC-038`. Two of those were fixes to the fix: `archive/` resolved in `check-decisions` but not `check-docs`, and jig's copy of a `logic` script had drifted *behind* muster's. Worth remembering the shape before starting a similar chain — the second gate that resolves the same thing is the one nobody looks for.
+- **jig's copy of a `logic` file can be the stale one.** `check-decisions.mjs` carried a dead `createHash` import and lacked an eslint suppression muster had added, because jig has no linter at all and muster lints `scripts/check-*.mjs`. A fix can only be *found* downstream and can only be *made* upstream. `drift` says "differs", never which side is right, and that is correct — but it means the direction is a judgement every time.
+- **`settings-policy.mjs` ran its whole body at import** until this session, so it could never be tested. That is why it was the one script here without a suite. Any script ending in a bare `process.exit()` has the same property; the guard is `if (process.argv[1]?.endsWith('<name>.mjs'))`.
+- **A decision record that will not fit is usually just over-written.** `DEC-J006` came in at 2,936 bytes against the 2,000 cap and was cut three times to 1,994. Every claim and the whole ruling survived; only prose went. The gate's message says a record that will not fit is more than one decision — here it was one decision explained at length, and the cap was right anyway.
+- **`~/.claude/tape/` is outside every repo and nothing drains it.** No skill reads it, no agent, no index. `rm -rf ~/.claude/tape` is always safe. The `.names/` subdirectory holds one file per session between `/its-dead` and the session actually ending; an entry that never disappears means the hook is not installed.
