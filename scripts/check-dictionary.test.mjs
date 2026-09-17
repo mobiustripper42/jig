@@ -269,4 +269,14 @@ describe('gatedFiles on its own', () => {
     expect(gatedFiles(new Set())).toEqual(gatedFiles(new Set()))
     expect(gatedFiles(new Set()).length).toBeGreaterThan(1)
   })
+
+  /**
+   * Both files exist in this checkout, so neither assertion can pass by absence — `existsSync`
+   * would drop a missing one and the test would read green for the wrong reason.
+   */
+  it('gates the always-loaded file a project owns, not the one it cannot edit', () => {
+    const files = gatedFiles(new Set())
+    expect(files).toContain('.claude/CLAUDE-context.md')
+    expect(files).not.toContain('CLAUDE.md')
+  })
 })

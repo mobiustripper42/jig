@@ -110,10 +110,20 @@ Report only. Don't open the review yourself and don't backfill a `## Task` block
 
 ```
 mkdir -p ~/.claude/tape/.names
-basename "$SESSION_FILE" .md > ~/.claude/tape/.names/$CLAUDE_CODE_SESSION_ID
+REPO=$(basename "$(git rev-parse --show-toplevel)" | tr '[:upper:]' '[:lower:]' \
+  | sed 's/[^a-z0-9.-]/-/g; s/-\{2,\}/-/g; s/\.\{2,\}/./g; s/^[-.]*//; s/[-.]*$//')
+echo "${REPO:+$REPO-}$(basename "$SESSION_FILE" .md)" > ~/.claude/tape/.names/$CLAUDE_CODE_SESSION_ID
 ```
 
-One line, no output to report. If `$CLAUDE_CODE_SESSION_ID` is empty, skip it silently — the tape still gets kept, named by uuid.
+No output to report. If `$CLAUDE_CODE_SESSION_ID` is empty, skip it silently — the tape still gets kept, named by uuid.
+
+**The repo prefix is the point.** `~/.claude/tape/` is one flat directory every repo on this machine writes into, and a session file's name carries only the date and the slug. A jig session and a tinkle session both on `main` produce the same `YYYY-MM-DD-HHMM-main`, distinguishable only if they happened to open in different minutes. The session *file* has no such problem — it lives inside its own repo — so the tape is the only place that needs this.
+
+**Prefix rather than infix**, so the directory groups by project and stays chronological within each. **In a linked worktree** `--show-toplevel` returns the worktree path, so two lanes get distinct names; that is correct, not a bug.
+
+**The `sed` is not decoration.** `keep-tape.mjs` REFUSES a declared name that isn't a plain filename (`PLAIN` at `scripts/keep-tape.mjs:56`) and falls back to the uuid — so an unsanitised folder name with a space or a `..` in it would make the tape name *worse* than the no-prefix version it replaces. `${REPO:+$REPO-}` drops the prefix entirely when a folder name sanitises to nothing, rather than emitting a leading `-` that `PLAIN` would also refuse.
+
+This block is executed by `scripts/keep-tape.test.mjs`, which extracts it from this file and runs it in a throwaway repo — so editing it here is covered, and a change that breaks the naming fails the suite.
 
 **What this is for.** Claude Code deletes transcripts on a rolling window, so a `SessionEnd` hook (`scripts/keep-tape.mjs` in jig) copies this session's `.jsonl` to `~/.claude/tape/`. The hook is handed its own `transcript_path` and knows the uuid; it does **not** know this session file's name. This step is the only place both are known, so it writes the one down for the other to find.
 

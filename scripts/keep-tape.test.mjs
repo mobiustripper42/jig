@@ -12,6 +12,7 @@
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { execFileSync } from 'node:child_process'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { keep } from './keep-tape.mjs'
@@ -212,5 +213,65 @@ describe('two sessions ending at once', () => {
     expect(a.target).not.toBe(b.target)
     expect(readFileSync(a.target, 'utf8')).toBe('{"type":"user"}\n')
     expect(readFileSync(b.target, 'utf8')).toBe('{"lane":"b"}\n')
+  })
+})
+
+/**
+ * THE SHIPPED INSTRUCTION, NOT A COPY OF IT. `/its-dead` Step 4.8 is prose a model follows, and
+ * nothing in jig executes skill markdown — so the obvious test, pasting the pipeline into a string
+ * here, would prove a fixture and leave the real one unwatched the first time the two drift.
+ *
+ * This extracts the block out of `its-dead/SKILL.md` and runs THAT, in a throwaway git repo with a
+ * deliberately hostile folder name, then feeds the declared name to `keep()`. So it covers the one
+ * thing the issue warned about: an unsanitised folder name makes the tape name FAIL `isPlainName`
+ * and fall back to the uuid, which is worse than the no-prefix state it replaced.
+ */
+describe('Step 4.8 of /its-dead, as written', () => {
+  const SKILL = '.claude/skills/its-dead/SKILL.md'
+
+  /** The first fenced block under the Step 4.8 heading. Throws rather than silently matching
+   *  nothing — a regex that stops matching must fail the suite, not quietly test the empty string. */
+  const block = () => {
+    const md = readFileSync(SKILL, 'utf8')
+    const m = md.match(/^## Step 4\.8 —.*\n+```\n([\s\S]*?)^```/m)
+    if (!m) throw new Error(`no fenced block under "## Step 4.8" in ${SKILL}`)
+    return m[1]
+  }
+
+  /** Run the block in `folder`, a fresh git repo, with a fake HOME. Returns the declared name. */
+  const declare = (folder, stem = STEM) => {
+    const home = join(dir, 'home')
+    const repo = join(dir, folder)
+    mkdirSync(repo, { recursive: true })
+    mkdirSync(home, { recursive: true })
+    execFileSync('git', ['init', '-q'], { cwd: repo })
+    execFileSync('bash', ['-c', block()], {
+      cwd: repo,
+      env: { ...process.env, HOME: home, SESSION_FILE: `sessions/${stem}.md`, CLAUDE_CODE_SESSION_ID: UUID },
+    })
+    return readFileSync(join(home, '.claude', 'tape', '.names', UUID), 'utf8').trim()
+  }
+
+  it('prefixes the repo folder, so two repos on `main` are distinguishable', () => {
+    expect(declare('jig')).toBe(`jig-${STEM}`)
+    expect(declare('tinkle')).toBe(`tinkle-${STEM}`)
+  })
+
+  it('sanitises a hostile folder name into one `keep()` will actually accept', () => {
+    const declared = declare('My Repo!! ..v2')
+    expect(declared).toMatch(/^[A-Za-z0-9][A-Za-z0-9._-]*$/)
+    expect(declared).not.toContain('..')
+    expect(declared.endsWith(STEM)).toBe(true)
+
+    // The end that matters: the name is USED, not refused back to the uuid.
+    mkdirSync(join(tape, '.names'), { recursive: true })
+    writeFileSync(join(tape, '.names', UUID), declared)
+    const r = keep(payload(), { tapeDir: tape })
+    expect(r.note).toBeUndefined()
+    expect(r.target).toBe(join(tape, `${declared}.jsonl`))
+  })
+
+  it('falls back to the bare session name when the folder sanitises to nothing', () => {
+    expect(declare('___')).toBe(STEM)
   })
 })
