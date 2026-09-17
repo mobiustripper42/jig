@@ -274,4 +274,24 @@ describe('Step 4.8 of /its-dead, as written', () => {
   it('falls back to the bare session name when the folder sanitises to nothing', () => {
     expect(declare('___')).toBe(STEM)
   })
+
+  /**
+   * RUN UNDER THE OPERATOR'S REAL LOCALE, which is the whole point — `declare()` inherits
+   * `process.env`, so this is `en_US.UTF-8` here and on GitHub Actions both. Without `LC_ALL=C`
+   * pinned in the block, glibc collation makes `[^a-z0-9.-]` match by collation rather than by
+   * byte and `café` comes through with its multi-byte bytes intact, which `PLAIN` then refuses —
+   * the uuid fallback the prefix exists to avoid, for every non-English folder name.
+   */
+  it('strips accented letters, whatever locale the operator runs under', () => {
+    expect(declare('café')).toBe(`caf-${STEM}`)
+    expect(declare('José-Notes')).toBe(`jos-notes-${STEM}`)
+  })
+
+  /** 200 rather than something that would actually overflow: a directory name is itself capped at
+   *  255, so the un-creatable case cannot be set up here. The cap is what is under test. */
+  it('caps a long folder name, so the copy cannot blow the filesystem name limit', () => {
+    const declared = declare('a'.repeat(200))
+    expect(declared).toBe(`${'a'.repeat(32)}-${STEM}`)
+    expect(declared.length).toBeLessThan(255)
+  })
 })

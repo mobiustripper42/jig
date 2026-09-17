@@ -43,8 +43,8 @@ describe('the three approved exclusions', () => {
 
   /**
    * `SKILL` was missing from a list that read as complete. Every skill here is defined in a
-   * `SKILL.md`, but the gate reads only `docs/SPEC.md`, `docs/decisions/*.md` and `CLAUDE.md`, and
-   * those refer to `.claude/skills/` as a directory — so no gated file had ever written the path.
+   * `SKILL.md`, but the gated set refers to `.claude/skills/` as a directory rather than naming a
+   * file inside it — so no gated file had ever written the path.
    * The first decision record to cite one (DEC-J006, in a `claims` target) was told `SKILL` is
    * unregistered vocabulary, which is the gate misreading a filename as jargon.
    */

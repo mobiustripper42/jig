@@ -45,8 +45,8 @@ export const prose = (s) =>
  *
  *     `SKILL` joined the list on 2026-09-12, and the gap is worth recording because the list read
  *     as complete. Every skill in this repo is defined in a `SKILL.md`, and no gated file had ever
- *     written that path — the gate reads `docs/SPEC.md`, `docs/decisions/*.md` and `CLAUDE.md`, and
- *     those talk about `.claude/skills/` as a directory. The first decision record to cite one by
+ *     written that path — the gated set talks about `.claude/skills/` as a directory rather than
+ *     naming a file inside it. The first decision record to cite one by
  *     path (DEC-J006) was told `SKILL` is unregistered vocabulary. The dictionary's own rule says
  *     not to register it — "registration is for a term with a specific local meaning that a reader
  *     could otherwise guess wrong" — so the exemption is the right place and this is what the
@@ -147,6 +147,14 @@ export function loadDictionary(path = DICT) {
  *
  * `docs/SPEC.md` stays: in an installed project it comes from `scaffold/docs/SPEC.md` and is the
  * project's to edit.
+ *
+ * WHAT THIS GIVES UP, stated because it is a real cost and not an oversight: jig authors
+ * `CLAUDE.md` rather than receiving it, so in THIS repo it is editable and the rule above would
+ * admit it. Dropping it is right for the other eleven repos and loses acronym coverage on the
+ * largest always-loaded file here. Nothing else fills the gap — `check-context` and `check-docs`
+ * both read `CLAUDE.md`, but neither runs the unregistered-vocabulary rule. Re-gating it only in
+ * jig means branching a shipped script on whether it is running inside jig, which is a mechanism
+ * nobody has asked for yet; if the gap ever bites, that is the shape of the fix.
  *
  * A NAMED LIST RATHER THAN A CLASS LOOKUP, because a project has no registry to consult —
  * `.claude/file-classes.yaml` is in `drift.mjs`'s `NOT_TEMPLATES` and never ships. So the rule
