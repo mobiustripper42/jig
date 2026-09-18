@@ -16,8 +16,8 @@ Roles: one developer. Multi-dev support was carried for months, never used, and 
 
 ## Stack
 
-- **Node** — ES modules, no build step, no framework. Scripts are `.mjs` and run straight from `scripts/`.
-- **Vitest** for the test suites; **js-yaml** for the two YAML registries. That is the whole dependency list, and it should stay short enough to read.
+- **Node** — modern module syntax, no build step, no framework. Scripts are `.mjs` and run straight from `scripts/`.
+- **Vitest** for the test suites; **js-yaml** for the two `.yml` registries. That is the whole dependency list, and it should stay short enough to read.
 - No database, no frontend, no deploy target. Nothing here runs in production because nothing here runs at all — it is source material copied into other repos.
 
 ## Core Data Model
@@ -70,7 +70,7 @@ Where a competent default does the wrong thing in this repo.
 | `.claude/` is the shipped template, not a local config directory | Editing an agent or skill here is editing what every project installs. There is no separate template copy to change instead — DEC-J001 removed it deliberately |
 | A red gate here usually means a missing file, not a broken check | jig is mid-migration, so a gate can be red because the corpus it reads does not exist yet. Run it and read the message. Never loosen a gate to get green — `npm run verify` says which, and `docs/PROJECT_PLAN.md` says when each one is due |
 | `scripts/` is jig-only by default | The file-class registry inverts seeds' default: a script here is assumed *not* to reach a project unless it is named `check-*` or `gen-*` |
-| A sibling repo's state is `origin/main`, not its working tree | Every sibling here is somebody's active session, parked on a task branch and behind. Reading `../muster/docs/…` satisfies "cite a file" and still reports the wrong repo state — muster was 26 commits behind when a merged PR body described it. `git -C ../<repo> fetch` then `git show origin/main:<path>`, and say which you read |
+| A sibling repo's state is `origin/main`, not its working tree | Every sibling here is somebody's active session, parked on a task branch and behind. Reading `../muster/docs/…` satisfies "cite a file" and still reports the wrong repo state — muster was 26 commits behind when a merged pull request body described it. `git -C ../<repo> fetch` then `git show origin/main:<path>`, and say which you read |
 
 ## Blast-Radius Triggers
 
@@ -98,6 +98,6 @@ The word does mean something else here, and it is worth not confusing them: a *m
 
 ## Workflow Notes (project)
 
-- **Test files run one at a time, on purpose.** `npm run test` passes `--no-file-parallelism` because two suites rename a real record into `docs/decisions/archive/` while any suite that runs a gate against the repo rather than a fixture reads the corpus off disk. In parallel that was ENOENT one run in three (issue #32). The pair has to be real, so the tests stay and the parallelism goes; it costs about a second and a half. `describe.sequential` would not have done it — that orders tests within a file, and the collision is across files.
+- **Test files run one at a time, on purpose.** `npm run test` passes `--no-file-parallelism` because two suites rename a real record into `docs/decisions/archive/` while any suite that runs a gate against the repo rather than a fixture reads the corpus off disk. In parallel that was a missing-file crash one run in three (issue #32). The pair has to be real, so the tests stay and the parallelism goes; it costs about a second and a half. `describe.sequential` would not have done it — that orders tests within a file, and the collision is across files.
 - **`npm install` is worth watching.** A symlink left in `node_modules/` during an install makes npm skip that package silently and report "changed 1 package".
 - **Seeds is archived, not deleted.** It is on disk and readable. `DEC-S###` ids appear in git history and in muster's records; jig's own record starts at `DEC-J001` with an empty corpus, and the two never mix.
