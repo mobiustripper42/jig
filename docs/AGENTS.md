@@ -65,9 +65,15 @@ plausible, because they fire at phase boundaries.
 ## Output styles — one
 
 Styles ship in `.claude/output-styles/`, `logic` class like the skills: every project carries
-every one. Which is **on** is a per-machine choice in `.claude/settings.local.json`, gitignored and
-never travelling — `{ "outputStyle": "One piece" }`, deleted to fall back to the machine default.
-Read once at launch, so a change applies at the next session start.
+every one. Which is **on** lives in `~/.claude/settings.json` for the machine — `{ "outputStyle":
+"One piece" }` — or in a repo's gitignored `.claude/settings.local.json` to override one project.
+Nothing that travels carries a style: the master defines no `outputStyle`, so `settings-policy`
+neither checks nor writes one, and the machine file is a hand-edit. Read once at launch, so a
+change applies at the next session start.
+
+A project-level `.claude/settings.json` beats the user-level file. Jig shipped an `outputStyle`
+there until 2026-09-18, which meant a machine default was never consulted in any installed repo.
+If a style does not take effect, look for the key somewhere more specific first.
 
 | Style | What it adds |
 |-------|--------------|

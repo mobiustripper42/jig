@@ -251,8 +251,10 @@ It compares against `.claude/settings.json` — the master — in the two places
 | checked | where | repairable by `--write` |
 |---|---|---|
 | `permissions` | both levels | yes |
-| `outputStyle`, `theme`, `effortLevel`, `tui`, `agentPushNotifEnabled`, `enabledPlugins` | user settings only — machine preferences | yes |
+| `theme`, `effortLevel`, `tui`, `agentPushNotifEnabled`, `enabledPlugins` | user settings only — machine preferences | yes |
 | retired machinery still wired — a `SessionEnd` tape hook, a leftover queue | user settings only | **no** — remove by hand |
+
+**`outputStyle` is in `MACHINE_KEYS` and is deliberately absent from the master, so it is neither checked nor written.** It was in the master until 2026-09-18, and because a project-level `.claude/settings.json` beats the user-level one, every installed project carried jig's answer and no machine default was ever consulted. Whoever is at the keyboard picks the style; nothing that travels should carry one. Setting it is a hand-edit of `~/.claude/settings.json`, and `--write` will not touch it.
 
 A deliberate per-repo override in `.claude/settings.local.json` — `Explanatory` while designing, say — is **not** reported: those keys are read at the user level only.
 

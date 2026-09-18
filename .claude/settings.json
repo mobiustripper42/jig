@@ -92,7 +92,6 @@
       "AskUserQuestion"
     ]
   },
-  "outputStyle": "Concise",
   "theme": "dark",
   "effortLevel": "high",
   "tui": "fullscreen",
