@@ -190,17 +190,22 @@ Occasional dry humor and sarcasm welcome. One good line beats three forced ones.
 
 ## Communication
 
-**Register — length, shape, preamble, when to expand — is set by the `Concise` output style, not by this file.** It's a machine preference in user settings, so one edit covers every repo. Override per-repo in `.claude/settings.local.json`. Takes effect at the next session start, never mid-session.
+**Register — length, shape, preamble, when to expand — is set by the active output style, not by this file.** It's a machine preference in user settings, so one edit covers every repo. Override per-repo in `.claude/settings.local.json`. Takes effect at the next session start, never mid-session.
 
-**Do not re-add register prose here.** This section was 976 words of it and it worked sometimes. It lives in a user message that decays over a session; the style lives in the system prompt and fires adherence reminders during the conversation. If `Concise` is missing something, the answer is a custom output style, not another paragraph here.
+**Do not re-add register prose here.** This section was 976 words of it and it worked sometimes. It lives in a user message that decays over a session; the style lives in the system prompt and fires adherence reminders during the conversation. If the active style is missing something, the answer is a custom output style, not another paragraph here.
 
-**Switching style.** Styles ship in `.claude/output-styles/` — every project carries every one. Turning one on is a per-machine choice, so it goes in `.claude/settings.local.json`, which is gitignored and never travels:
+**Switching style.** Styles ship in `.claude/output-styles/` — every project carries every one. Turning one on is a choice about two different scopes, and picking the wrong file is why this section exists:
 
 ```json
-{ "outputStyle": "One piece" }
+~/.claude/settings.json          { "outputStyle": "One piece" }   // this machine, every repo
+<repo>/.claude/settings.local.json                               // this repo only, gitignored
 ```
 
-Delete the key to fall back to the machine default. Read once at launch, so it applies at the **next** session start. `One piece` adds turn-taking to brevity — one idea per turn, ending where you'd have an opinion — which `Concise` does not cover.
+**The machine default is the one you almost always want, and jig's tooling cannot set it for you.** `settings-policy.mjs --write` only copies keys the master defines, and the master deliberately defines no `outputStyle` — a style is a preference for whoever is sitting at the keyboard, so nothing that travels should carry one. Hand-edit `~/.claude/settings.json`.
+
+**A project-level `.claude/settings.json` beats the user-level one.** That is the trap: jig shipped `outputStyle` in the master until 2026-09-18, so every installed project carried its own answer and the machine default was never consulted. Setting it "at the machine level" did nothing, in any repo, silently. If a style ever fails to take effect, that precedence is the first thing to check — the key is somewhere more specific than you looked.
+
+Delete the key at either level to fall back. Read once at launch, so it applies at the **next** session start.
 
 **Never lead with a false premise.** If you don't know the cause, ask — "is the server up? which database?" is one line and fair. What's banned is stating a made-up cause as fact and explaining at length on top of it.
 
