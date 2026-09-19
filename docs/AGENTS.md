@@ -79,7 +79,7 @@ more specific first.
 
 | Style | What it adds |
 |-------|--------------|
-| `One piece` | One judgment per turn, ending at the fork. Every reply opens with a one-word tag — `Lookup.` `Action.` `Judgment.` `Summary.` — that commits to a shape before the reply exists, and closes with a numbered parking lot of every displaced thread, so a turn that overruns is countable rather than arguable and nothing raised is dropped. Iterated in muster through six versions before moving here |
+| `One piece` | One judgment per turn, ending at the fork. Every reply opens with a one-word tag — `Lookup.` `Action.` `Judgment.` `Summary.` — that commits to a shape before the reply exists, and closes with a numbered parking lot of every displaced thread, so a turn that overruns is countable rather than arguable and nothing raised is dropped. Revised three times in muster, v3 to v6 by its own numbering, before moving here |
 
 The machine default is set outside this repo and is not listed here — it is a preference, not part
 of the roster.

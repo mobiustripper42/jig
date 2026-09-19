@@ -100,11 +100,12 @@ describe('classification', () => {
   })
 
   it('notices a style the project added that jig does not ship', () => {
-    // The registry says every project carries every style. A closed-set claim the script neither
-    // enforces nor observes is the shape this repo keeps finding defects in — and skills and
-    // agents already got this detector, so a style going unmentioned was asymmetric as well as
-    // wrong. Nothing stops a project writing one: the directory is writable and
-    // `settings.local.json` can point `outputStyle` at any name.
+    // Written when the registry said every project carries every style — a closed-set claim the
+    // script neither enforced nor observed, which is the shape this repo keeps finding defects in.
+    // The registry no longer says that (DEC-J007: no project holds a copy), but the detector
+    // still matters: nothing stops a project writing its own style, the directory is writable,
+    // and `settings.local.json` can point `outputStyle` at any name. Skills and agents have the
+    // same detector, so a style going unmentioned would be asymmetric as well as wrong.
     const p = project({ '.claude/output-styles/house.md': '---\nname: House\n---\n' })
     const { out } = run(['--jig', JIG, p])
     expect(out).toMatch(/\.claude\/output-styles\/house\.md\s+not a template/)

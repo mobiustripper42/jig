@@ -6,7 +6,10 @@
 #   context  → never copy; the project owns its version and differing is correct
 #   hybrid   → copy the shell only; the paired `-context.md` file is project-owned
 #   presence → must exist; contents are never compared and never copied
-#   jig-only → lives here and a project never holds a copy; absence is not drift
+#   jig-only → lives here and a project never holds a copy; absence is not drift.
+#              Two shapes share it: jig's own tooling that no project runs (`scripts/**`),
+#              and the one file every session reads from here through the machine
+#              (`.claude/output-styles/**`). Same rule either way — a project copy is a fork.
 #
 # Read by `scripts/drift.mjs`. First match wins, so carve-outs precede globs.
 #
