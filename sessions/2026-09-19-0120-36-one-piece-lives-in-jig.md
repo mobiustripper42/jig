@@ -5,7 +5,7 @@ branch: task/36-one-piece-lives-in-jig
 started: 2026-09-19T01:20:19Z
 ended:
 points:
-pr_numbers: [39, 40, 41]
+pr_numbers: [39, 40, 41, 42]
 status: open
 transcript: /home/eric/.claude/projects/-home-eric-jig/770810a2-c217-5022-b202-8c185f8cc5b8.jsonl
 ---
@@ -63,6 +63,23 @@ transcript: /home/eric/.claude/projects/-home-eric-jig/770810a2-c217-5022-b202-8
 **Points:** 2
 **Branch:** task/its-dead-cites-jig-only-script
 **Opened at:** 2026-09-19T03:05:00Z
+
+## Task 4: A sync is a six-step checklist, done when the target is green
+
+**Completed:**
+
+- **A numbered checklist in `.claude/CLAUDE-context.md`** after the sync paragraph. It makes the copy step three of six; step four is "run every gate the target runs," the step skipped in both of this session's syncs; step five sorts red into target-content versus template-defect, by whether the checker's complaint is right.
+- **Context file, not a skill**, at the operator's call: a skill is one more thing to keep in sync.
+- **`@code-review` found the checklist repeating its own lesson.** The worklist omitted drift's `NOT RUN` section, which exists because `check-denied` shipped to muster and sat unwired for three days — so a sync copying a new gate and never wiring it would have passed all six steps green. Fixed, plus four more: the "nothing differs" proof was weaker than it read, step five's sort, and two `git fetch` cleanups.
+
+**Code review:** 5 findings and 1 escalation, all addressed. `/security-review` not run — this file is jig's own context, not a shipped template or a blast-radius trigger.
+
+**PR:** [PR #42](https://github.com/mobiustripper42/jig/pull/42)
+**Points:** 2
+**Branch:** task/sync-is-a-checklist
+**Opened at:** 2026-09-19T03:40:00Z
+
+**Next task, from the review's escalation:** `drift.mjs` could refuse to print `nothing differs.` while `notRun` or `notYours` is nonzero, turning the checklist's step three from a remembered check into an enforced one. That is a change to drift's output contract with its own tests. This is the third mechanism gap this session surfaced and deferred, alongside the symlink check (Task 1) and the bare-jig-only-citation check (Task 3) — all three are jig turning a prose rule that was broken into a gate that can't be.
 
 **Gap found, not filed:** a `logic`/`hybrid` file citing a `jig-only` path bare is checkable from the registry and nothing checks it. Same shape as the symlink check from Task 1. Both are `settings-policy`/`check-context` mechanisms a future task could add.
 
