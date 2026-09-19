@@ -194,18 +194,18 @@ Occasional dry humor and sarcasm welcome. One good line beats three forced ones.
 
 **Do not re-add register prose here.** This section was 976 words of it and it worked sometimes. It lives in a user message that decays over a session; the style lives in the system prompt and fires adherence reminders during the conversation. If the active style is missing something, the answer is a custom output style, not another paragraph here.
 
-**Switching style.** Styles ship in `.claude/output-styles/` — every project carries every one. Turning one on is a choice about two different scopes, and picking the wrong file is why this section exists:
+**The output style is two things, and both live on the machine (DEC-J007).** The **setting** says which style is on. The **file** says what that style is. They are separate, and treating them as one is what cost a full session.
 
-```json
-~/.claude/settings.json          { "outputStyle": "One piece" }   // this machine, every repo
-<repo>/.claude/settings.local.json                               // this repo only, gitignored
+```
+~/.claude/settings.json                { "outputStyle": "One piece" }     the setting — hand-edited, once
+~/.claude/output-styles/one-piece.md   → symlink to jig's copy             the file — jig is the versioned home
 ```
 
-**The machine default is the one you almost always want, and jig's tooling cannot set it for you.** `settings-policy.mjs --write` only copies keys the master defines, and the master deliberately defines no `outputStyle` — a style is a preference for whoever is sitting at the keyboard, so nothing that travels should carry one. Hand-edit `~/.claude/settings.json`.
+**No repo carries either.** Jig's `.claude/settings.json` master defines no `outputStyle`, so `settings-policy.mjs` neither checks nor writes one, and `.claude/output-styles/**` is `jig-only`, so drift reports a project copy as NOT YOURS. The fix for a copy is deletion, never a sync. Edit the style in jig; the symlink means the edit is live at the next session start with nothing to copy.
 
-**A project-level `.claude/settings.json` beats the user-level one.** That is the trap: jig shipped `outputStyle` in the master until 2026-09-18, so every installed project carried its own answer and the machine default was never consulted. Setting it "at the machine level" did nothing, in any repo, silently. If a style ever fails to take effect, that precedence is the first thing to check — the key is somewhere more specific than you looked.
+**Precedence, lowest to highest.** For the setting: `~/.claude/settings.json`, then `<repo>/.claude/settings.json`, then `<repo>/.claude/settings.local.json`. For the file: `~/.claude/output-styles/` loses to `<repo>/.claude/output-styles/` — observed 2026-09-18, a repo holding a stale copy ran it over the machine's newer one. Both run the same way: the more specific location silently beats the machine. That is the trap. Jig shipped the key and the file until 2026-09-18, so setting either "at the machine level" did nothing, in any repo. A repo copy of the style file is therefore not untidy, it is the style that repo runs — delete it. If a style ever fails to take effect, look for the key or the file somewhere more specific than you looked.
 
-Delete the key at either level to fall back. Read once at launch, so it applies at the **next** session start.
+Read once at launch, so a change applies at the **next** session start.
 
 **Never lead with a false premise.** If you don't know the cause, ask — "is the server up? which database?" is one line and fair. What's banned is stating a made-up cause as fact and explaining at length on top of it.
 

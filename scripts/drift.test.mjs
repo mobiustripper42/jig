@@ -86,13 +86,17 @@ describe('classification', () => {
     expect(out).toMatch(/logic\s+docs\/decisions\/decision-record\.schema\.json\s+absent here/)
   })
 
-  it('ships output styles, which every project carries and none turns on by default', () => {
-    // The style file is shared vocabulary; the choice of which is ON lives in
-    // `.claude/settings.local.json`, gitignored and per-machine. Without a registry entry this
-    // path is UNCLASSIFIED — caught by the sibling test, but only as an absence, and the point
-    // here is that a project is positively told it is missing the file.
-    const { out } = run(['--jig', JIG, project({})])
-    expect(out).toMatch(/logic\s+\.claude\/output-styles\/one-piece\.md\s+absent here/)
+  it('does not ask a project for the output style, and flags a copy it holds anyway', () => {
+    // The style file lives in jig and is read by every session on the machine through a symlink
+    // at `~/.claude/output-styles/one-piece.md` (DEC-J007). A project copy is one more place a
+    // stale version can sit, and the version being iterated in jig never reaches it. That is why
+    // this is `jig-only` and why the finding is NOT YOURS rather than a diff — the fix is
+    // deletion, never a sync.
+    const clean = run(['--jig', JIG, project({})])
+    expect(clean.out).not.toMatch(/output-styles\/one-piece\.md/)
+
+    const held = run(['--jig', JIG, project({ '.claude/output-styles/one-piece.md': 'stale' })])
+    expect(held.out).toMatch(/jig-only\s+\.claude\/output-styles\/one-piece\.md/)
   })
 
   it('notices a style the project added that jig does not ship', () => {
