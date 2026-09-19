@@ -1,6 +1,7 @@
-# What a manual copy actually needs to know about each template jig ships:
-# is this file identical in every project and safe to `cp` wholesale, or does
-# the project own its version and it must never be copied at all?
+# What a copy needs to know about each template jig ships — a copy made by a jig
+# session, by hand, when the operator asks; there is no sync script. Is this file
+# identical in every project and safe to `cp` wholesale, or does the project own
+# its version and it must never be copied at all?
 #
 #   logic    → copy wholesale; jig is canonical, and a difference is staleness
 #   context  → never copy; the project owns its version and differing is correct

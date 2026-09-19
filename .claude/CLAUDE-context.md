@@ -12,6 +12,10 @@ jig replaces `seeds`, which failed by growing prose faster than anyone could rea
 
 **The filter every mechanism here has to pass: does it work when nobody remembers it's there?** Keep it if yes. Bin it if it is a paragraph hoping to be recalled at the right moment.
 
+**What jig physically does.** It holds two kinds of file: `scaffold/` for a new project, copied once and then owned there; and templates for repos already installed — `.claude/skills/**`, `CLAUDE.md`, the gate scripts — where jig's copy is canonical and a project's is supposed to be identical. `.claude/file-classes.yaml` says which is which. Template changes are made in jig. The exception is a file that can only be evaluated by living in it, which gets prototyped in a repo with active development and harvested back — the output style did this in muster, three revisions, then pull request #39 brought it here.
+
+**Templates cross by a jig session's hand, in either direction, and nothing else moves them.** There is no sync script and there will not be one. A session in a project runs `drift.mjs` at start and learns what is out of date; that session reports and does nothing, because deciding what crosses is a person's call. When the operator says to bring a project up to date, or to harvest a prototype back, a session *in jig* does the copying, commits in the target repo on a branch, and opens the pull request there. The bytes are what jig already reviewed, so that is a copy, not new code. This was the design from the start and was not written down, and a jig session read "nothing syncs" as "do not copy" and refused a sync the operator asked for. Now it is written down.
+
 Roles: one developer. Multi-dev support was carried for months, never used, and is not carried here — which is why session filenames are `YYYY-MM-DD-HHMM-<slug>.md` with no dev handle in the middle.
 
 ## Stack

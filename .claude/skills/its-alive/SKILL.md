@@ -234,7 +234,7 @@ Read-only. It prints which `logic`-class files differ from the templates, which 
 
 **Why this check lives here rather than in jig.** A repo's drift only matters when you are about to work in it, and that is exactly when this runs. A dormant project can sit twelve template changes behind for months at no cost — the day you open it for a one-line bugfix, the briefing says so and you decide whether to sync first or ignore it. That also means there is no fleet list to maintain, and no report enumerating repos nobody has touched since spring.
 
-**It reports; it does not act.** Do not sync, do not copy, do not offer to. Deciding what should cross is the part that needs a person, and this exists so that person is not guessing at the state.
+**It reports; it does not act.** Do not sync, do not copy, do not offer to. Deciding what should cross is the part that needs a person, and this exists so that person is not guessing at the state. When they decide, the copy is done from a session *in jig*, which commits on a branch in this repo and opens the pull request here — never from this session, which cannot ship into another checkout and would be writing into its own working tree mid-task.
 
 If jig doesn't resolve, skip silently and say so in Context. A session must never be blocked by a checkout not being on this machine.
 
