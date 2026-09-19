@@ -80,7 +80,7 @@ Two things the gate cannot check, which is why they are here:
 
 **Task model:** PROJECT_PLAN.md is read at planning and written at retro, untouched mid-phase. Current tasks are GitHub Issues. The phase ends when its issues close.
 
-**Workflow fixes don't get made here.** A skill or shared agent that misbehaves in this project is not fixed in this project — those files are canonical in jig, no automation syncs them in either direction, and a local fix becomes invisible drift in a file meant to be identical everywhere. Say what broke; fixing it is a deliberate act in jig, and bringing the fix here is a jig session's copy, asked for by name.
+**Workflow fixes don't get made here.** A skill or shared agent that misbehaves in this project is not fixed in this project — those files are canonical in jig, no automation syncs them in either direction, and a local fix becomes invisible drift in a file meant to be identical everywhere. Say what broke. Do not edit the file here, and do not copy a fix in from jig yourself: fixing it is a deliberate act in jig, and bringing the fix here is a jig session's copy, asked for by name.
 
 ## Agents
 
