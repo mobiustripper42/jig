@@ -5,7 +5,7 @@ branch: task/36-one-piece-lives-in-jig
 started: 2026-09-19T01:20:19Z
 ended:
 points:
-pr_numbers: [39, 40]
+pr_numbers: [39, 40, 41]
 status: open
 transcript: /home/eric/.claude/projects/-home-eric-jig/770810a2-c217-5022-b202-8c185f8cc5b8.jsonl
 ---
@@ -48,6 +48,23 @@ transcript: /home/eric/.claude/projects/-home-eric-jig/770810a2-c217-5022-b202-8
 **Points:** 2
 **Branch:** task/templates-cross-by-a-jig-session
 **Opened at:** 2026-09-19T02:35:00Z
+
+## Task 3: its-dead cited a jig-only script bare
+
+**Completed:**
+
+- **Three citations in `.claude/skills/its-dead/SKILL.md`** changed from `scripts/keep-tape.mjs` to `<jig>/scripts/keep-tape.mjs`, plus ten words at first use saying what `<jig>` is. The script is `jig-only`; the skill ships everywhere; `check-context.mjs:84` resolves any cited path without a `<`. Muster's context check went red the moment it received the skill.
+- **Found by the muster session**, not by jig, because jig has the file and its own gate cannot see the defect. The convention `<jig>/` already existed in `its-alive`.
+- **Also this task, outside jig:** synced muster. Cut `task/sync-jig-templates-2026-09-19` from `origin/main` in `../muster` (its `main` is held by the `muster-s91` worktree), copied five drift files, deleted its style copy, opened [muster PR #1038](https://github.com/mobiustripper42/muster/pull/1038). Left it red on `check:dictionary` — fifteen findings in muster's own context file, which the operator chose to have a muster session fix. That session did, and found this bug.
+
+**Code review:** clean, one cleanup taken. The reviewer confirmed by execution that `isClaim` skips the new form, and that these were the only three bare citations of a jig-only path in any shipped file. `/security-review` ran for `.claude/skills/**` and confirmed the executable block is byte-identical to `main`.
+
+**PR:** [PR #41](https://github.com/mobiustripper42/jig/pull/41)
+**Points:** 2
+**Branch:** task/its-dead-cites-jig-only-script
+**Opened at:** 2026-09-19T03:05:00Z
+
+**Gap found, not filed:** a `logic`/`hybrid` file citing a `jig-only` path bare is checkable from the registry and nothing checks it. Same shape as the symlink check from Task 1. Both are `settings-policy`/`check-context` mechanisms a future task could add.
 
 **Next Steps:**
 
