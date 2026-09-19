@@ -86,21 +86,26 @@ describe('classification', () => {
     expect(out).toMatch(/logic\s+docs\/decisions\/decision-record\.schema\.json\s+absent here/)
   })
 
-  it('ships output styles, which every project carries and none turns on by default', () => {
-    // The style file is shared vocabulary; the choice of which is ON lives in
-    // `.claude/settings.local.json`, gitignored and per-machine. Without a registry entry this
-    // path is UNCLASSIFIED — caught by the sibling test, but only as an absence, and the point
-    // here is that a project is positively told it is missing the file.
-    const { out } = run(['--jig', JIG, project({})])
-    expect(out).toMatch(/logic\s+\.claude\/output-styles\/one-piece\.md\s+absent here/)
+  it('does not ask a project for the output style, and flags a copy it holds anyway', () => {
+    // The style file lives in jig and is read by every session on the machine through a symlink
+    // at `~/.claude/output-styles/one-piece.md` (DEC-J007). A project copy is one more place a
+    // stale version can sit, and the version being iterated in jig never reaches it. That is why
+    // this is `jig-only` and why the finding is NOT YOURS rather than a diff — the fix is
+    // deletion, never a sync.
+    const clean = run(['--jig', JIG, project({})])
+    expect(clean.out).not.toMatch(/output-styles\/one-piece\.md/)
+
+    const held = run(['--jig', JIG, project({ '.claude/output-styles/one-piece.md': 'stale' })])
+    expect(held.out).toMatch(/jig-only\s+\.claude\/output-styles\/one-piece\.md/)
   })
 
   it('notices a style the project added that jig does not ship', () => {
-    // The registry says every project carries every style. A closed-set claim the script neither
-    // enforces nor observes is the shape this repo keeps finding defects in — and skills and
-    // agents already got this detector, so a style going unmentioned was asymmetric as well as
-    // wrong. Nothing stops a project writing one: the directory is writable and
-    // `settings.local.json` can point `outputStyle` at any name.
+    // Written when the registry said every project carries every style — a closed-set claim the
+    // script neither enforced nor observed, which is the shape this repo keeps finding defects in.
+    // The registry no longer says that (DEC-J007: no project holds a copy), but the detector
+    // still matters: nothing stops a project writing its own style, the directory is writable,
+    // and `settings.local.json` can point `outputStyle` at any name. Skills and agents have the
+    // same detector, so a style going unmentioned would be asymmetric as well as wrong.
     const p = project({ '.claude/output-styles/house.md': '---\nname: House\n---\n' })
     const { out } = run(['--jig', JIG, p])
     expect(out).toMatch(/\.claude\/output-styles\/house\.md\s+not a template/)

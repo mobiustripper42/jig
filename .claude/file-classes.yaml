@@ -6,7 +6,10 @@
 #   context  → never copy; the project owns its version and differing is correct
 #   hybrid   → copy the shell only; the paired `-context.md` file is project-owned
 #   presence → must exist; contents are never compared and never copied
-#   jig-only → lives here and a project never holds a copy; absence is not drift
+#   jig-only → lives here and a project never holds a copy; absence is not drift.
+#              Two shapes share it: jig's own tooling that no project runs (`scripts/**`),
+#              and the one file every session reads from here through the machine
+#              (`.claude/output-styles/**`). Same rule either way — a project copy is a fork.
 #
 # Read by `scripts/drift.mjs`. First match wins, so carve-outs precede globs.
 #
@@ -21,11 +24,20 @@ file-classes:
   # ── Live files — one copy, and jig runs the bytes it ships (DEC-J001) ────────
   - ".claude/skills/**": logic
 
-  # Output styles. Every project carries every style; which one is ON is a per-machine
-  # choice living in `.claude/settings.local.json`, which is gitignored and never travels.
-  # That split is the point: the style file is shared vocabulary and worth reviewing once,
-  # while the choice is a preference nobody else should inherit.
-  - ".claude/output-styles/**": logic
+  # Output styles. ONE COPY, HERE, AND NO PROJECT HOLDS ONE (DEC-J007). Every session on the
+  # machine reads it through a symlink at `~/.claude/output-styles/one-piece.md`, and the
+  # choice of which style is ON is `outputStyle` in `~/.claude/settings.json` — also machine,
+  # never shipped.
+  #
+  # This was `logic` until 2026-09-18, meaning every project carried a copy. Two things made
+  # that the wrong class. A repo copy BEATS the machine file — observed: soundings holding a
+  # stale v2 ran it over the machine's v6 — so the version being iterated in jig reached nobody
+  # who still had one, silently. And the setting that turns it on is a per-person preference,
+  # so a shipped file plus a shipped key meant the operator could not set it once anywhere.
+  #
+  # `jig-only` gives the right finding for free: a project holding a copy is reported as NOT
+  # YOURS, and the fix is deletion, never a sync.
+  - ".claude/output-styles/**": jig-only
 
   # THE `scripts/**` DEFAULT IS INVERTED FROM SEEDS, and this is the debt seeds
   # recorded coming due rather than a new opinion.
