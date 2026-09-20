@@ -5,7 +5,7 @@ branch: task/36-one-piece-lives-in-jig
 started: 2026-09-19T01:20:19Z
 ended:
 points:
-pr_numbers: [39, 40, 41, 42, 44]
+pr_numbers: [39, 40, 41, 42, 44, 45]
 status: open
 transcript: /home/eric/.claude/projects/-home-eric-jig/770810a2-c217-5022-b202-8c185f8cc5b8.jsonl
 ---
@@ -92,6 +92,24 @@ transcript: /home/eric/.claude/projects/-home-eric-jig/770810a2-c217-5022-b202-8
 **Points:** 1
 **Branch:** task/poker-one-task-per-turn
 **Opened at:** 2026-09-20T14:30:00Z
+
+## Task 6: doc-check.json is presence, with a scaffold
+
+**Completed:**
+
+- **`.claude/doc-check.json` reclassed `context` → `presence`** in `.claude/file-classes.yaml`. `check-docs.mjs` throws without it, so a gate's required file can't be class-hidden from drift. Found from a centerline session.
+- **`scaffold/claude/doc-check.json`** added as the install-time starter; `check-docs.mjs`'s throw now names it.
+- **Corrected a false comment** claiming the file is "byte-identical across projects" — its contents are project-specific.
+- **Two drift tests:** an absent one is MISSING (watched red under `context`), a present-but-different one is not drift.
+
+**Code review:** 0 findings. The reviewer reverted the class and reran the suite to confirm the test is non-vacuous, and ran `check:docs` against jig's tree to confirm the scaffold's roster claim resolves. `/security-review` not run — dev tooling and a config scaffold.
+
+**PR:** [PR #45](https://github.com/mobiustripper42/jig/pull/45)
+**Points:** 3
+**Branch:** task/doc-check-is-presence-with-a-scaffold
+**Opened at:** 2026-09-20T15:10:00Z
+
+**Waiting on this merge:** the centerline sync. Two reports came from centerline — this one (report 1, a real jig bug, fixed here) and report 2 (its-dead cited keep-tape bare, already fixed in PR #41). Once #45 merges, centerline gets a sync bringing the #41 its-dead and this doc-check change, plus deletion of centerline's two jig-only keep-tape copies that drift flags NOT YOURS.
 
 **Next task, from the review's escalation:** `drift.mjs` could refuse to print `nothing differs.` while `notRun` or `notYours` is nonzero, turning the checklist's step three from a remembered check into an enforced one. That is a change to drift's output contract with its own tests. This is the third mechanism gap this session surfaced and deferred, alongside the symlink check (Task 1) and the bare-jig-only-citation check (Task 3) — all three are jig turning a prose rule that was broken into a gate that can't be.
 
