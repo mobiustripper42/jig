@@ -138,6 +138,20 @@ describe('classification', () => {
     expect(out).toMatch(/Contents are yours and are never compared/)
   })
 
+  it('reports an absent doc-check.json, because a shipped gate throws without it', () => {
+    // `.claude/doc-check.json` carries check-docs's rosters and exemptions and is project-owned,
+    // but check-docs.mjs throws when it is absent — so presence is mandatory and context (which
+    // hides absence) was the wrong class. An empty project must show it MISSING.
+    const { out } = run(['--jig', JIG, project({})])
+    expect(out).toMatch(/MISSING[\s\S]*\.claude\/doc-check\.json/)
+  })
+
+  it('does not report a present doc-check.json as drift, however different its contents', () => {
+    const p = project({ '.claude/doc-check.json': '{"repo":"someone/else","rosters":{}}\n' })
+    const { out } = run(['--jig', JIG, p])
+    expect(out).not.toMatch(/doc-check\.json\s+differs/)
+  })
+
   it('does not report a context-class file as drift, however different it is', () => {
     const p = project({ '.claude/CLAUDE-context.md': 'entirely this project\'s own words\n' })
     const { out } = run(['--jig', JIG, p])
