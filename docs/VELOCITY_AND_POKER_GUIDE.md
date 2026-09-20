@@ -83,7 +83,9 @@ It reads GitHub directly (needs `gh` installed and authed): points off closed is
 
 ### How to poker (solo dev + Claude)
 
-**Setup:** Claude proposes effort for each task in a phase. You review.
+**Setup:** One task per turn. Claude states one task — its number, its title, the proposed effort, and the one reason for that number — then stops. You answer with a number or "fine." The next task follows. The plan file is updated once, after the whole phase has been scored, never per task.
+
+**Why one at a time:** the whole phase as one table is unreadable on a phone and skips the per-task debate the example below turns on. A table of estimates gets a thumbs-up as a whole, and a thumbs-up is not an estimate.
 
 **The conversation:**
 ```
