@@ -112,8 +112,15 @@ file-classes:
   # The project-owned half of that pair. Never copied, never compared — the template is a
   # placeholder in `scaffold/claude/` and this is whatever the project wrote.
   - ".claude/CLAUDE-context.md": context
-  # Project-owned config: the repo slug, the roster claims, the exemption lists.
-  - ".claude/doc-check.json": context
+  # `.claude/doc-check.json` carries check-docs's rosters and exemption lists — the repo slug,
+  # which docs claim a complete skill/agent roster, which are historical ledgers, which slash
+  # commands are deliberately foreign. `presence`, not `context`, for the same reason
+  # `.claude/settings.json` is: its CONTENTS are the project's and comparing them would be noise,
+  # but its PRESENCE is not a matter of opinion — `check-docs.mjs` throws without it, so an absent
+  # one is a broken gate, not a project choice. `context` hid that: drift never flagged the
+  # absence and the install never made a starter. `scaffold/claude/doc-check.json` is the starter;
+  # a project fills it in once and owns it after.
+  - ".claude/doc-check.json": presence
 
   # ── jig's own documents — a project holds nothing at these paths ─────────────
   #
