@@ -5,7 +5,7 @@ branch: task/36-one-piece-lives-in-jig
 started: 2026-09-19T01:20:19Z
 ended:
 points:
-pr_numbers: [39, 40, 41, 42]
+pr_numbers: [39, 40, 41, 42, 44]
 status: open
 transcript: /home/eric/.claude/projects/-home-eric-jig/770810a2-c217-5022-b202-8c185f8cc5b8.jsonl
 ---
@@ -78,6 +78,20 @@ transcript: /home/eric/.claude/projects/-home-eric-jig/770810a2-c217-5022-b202-8
 **Points:** 2
 **Branch:** task/sync-is-a-checklist
 **Opened at:** 2026-09-19T03:40:00Z
+
+## Task 5: Poker one task per turn, not the whole phase as a table
+
+**Completed:**
+
+- **`docs/VELOCITY_AND_POKER_GUIDE.md` "How to poker" Setup** rewritten to one task per turn: Claude states one task with its reason and stops, the user answers a number or "fine", the plan updates once after the phase is scored. A "Why one at a time" line carries the operator's reason. Observed in centerline Phase 0-4 poker.
+- **`@code-review` caught the example contradicting the new Setup** — Claude opened with no reason while the user's "It's not just UI" answered a UI claim never made. Added the reason to Claude's opening line, which fixed both. Also trimmed an over-written why line and a batch straggler in "When to re-estimate".
+
+**Code review:** 3 findings, all addressed. `/security-review` not run — a `logic` doc about estimation, no blast radius past the dev environment.
+
+**PR:** [PR #44](https://github.com/mobiustripper42/jig/pull/44)
+**Points:** 1
+**Branch:** task/poker-one-task-per-turn
+**Opened at:** 2026-09-20T14:30:00Z
 
 **Next task, from the review's escalation:** `drift.mjs` could refuse to print `nothing differs.` while `notRun` or `notYours` is nonzero, turning the checklist's step three from a remembered check into an enforced one. That is a change to drift's output contract with its own tests. This is the third mechanism gap this session surfaced and deferred, alongside the symlink check (Task 1) and the bare-jig-only-citation check (Task 3) — all three are jig turning a prose rule that was broken into a gate that can't be.
 
