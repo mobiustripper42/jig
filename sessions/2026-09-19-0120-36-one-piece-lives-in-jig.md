@@ -5,7 +5,7 @@ branch: task/36-one-piece-lives-in-jig
 started: 2026-09-19T01:20:19Z
 ended:
 points:
-pr_numbers: [39, 40, 41, 42, 44, 45]
+pr_numbers: [39, 40, 41, 42, 44, 45, 46]
 status: open
 transcript: /home/eric/.claude/projects/-home-eric-jig/770810a2-c217-5022-b202-8c185f8cc5b8.jsonl
 ---
@@ -108,6 +108,23 @@ transcript: /home/eric/.claude/projects/-home-eric-jig/770810a2-c217-5022-b202-8
 **Points:** 3
 **Branch:** task/doc-check-is-presence-with-a-scaffold
 **Opened at:** 2026-09-20T15:10:00Z
+
+## Task 7: Prose templates are not fenced
+
+**Completed:**
+
+- **Unfenced five user-facing display templates** across `.claude/skills/its-alive/SKILL.md` (Step 8 briefing) and `.claude/skills/its-dead/SKILL.md` (Step 3 prompt, Step 4 wall-clock, Step 4.5 warning, Step 6 closing summary). A session reproducing a fenced template fenced its output, which clips on a phone. Reproduced from centerline.
+- **Widened the output style's fence rule** in `.claude/output-styles/one-piece.md` from artifacts to any prose: a fence is for code and command output only, and a template written in a fence or blockquote delimits the example rather than being emitted.
+- The bash/command/file-write blocks in both skills stay fenced.
+
+**Code review:** 2 findings, both addressed — I'd left two more prose blocks fenced (the same miss the rule condemns), and the blockquote `>` marker needed a strip instruction for sessions not running this style, since these `logic` skills ship everywhere. `/security-review` ran for `.claude/skills/**` and confirmed presentation-only, every command block still fenced.
+
+**PR:** [PR #46](https://github.com/mobiustripper42/jig/pull/46)
+**Points:** 2
+**Branch:** task/prose-templates-are-not-fenced
+**Opened at:** 2026-09-21T13:00:00Z
+
+**The root cause was mine this session:** my own briefings and closing summaries were fenced because I reproduced the skill fences. The fix takes effect next session, since the output style is read at launch.
 
 **Waiting on this merge:** the centerline sync. Two reports came from centerline — this one (report 1, a real jig bug, fixed here) and report 2 (its-dead cited keep-tape bare, already fixed in PR #41). Once #45 merges, centerline gets a sync bringing the #41 its-dead and this doc-check change, plus deletion of centerline's two jig-only keep-tape copies that drift flags NOT YOURS.
 
