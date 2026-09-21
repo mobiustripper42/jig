@@ -57,12 +57,10 @@ If no `## Task <N>` blocks exist (a session that ran `/its-alive` and `/its-dead
 
 ## Step 3 — Append session-wide Context (optional)
 
-If the user wants to add session-wide Next Steps or Context notes that aren't per-task, prompt:
+If the user wants to add session-wide Next Steps or Context notes that aren't per-task, prompt them — as plain lines, not fenced:
 
-```
-Anything to add to **Next Steps** (what to pick up next session)?
-Anything for **Context** (gotchas, patterns, hidden constraints)?
-```
+> Anything to add to **Next Steps** (what to pick up next session)?
+> Anything for **Context** (gotchas, patterns, hidden constraints)?
 
 Append to the existing `**Next Steps:**` and `**Context:**` sections at the bottom of the file. These sections cover the session as a whole; per-task notes live inside their own `## Task <N>` block.
 
@@ -74,7 +72,7 @@ Compute on screen for the user's sanity check:
 WALL_CLOCK = (END_UTC − started) in hours, rounded to nearest 0.083h (5 min).
 ```
 
-Emit as plain prose lines, never fenced:
+Emit as plain prose lines, never fenced; drop the leading `>`, it marks the example:
 
 > Wall clock: Xh Ym  (started <ISO_STARTED>, ended <END_UTC>)
 > PRs this session: #N1, #N2, ...   (from pr_numbers list)
@@ -96,12 +94,10 @@ gh pr list --author @me --state all --limit 30 --json number,createdAt,headRefNa
 
 Keep the ones created at or after the session's `started:` stamp. Any of those **not** in `pr_numbers:` was shipped by hand.
 
-For each, display:
+For each, display as plain lines, not fenced:
 
-```
-⚠ PR #N (<branch>) was opened outside /kill-this — @code-review never ran on it.
-  Review before merging: @code-review against `gh pr diff N`.
-```
+> ⚠ PR #N (<branch>) was opened outside /kill-this — @code-review never ran on it.
+>   Review before merging: @code-review against `gh pr diff N`.
 
 Report only. Don't open the review yourself and don't backfill a `## Task` block for it — the user decides whether the PR is worth a retrospective pass. If every session PR is in `pr_numbers:`, say nothing.
 
@@ -150,7 +146,7 @@ No version bump. No CHANGELOG. No tag. No branch cleanup (task branches and thei
 
 ## Step 6 — Closing summary
 
-Emit as plain prose lines, never fenced:
+Emit as plain prose lines, never fenced; drop the leading `>`, it marks the example:
 
 > Session <N> closed.
 > Wall clock (raw): Xh Ym       <- gut-check only, not persisted

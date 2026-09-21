@@ -270,7 +270,7 @@ If jig doesn't resolve, skip silently — same rule as Step 7.5.
 
 ## Step 8 — Present briefing
 
-Emit the briefing as plain prose lines, never inside a code fence — a fence does not wrap on a phone. The shape:
+Emit the briefing as plain prose lines, never inside a code fence — a fence does not wrap on a phone. Drop the leading `>`; it marks the example boundary here. The shape:
 
 > Session <N> — <DATE_PART>
 > Started: <local time> (<UTC time>)

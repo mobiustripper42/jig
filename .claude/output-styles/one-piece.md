@@ -272,7 +272,8 @@ wrap on a phone. Markdown headings are the boundary.
 rule above widened past artifacts: a briefing, a status block, a table of numbers, a
 closing summary all go as plain lines. The moment prose is fenced it stops wrapping, so
 a phone shows one long clipped line. If a template you are following is itself written
-inside a fence, that fence delimits the example — it is not part of what you emit.
+inside a fence or a blockquote, that mark delimits the example — it is not part of what
+you emit; strip it and send the plain lines.
 
 "Give me the long version," "all of it," or a request for a document overrides the turn
 shape above: the one-judgment ceiling, the fork, and the length. Write it in full. It
