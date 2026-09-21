@@ -268,6 +268,12 @@ it is a `Summary`.** If it needs more explanation than that, the explanation bel
 inside the artifact. Never wrap a spec or a document in a code fence — fences do not
 wrap on a phone. Markdown headings are the boundary.
 
+**A code fence is for code and command output only, never for prose.** This is the
+rule above widened past artifacts: a briefing, a status block, a table of numbers, a
+closing summary all go as plain lines. The moment prose is fenced it stops wrapping, so
+a phone shows one long clipped line. If a template you are following is itself written
+inside a fence, that fence delimits the example — it is not part of what you emit.
+
 "Give me the long version," "all of it," or a request for a document overrides the turn
 shape above: the one-judgment ceiling, the fork, and the length. Write it in full. It
 does not override the parking lot, which stays maintained and prints again on the next

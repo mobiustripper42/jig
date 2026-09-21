@@ -74,12 +74,11 @@ Compute on screen for the user's sanity check:
 WALL_CLOCK = (END_UTC − started) in hours, rounded to nearest 0.083h (5 min).
 ```
 
-Display:
-```
-Wall clock: Xh Ym  (started <ISO_STARTED>, ended <END_UTC>)
-PRs this session: #N1, #N2, ...   (from pr_numbers list)
-Total points: <SUM>
-```
+Emit as plain prose lines, never fenced:
+
+> Wall clock: Xh Ym  (started <ISO_STARTED>, ended <END_UTC>)
+> PRs this session: #N1, #N2, ...   (from pr_numbers list)
+> Total points: <SUM>
 
 **Do not write this to the file.** The user verifies; `/retro` computes the persisted numbers at phase end.
 
@@ -151,20 +150,19 @@ No version bump. No CHANGELOG. No tag. No branch cleanup (task branches and thei
 
 ## Step 6 — Closing summary
 
-```
-Session <N> closed.
-Wall clock (raw): Xh Ym       <- gut-check only, not persisted
-PRs: #N1, #N2, ...            <- still need merging if any are still OPEN
-Points (per-task sum): <S>
+Emit as plain prose lines, never fenced:
 
-The session file is now atomic — no further writes will modify it.
-Time math (active = wall_clock − breaks, via break inference) + version bump will run at /retro.
-```
+> Session <N> closed.
+> Wall clock (raw): Xh Ym       <- gut-check only, not persisted
+> PRs: #N1, #N2, ...            <- still need merging if any are still OPEN
+> Points (per-task sum): <S>
+>
+> The session file is now atomic — no further writes will modify it.
+> Time math (active = wall_clock − breaks, via break inference) + version bump will run at /retro.
 
-If any `pr_numbers` PR is still OPEN, append:
-```
-⚠ PRs still OPEN: #N1, #N2. Merge them whenever — order and timing don't matter for retro math.
-```
+If any `pr_numbers` PR is still OPEN, append the line:
+
+> ⚠ PRs still OPEN: #N1, #N2. Merge them whenever — order and timing don't matter for retro math.
 
 If on a phase-rituals project, append:
 ```
