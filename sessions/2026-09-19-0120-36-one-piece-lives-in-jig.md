@@ -3,10 +3,10 @@ session: 6
 slug: 36-one-piece-lives-in-jig
 branch: task/36-one-piece-lives-in-jig
 started: 2026-09-19T01:20:19Z
-ended:
-points:
+ended: 2026-09-22T19:46:02Z
+points: 15
 pr_numbers: [39, 40, 41, 42, 44, 45, 46]
-status: open
+status: closed
 transcript: /home/eric/.claude/projects/-home-eric-jig/770810a2-c217-5022-b202-8c185f8cc5b8.jsonl
 ---
 
@@ -134,4 +134,14 @@ transcript: /home/eric/.claude/projects/-home-eric-jig/770810a2-c217-5022-b202-8
 
 **Next Steps:**
 
+- **Sync muster and centerline when each is on break and clean.** As of session close, muster owes four `logic` files (both skills, the poker guide, `check-docs.mjs`) and centerline owes two (both skills). Run the six-step checklist from a jig session; muster also wants its doc gates run since it takes `check-docs.mjs`. The output style is `jig-only` and already live machine-wide, so it never crosses.
+- **CenterLine planning is the real outstanding work.** Its install and handoff committed in an earlier session; the spec and phase plan from the handoff have not been written. Poker it one task per turn now that the guide says so.
+- **Three mechanism gaps surfaced and none built**, all the same shape — a prose rule that was broken, convertible to a gate that can't be: (1) `settings-policy` checking the machine's output-style symlink exists and points at this checkout; (2) a check that no `logic`/`hybrid` file cites a `jig-only` path bare; (3) `drift.mjs` refusing to print `nothing differs.` while `NOT RUN` or `NOT YOURS` is nonzero, which would make the sync checklist's step three enforced. Number 3 is the strongest.
+- **Two issues still open and deferred:** [issue #24](https://github.com/mobiustripper42/jig/issues/24) (check a code comment) and [issue #31](https://github.com/mobiustripper42/jig/issues/31) (SPEC vendor citations). Issue #36 closed via PR #39; issue #43 closed not-planned.
+
 **Context:**
+
+- **The session's recurring failure was verify-in-jig-and-assume-everywhere.** Two syncs shipped byte-identical files that failed in the target: `check-dictionary.mjs` changed what muster checks, and `its-dead` cited a path only jig has. Jig's own gates are green on both because jig has the files. The fix was Task 4's checklist, whose step four ("run every gate the target runs") is exactly the step I skipped twice.
+- **A project-level setting or file beats the machine one, silently.** Cost most of the earlier output-style thread. `outputStyle` in a shipped `.claude/settings.json`, and a repo's `.claude/output-styles/` copy, both won over the machine before PRs #38 and #39. First check when a setting seems not to take effect: is it set somewhere more specific than you looked.
+- **Output style is read once at launch.** The unfencing from PR #46 lands next session, which is why this session's briefings and summaries were fenced.
+- **Wall clock is meaningless here** — the session spans four calendar days. `/retro`'s break inference is the only number worth reading.
