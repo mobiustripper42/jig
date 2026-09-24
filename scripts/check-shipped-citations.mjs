@@ -67,9 +67,10 @@ const templates = () =>
  *
  * 1. A scaffold installs to a path jig also has its own unrelated file at. `scaffold/docs/SPEC.md`
  *    lands as the project's `docs/SPEC.md`; jig's `docs/SPEC.md` is a different document and is
- *    jig-only. Four docs collide this way, and they are the exact basename pair DEC-S049 proved
- *    must not be compared. Derived through `toProject` rather than hand-listed, so it cannot
- *    disagree with the mapping it inverts.
+ *    jig-only. Six paths collide this way as of writing — the four docs DEC-S049 argued about, plus
+ *    `.claude/CLAUDE-context.md` and `.claude/doc-check.json` — and the count is here to orient a
+ *    reader, not to be relied on. The set is derived through `toProject` rather than hand-listed,
+ *    so it cannot disagree with the mapping it inverts, and it grows on its own.
  * 2. Decision records. Every project keeps its own at `docs/decisions/`; jig's are excluded from
  *    the template set outright, so this repo's class for that prefix says nothing about what a
  *    project has. `drift.mjs` excludes the same prefix for the same reason.
@@ -112,7 +113,16 @@ const subjects = (all, scaffolded, classOf) =>
   })
 
 export function check() {
-  const classOf = classifier(fileClasses('.'))
+  let classes
+  try {
+    classes = fileClasses('.')
+  } catch {
+    // The lib throws rather than exiting, so every caller owns its own message (see its module
+    // note). Without this the gate answered a missing registry with a raw Node stack trace — which
+    // is what a reader gets for running it from anywhere but a repo root, since it reads cwd.
+    throw new Error('no .claude/file-classes.yaml here — run this from the root of a jig checkout')
+  }
+  const classOf = classifier(classes)
   const all = templates()
   const scaffolded = scaffoldTargets(all)
   const exempt = exemptions(scaffolded)
@@ -148,7 +158,16 @@ export function check() {
 }
 
 if (process.argv[1]?.endsWith('check-shipped-citations.mjs')) {
-  const failures = check()
+  let failures
+  try {
+    failures = check()
+  } catch (e) {
+    // Exit 2, as `drift.mjs` does for the same condition: "this could not run" is a different
+    // answer from "this ran and found something", and a `verify` chain reading them as one
+    // learns nothing from either.
+    console.error(`check-shipped-citations: ${e.message}`)
+    process.exit(2)
+  }
   if (failures.length) {
     console.error(`✗ shipped citations — ${failures.length} bare reference${failures.length === 1 ? '' : 's'} to a path jig keeps:\n`)
     for (const f of failures) console.error(`  ${f}`)

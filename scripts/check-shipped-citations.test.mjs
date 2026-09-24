@@ -165,11 +165,23 @@ describe('the paths that are jig-only here and present everywhere', () => {
     const p = repo(
       { '.claude/skills/**': 'logic', 'docs/**': 'jig-only' },
       {
-        '.claude/skills/retro/SKILL.md': 'Search `docs/decisions/` before writing one.\n',
+        '.claude/skills/retro/SKILL.md': 'It supersedes `docs/decisions/DEC-001-a-choice.md`.\n',
         'docs/decisions/DEC-001-a-choice.md': '---\nid: DEC-001\n---\n',
       },
     )
     expect(run(p).status).toBe(0)
+  })
+})
+
+describe('being run where it cannot work', () => {
+  it('says so and exits 2 rather than throwing a stack trace', () => {
+    // It reads cwd, so the wrong directory is the easy mistake. Exit 2 rather than 1: "could not
+    // run" and "ran and found something" are different answers, and a `verify` chain that reads
+    // them as one learns nothing from either.
+    const { out, status } = run(mkdtempSync(join(tmpdir(), 'no-registry-')))
+    expect(status).toBe(2)
+    expect(out).toMatch(/no \.claude\/file-classes\.yaml here/)
+    expect(out).not.toMatch(/at Object|at Module|node:internal/)
   })
 })
 
