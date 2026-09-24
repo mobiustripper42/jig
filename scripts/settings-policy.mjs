@@ -357,6 +357,8 @@ export function hookProblems(doc, { tapeQueue = join(homedir(), '.claude', 'tape
  */
 export function styleProblems(doc, { stylesDir = join(homedir(), '.claude', 'output-styles'), jig = JIG } = {}) {
   const want = doc.outputStyle
+  // A fast path, not a behaviour: `undefined` matches no frontmatter name, so the not-found return
+  // below already handles it. It is here to avoid reading every style file to learn nothing.
   if (!want) return []
   const dir = join(jig, '.claude', 'output-styles')
   if (!existsSync(dir)) return []
@@ -366,10 +368,50 @@ export function styleProblems(doc, { stylesDir = join(homedir(), '.claude', 'out
    * the file is `one-piece.md`; slugifying either direction works for this one style and breaks on
    * the first one whose name is not its filename.
    */
-  const named = readdirSync(dir)
+  const styles = readdirSync(dir)
     .filter((f) => f.endsWith('.md'))
-    .find((f) => /^name:\s*(.+)$/m.exec(readFileSync(join(dir, f), 'utf8').slice(0, 2000))?.[1].trim() === want)
-  if (!named) return []
+    .map((f) => ({ f, name: /^name:\s*(.+)$/m.exec(readFileSync(join(dir, f), 'utf8').slice(0, 2000))?.[1].trim() ?? null }))
+
+  /**
+   * A STYLE FILE THIS CANNOT READ A NAME OUT OF IS REPORTED, NOT SKIPPED, and the polarity is the
+   * whole point of the check existing.
+   *
+   * Dropping the `name:` key while editing jig's own style file made every machine go silent — the
+   * unnamed file matched nothing, the search found nothing, and the check returned "all clear" with
+   * `outputStyle` still set. That is the same self-silencing this was written to end, one level up:
+   * a check that cannot answer has to say so rather than answer "fine".
+   */
+  const unreadable = styles.filter((s) => s.name === null)
+  if (unreadable.length) {
+    return unreadable.map(
+      (s) => `      output style: ${join(dir, s.f)} has no frontmatter \`name:\` — this check cannot tell which style it is, so it can no longer answer for any of them`,
+    )
+  }
+
+  const matches = styles.filter((s) => s.name === want)
+  /**
+   * Two files claiming one name is jig's defect, not the machine's, and picking the first would
+   * report a correctly-linked machine as broken half the time depending on directory order. Latent
+   * while jig ships one style; cheap enough to refuse now rather than debug later.
+   */
+  if (matches.length > 1) {
+    return [`      output style: ${matches.map((s) => s.f).join(' and ')} both declare \`name: ${want}\` in ${dir} — jig cannot say which one this machine should link`]
+  }
+  if (!matches.length) return []
+  const named = matches[0].f
+
+  /**
+   * The fix line below is a command a person pastes into a shell, so the filename that goes into it
+   * has to be a plain filename. `keep-tape.mjs` guards its own declared name with the same rule and
+   * the same refusal, and one convention spelled two ways is how the second one rots.
+   *
+   * Not an escalation — a file inside this checkout is already running the script — so this is
+   * hardening rather than a patch, and it costs one line. Reported as jig's defect, like the
+   * duplicate name above, because that is whose it would be.
+   */
+  if (!/^[\w.-]+\.md$/.test(named)) {
+    return [`      output style: ${join(dir, named)} is not a plain filename — refusing to print a paste-ready command built from it`]
+  }
 
   const src = join(dir, named)
   const link = join(stylesDir, named)
@@ -380,11 +422,18 @@ export function styleProblems(doc, { stylesDir = join(homedir(), '.claude', 'out
    * deleted checkout reads as "nothing here" and gets reported as never bootstrapped — the wrong
    * finding with the wrong fix, on the machine where the right one matters most.
    */
-  let here
+  let here = null
+  let statError = null
   try {
     here = lstatSync(link)
-  } catch {
-    here = null
+  } catch (e) {
+    // An unreadable directory is not an uncreated link. Both leave `here` null, and answering
+    // `chmod 000 ~/.claude/output-styles` with "run this ln -sfn" sends the operator at a fix that
+    // cannot work — the same wrong-finding-wrong-fix the `lstatSync` note below is about.
+    if (e.code !== 'ENOENT') statError = e
+  }
+  if (statError) {
+    return [`      output style: ${link} could not be read — ${statError.code}. Nothing here can say whether the link is right until that is sorted`]
   }
   if (!here) {
     // Says what is checkable. What Claude Code actually does with a setting naming a style it
@@ -399,7 +448,18 @@ export function styleProblems(doc, { stylesDir = join(homedir(), '.claude', 'out
   try {
     target = realpathSync(link)
   } catch {
-    return [`      output style: ${link} points at ${readlinkSync(link)}, which does not exist — a checkout that moved or was deleted`, fix]
+    // "Cannot be resolved" rather than "does not exist": a symlink loop lands here too, and
+    // `realpathSync` does not distinguish them. `readlinkSync` reads one level and does not follow,
+    // so it survives both — but it is still a syscall inside a handler for a failed syscall, and a
+    // throw from here would crash the gate rather than report anything. The whole point of this
+    // branch is that a check which cannot answer says so.
+    let points
+    try {
+      points = readlinkSync(link)
+    } catch {
+      points = 'somewhere this cannot read'
+    }
+    return [`      output style: ${link} points at ${points}, which cannot be resolved — a checkout that moved, was deleted, or a link that loops`, fix]
   }
   if (resolve(target) !== resolve(realpathSync(src))) {
     return [`      output style: ${link} points at ${target}, not this checkout — edits here are not what this machine reads`, fix]

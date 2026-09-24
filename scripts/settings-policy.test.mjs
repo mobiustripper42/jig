@@ -12,7 +12,7 @@
 // testing the thing. The hook checks take their paths as arguments precisely so they don't need it.
 
 import { describe, expect, it } from 'vitest'
-import { mkdirSync, mkdtempSync, symlinkSync, writeFileSync } from 'node:fs'
+import { chmodSync, mkdirSync, mkdtempSync, symlinkSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { hookProblems, styleProblems } from './settings-policy.mjs'
@@ -186,8 +186,58 @@ describe('the output style this machine reads through jig', () => {
     const gone = bench()
     symlinkSync(join(gone.jig, '.claude', 'output-styles', 'vanished.md'), join(b.stylesDir, linked))
     const out = styleProblems({ outputStyle: 'One piece' }, b.opts).join('\n')
-    expect(out).toMatch(/which does not exist/)
+    expect(out).toMatch(/cannot be resolved/)
     expect(out).toMatch(/vanished\.md/)
+  })
+
+  /**
+   * A CHECK THAT CANNOT ANSWER HAS TO SAY SO, which is this whole file's argument one level up.
+   *
+   * Dropping the `name:` key while editing jig's own style file makes the unnamed file match
+   * nothing, the search find nothing, and the check return all-clear on every machine with
+   * `outputStyle` still set. Silent self-disablement is the exact failure `styleProblems` exists
+   * to end; it does not get to commit it.
+   */
+  it('reports a style file of its own it cannot read a name out of', () => {
+    const b = bench()
+    writeFileSync(b.styleFile, 'no frontmatter at all\n')
+    const out = styleProblems({ outputStyle: 'One piece' }, b.opts).join('\n')
+    expect(out).toMatch(/no frontmatter/)
+    expect(out).toMatch(/one-piece\.md/)
+  })
+
+  it('refuses to guess when two of jig\'s styles claim one name', () => {
+    // Picking the first would report a correctly-linked machine as broken half the time, depending
+    // on directory order. Latent while jig ships one style.
+    const b = bench()
+    writeFileSync(join(b.jig, '.claude', 'output-styles', 'twin.md'), '---\nname: One piece\n---\n\nbody\n')
+    const out = styleProblems({ outputStyle: 'One piece' }, b.opts).join('\n')
+    expect(out).toMatch(/both declare/)
+    expect(out).toMatch(/twin\.md/)
+  })
+
+  it('refuses to build a paste-ready command out of a filename that is not plain', () => {
+    // The fix line is a command a person pastes into a shell. `keep-tape.mjs` guards its own
+    // declared name with the same rule; one convention spelled two ways is how the second rots.
+    const b = bench()
+    writeFileSync(join(b.jig, '.claude', 'output-styles', '$(id).md'), '---\nname: Odd\n---\n\nbody\n')
+    const out = styleProblems({ outputStyle: 'Odd' }, b.opts).join('\n')
+    expect(out).toMatch(/not a plain filename/)
+    expect(out).not.toMatch(/ln -sfn/)
+  })
+
+  it('says the directory is unreadable rather than pointing at a fix that cannot work', () => {
+    // `chmod 000` on the styles directory leaves the same null stat as a link that was never made.
+    // Answering it with `ln -sfn` sends the operator at a repair that fails for a different reason.
+    const b = bench()
+    chmodSync(b.stylesDir, 0o000)
+    try {
+      const out = styleProblems({ outputStyle: 'One piece' }, b.opts).join('\n')
+      expect(out).toMatch(/could not be read/)
+      expect(out).not.toMatch(/ln -sfn/)
+    } finally {
+      chmodSync(b.stylesDir, 0o700)
+    }
   })
 
   it('says nothing when the link points at this checkout', () => {
