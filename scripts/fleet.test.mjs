@@ -47,10 +47,16 @@ const commit = (dir, files, { push = true } = {}) => {
  * A directory of repos with jig among them, and somewhere else holding their remotes. The remotes
  * live outside the root on purpose: a bare repo inside it would be one more thing to discover.
  */
-const bench = () => ({
-  root: mkdtempSync(join(tmpdir(), 'fleet-root-')),
-  remotes: mkdtempSync(join(tmpdir(), 'fleet-remotes-')),
-})
+const bench = ({ enclosed = false } = {}) => {
+  let root = mkdtempSync(join(tmpdir(), 'fleet-root-'))
+  if (enclosed) {
+    // The root sits inside another git repo, as it would under a home directory kept in git.
+    git(root, 'init', '-q', '-b', 'main')
+    root = join(root, 'code')
+    mkdirSync(root)
+  }
+  return { root, remotes: mkdtempSync(join(tmpdir(), 'fleet-remotes-')) }
+}
 const repo = (b, name, files) => {
   const bare = join(b.remotes, `${name}.git`)
   git(b.remotes, 'init', '-q', '--bare', '-b', 'main', bare)
@@ -153,6 +159,32 @@ describe('fleet', { timeout: 30_000 }, () => {
     const { out } = fleet(b)
     expect(out.split('\n').filter((l) => /^ {2}alpha\s/.test(l))).toHaveLength(1)
     expect(out).not.toMatch(/alpha-lane/)
+  })
+
+  it('ignores a plain directory, even when something above it is a git repo', () => {
+    // Inside an enclosing repo, git answers for every subdirectory, so a folder of notes would
+    // report the enclosing repo's refs under its own name. Found by review: dropping the toplevel
+    // comparison passed every other test here.
+    const b = bench({ enclosed: true })
+    repo(b, 'jig', JIG)
+    repo(b, 'alpha', onJig())
+    mkdirSync(join(b.root, 'notes'))
+    const { out } = fleet(b)
+    expect(out).not.toMatch(/notes|^no origin\/main/m)
+    expect(line(out, 'alpha')).toMatch(/nothing differs/)
+  })
+
+  it('says drift failed rather than calling the repo current', () => {
+    // drift exits 0 on findings and non-zero only when it cannot compare at all — here, a jig
+    // with no file-class registry. That run has no all-clear line, but it has no findings either.
+    const b = bench()
+    const { '.claude/file-classes.yaml': _, ...noRegistry } = JIG
+    repo(b, 'jig', noRegistry)
+    repo(b, 'alpha', onJig())
+    const { out, code } = fleet(b)
+    expect(line(out, 'alpha')).toMatch(/drift failed/)
+    expect(out).toMatch(/no \.claude\/file-classes\.yaml/)
+    expect(code).toBe(1)
   })
 
   it('names the repos that are not on jig, and never lists jig itself', () => {
