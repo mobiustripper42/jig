@@ -12,8 +12,9 @@
     "check:context": "node scripts/check-context.mjs",
     "check:docs": "node scripts/check-docs.mjs",
     "test": "vitest run --no-file-parallelism",
-    "verify": "npm run check:decisions && npm run check:dictionary && npm run check:denied && npm run check:context && npm run check:docs && npm run test",
-    "check:denied": "node scripts/check-denied.mjs"
+    "verify": "npm run check:decisions && npm run check:dictionary && npm run check:denied && npm run check:context && npm run check:docs && npm run check:shipped-citations && npm run test",
+    "check:denied": "node scripts/check-denied.mjs",
+    "check:shipped-citations": "node scripts/check-shipped-citations.mjs"
   },
   "devDependencies": {
     "js-yaml": "^5.4.1",

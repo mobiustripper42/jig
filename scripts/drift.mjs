@@ -23,6 +23,7 @@ import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import { basename, join, resolve } from 'node:path'
 import { createHash } from 'node:crypto'
+import { classifier, fileClasses as readFileClasses, toProject } from './lib/file-classes.mjs'
 
 /**
  * `die` is a function DECLARATION, not a const arrow, and that is load-bearing. `findJig` runs
@@ -127,15 +128,11 @@ const hash = (p) => createHash('sha256').update(readFileSync(p)).digest('hex')
  * switched off, wrapped around the one section anything actually read.
  */
 function fileClasses() {
-  const cfg = join(JIG, '.claude', 'file-classes.yaml')
-  if (!existsSync(cfg)) die('no .claude/file-classes.yaml in jig — nothing to classify against')
-  const body = readFileSync(cfg, 'utf8').split(/^file-classes:/m)[1] ?? ''
-  const out = []
-  for (const line of body.split('\n')) {
-    const m = line.match(/^\s*-\s*"([^"]+)"\s*:\s*([\w-]+)/)
-    if (m) out.push({ glob: m[1], cls: m[2] })
+  try {
+    return readFileClasses(JIG)
+  } catch {
+    die('no .claude/file-classes.yaml in jig — nothing to classify against')
   }
-  return out
 }
 
 /**
@@ -173,26 +170,9 @@ const NOT_TEMPLATES = new Set(['.claude/settings.local.json', '.claude/file-clas
 const EXCLUDED_PREFIXES = ['docs/decisions/']
 const EXCLUSION_EXCEPTIONS = new Set(['docs/decisions/decision-record.schema.json'])
 
-/**
- * jig-side path → project-side path.
- *
- * Identity for every live file, which is DEC-J001 stated as code: jig runs `.claude/skills/x`
- * and a project runs `.claude/skills/x`, and they are the same bytes because there is one copy.
- * The scaffolds are the only paths that move, because a placeholder's home in jig is not where it
- * lands — `scaffold/docs/SPEC.md` installs as the project's `docs/SPEC.md`, which jig also has a
- * completely different file at.
- *
- * `scaffold/templates/**` deliberately has no mapping. It installs to a path inside the project's
- * source tree that this script cannot know (`src/components/VersionTag.tsx` in a Next.js app, and
- * nowhere at all in a tool project). It is `context` class, so nothing ever compares it and the
- * missing mapping is never reached — but stating it here is cheaper than rediscovering it the
- * first time somebody reclassifies that glob.
- */
-function toProject(rel) {
-  if (rel.startsWith('scaffold/claude/')) return rel.replace('scaffold/claude/', '.claude/')
-  if (rel.startsWith('scaffold/docs/')) return rel.replace('scaffold/docs/', 'docs/')
-  return rel
-}
+// `toProject` — jig-side path → project-side path — is imported from `lib/file-classes.mjs`, which
+// carries the mapping and the reason it exists. `check-shipped-citations.mjs` needs the same answer
+// about the same four scaffold collisions, and two copies of it would be two answers.
 
 /**
  * TYPE GATING IS NOT IMPLEMENTED HERE, DELIBERATELY, and this note exists so the next reader does
@@ -219,18 +199,9 @@ function walk(dir, base = dir) {
 }
 
 const classes = fileClasses()
-/**
- * `**` is parked under a placeholder so the single-`*` pass can't chew it in half, then restored.
- * That placeholder used to be a raw NUL byte, which made this entire file BINARY to git: every
- * diff of drift.mjs printed `Binary files a/… and b/… differ`, so no change to it was ever
- * reviewable in a PR and @code-review read none of them — including the change that introduced the
- * NUL. A printable token costs nothing and keeps the file text. Collision isn't a real risk:
- * `routine-config.yaml` holds repo paths, and one containing this string isn't worth defending.
- */
-const classOf = (rel) => classes.find(({ glob }) => {
-  const re = new RegExp('^' + glob.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*\*/g, '@@GLOBSTAR@@').replace(/\*/g, '[^/]*').replace(/@@GLOBSTAR@@/g, '.*') + '$')
-  return re.test(rel)
-})?.cls
+// The glob→regex translation lives in `lib/file-classes.mjs` with the note about the NUL byte that
+// once made this file binary to git.
+const classOf = classifier(classes)
 
 /**
  * Every template jig ships, as repo-relative paths. Seeds walked one directory and prefixed each

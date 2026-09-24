@@ -73,6 +73,16 @@ file-classes:
   # imported only by `settings-policy.mjs`, which is jig-only, and `records.test.mjs` is a test
   # suite a project runs no more than it runs the others.
   - "scripts/lib/records.mjs": logic
+
+  # A GATE NAMED LIKE A SHIPPED ONE THAT MUST NOT SHIP, so it is carved out above the glob that
+  # would claim it. `check-shipped-citations.mjs` asks whether a file a project receives cites a
+  # path jig keeps to itself — a question that needs this registry and jig's own tree to answer, and
+  # that is meaningless in a project, which has neither. Under `check-*.mjs: logic` every project
+  # would receive a gate it cannot run, and `drift.mjs` would then report it NOT RUN in each of them
+  # for never being wired into a `verify` it does not belong in.
+  #
+  # The name is kept despite that, because it is what the gate is. The carve-out is the cost.
+  - "scripts/check-shipped-citations.mjs": jig-only
   - "scripts/check-*.mjs": logic
   - "scripts/gen-*.mjs": logic
   - "scripts/**": jig-only
