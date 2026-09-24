@@ -461,7 +461,18 @@ const show = (title, rs) => {
   }
   console.log('')
 }
-if (!rows.length && !missing.length && !unclassified.length) console.log('  nothing differs.\n')
+/**
+ * Guarded on every finding this run can make, not on three of the five.
+ *
+ * `notRun` and `notYours` were left out, so a project whose only problems were an unwired gate or
+ * a jig-only copy printed the all-clear as its headline and the finding underneath it — the
+ * arrangement that let `check-denied` sit switched off in muster for three days while every run
+ * read clean. Nothing replaces the line when it is withheld: the blocks below carry their own
+ * footers saying what to do, and a second summary line is one more sentence to keep true.
+ */
+if (!rows.length && !missing.length && !unclassified.length && !notRun.length && !notYours.length) {
+  console.log('  nothing differs.\n')
+}
 /**
  * A jig-side gap, printed last and phrased as one. It is not this project's drift and
  * there is nothing to copy in response — the fix is an entry in jig's registry. Kept out

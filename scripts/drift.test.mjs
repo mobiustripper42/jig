@@ -325,3 +325,66 @@ describe('which jig it compared against', () => {
     expect(out).toMatch(/^jig at \S+ [0-9a-f]{7,}/m)
   })
 })
+
+/**
+ * The all-clear line, and the two findings it used to print over the top of.
+ *
+ * `nothing differs.` was guarded on `rows`, `missing` and `unclassified` and not on `notRun` or
+ * `notYours`, so a project whose only findings were an unwired gate or a jig-only copy got the
+ * all-clear as its headline and the finding underneath it. That is the arrangement that let
+ * `check-denied` sit switched off in muster for three days while every drift run read clean.
+ */
+describe('the all-clear line', () => {
+  /**
+   * A MINIMAL JIG, because the real one cannot make a project clean.
+   *
+   * Every other case in this file compares against `JIG`, where a throwaway project is absent two
+   * dozen templates — so `rows` is never empty, the all-clear is unreachable, and a test written
+   * that way would pass against the broken code while asserting nothing. Holding `jig-version` is
+   * the whole test for a jig checkout (`drift.mjs:87`), so a fake one is three files.
+   */
+  const fakeJig = (classes, files) => {
+    const dir = mkdtempSync(join(tmpdir(), 'driftjig-'))
+    writeFileSync(join(dir, 'jig-version'), '6\n')
+    mkdirSync(join(dir, '.claude'), { recursive: true })
+    const entries = Object.entries(classes).map(([glob, cls]) => `  - "${glob}": ${cls}\n`).join('')
+    writeFileSync(join(dir, '.claude', 'file-classes.yaml'), `file-classes:\n${entries}`)
+    for (const [rel, text] of Object.entries(files)) {
+      mkdirSync(join(dir, rel, '..'), { recursive: true })
+      writeFileSync(join(dir, rel), text)
+    }
+    return dir
+  }
+
+  const SHARED = { 'docs/CHEATSHEET.md': 'the one file both sides hold\n' }
+
+  it('prints when the project really has nothing to report', () => {
+    const jig = fakeJig({ 'docs/CHEATSHEET.md': 'logic' }, SHARED)
+    expect(run(['--jig', jig, project(SHARED)]).out).toMatch(/nothing differs/)
+  })
+
+  it('is withheld when the only finding is a gate the project never runs', () => {
+    const files = { ...SHARED, 'scripts/check-foo.mjs': 'a gate\n' }
+    const jig = fakeJig({ 'docs/CHEATSHEET.md': 'logic', 'scripts/check-foo.mjs': 'logic' }, files)
+    const p = project({
+      ...files,
+      'package.json': JSON.stringify({
+        name: 'p',
+        scripts: { 'check:foo': 'node scripts/check-foo.mjs', verify: 'npm run test' },
+      }),
+    })
+    const { out } = run(['--jig', jig, p])
+    // Both halves. Asserting only the absence would go green if the fixture quietly stopped
+    // producing a finding at all, which is the same way a test passes against the wrong mechanism.
+    expect(out).toMatch(/gate\s+check:foo\b/)
+    expect(out).not.toMatch(/nothing differs/)
+  })
+
+  it('is withheld when the only finding is a jig-only file the project holds', () => {
+    const files = { ...SHARED, 'scripts/keep-tape.mjs': 'jig keeps this one\n' }
+    const jig = fakeJig({ 'docs/CHEATSHEET.md': 'logic', 'scripts/keep-tape.mjs': 'jig-only' }, files)
+    const { out } = run(['--jig', jig, project(files)])
+    expect(out).toMatch(/jig-only\s+scripts\/keep-tape\.mjs/)
+    expect(out).not.toMatch(/nothing differs/)
+  })
+})
