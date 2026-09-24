@@ -38,7 +38,7 @@
  * Exit: 0 = current; 1 = stale, absent or unreadable; 2 = usage error.
  */
 
-import { readFileSync, writeFileSync, existsSync, copyFileSync, statSync, readdirSync, unlinkSync } from 'node:fs'
+import { readFileSync, writeFileSync, existsSync, copyFileSync, statSync, lstatSync, readdirSync, readlinkSync, realpathSync, unlinkSync } from 'node:fs'
 import { basename, join, resolve } from 'node:path'
 import { homedir } from 'node:os'
 import { fileURLToPath } from 'node:url'
@@ -334,8 +334,87 @@ export function hookProblems(doc, { tapeQueue = join(homedir(), '.claude', 'tape
   return out
 }
 
-/** @returns {'current'|'stale'|'absent'|'unreadable'} */
-function check(label, path, { style = false } = {}) {
+/**
+ * THE STYLE FILE THIS MACHINE READS THROUGH JIG, and the same argument as the hook above.
+ *
+ * `~/.claude/output-styles/one-piece.md` is a symlink into a jig checkout, made by hand once per
+ * machine, so that editing the style in jig is live at the next session start with nothing to copy.
+ * Nothing has ever checked it. A regular file there, or a link into a checkout that has moved, runs
+ * something other than jig's copy — and the only symptom is a session that does not behave like the
+ * style says, which nobody attributes to a symlink.
+ *
+ * FIRES ONLY WHEN `outputStyle` NAMES A STYLE JIG SHIPS, and that condition is what makes it usable
+ * rather than noisy. An unset setting has no symptom: nothing is reading the file, so a missing link
+ * is a machine that never bootstrapped one rather than a machine running the wrong thing. A setting
+ * naming somebody's own style is their business; jig answers for jig's.
+ *
+ * Note the asymmetry with the setting itself, which is deliberate and documented in `MACHINE_KEYS`:
+ * jig does not manage WHICH style is on, and this does not either. It reads the setting only to
+ * learn whether the file matters on this machine.
+ *
+ * Reported, never repaired. `--write` edits `permissions` and the machine keys; creating a symlink
+ * in the operator's home directory is a different operation, and the fix is one line they can read.
+ */
+export function styleProblems(doc, { stylesDir = join(homedir(), '.claude', 'output-styles'), jig = JIG } = {}) {
+  const want = doc.outputStyle
+  if (!want) return []
+  const dir = join(jig, '.claude', 'output-styles')
+  if (!existsSync(dir)) return []
+
+  /**
+   * Matched on the frontmatter `name`, not a slug of the filename. The setting says `One piece` and
+   * the file is `one-piece.md`; slugifying either direction works for this one style and breaks on
+   * the first one whose name is not its filename.
+   */
+  const named = readdirSync(dir)
+    .filter((f) => f.endsWith('.md'))
+    .find((f) => /^name:\s*(.+)$/m.exec(readFileSync(join(dir, f), 'utf8').slice(0, 2000))?.[1].trim() === want)
+  if (!named) return []
+
+  const src = join(dir, named)
+  const link = join(stylesDir, named)
+  const fix = `      Fix: ln -sfn ${src} ${link}`
+
+  /**
+   * `lstatSync`, not `existsSync`. `existsSync` follows the link, so a symlink pointing at a
+   * deleted checkout reads as "nothing here" and gets reported as never bootstrapped — the wrong
+   * finding with the wrong fix, on the machine where the right one matters most.
+   */
+  let here
+  try {
+    here = lstatSync(link)
+  } catch {
+    here = null
+  }
+  if (!here) {
+    // Says what is checkable. What Claude Code actually does with a setting naming a style it
+    // cannot find is not something this script has observed, and a confident sentence about it
+    // would be the kind of invented mechanism the record keeps catching.
+    return [`      output style: "${want}" is set and ${link} does not exist — nothing links this machine to jig's copy`, fix]
+  }
+  if (!here.isSymbolicLink()) {
+    return [`      output style: ${link} is a regular file, not a symlink — a copy that will never follow jig, and it wins silently`, fix]
+  }
+  let target
+  try {
+    target = realpathSync(link)
+  } catch {
+    return [`      output style: ${link} points at ${readlinkSync(link)}, which does not exist — a checkout that moved or was deleted`, fix]
+  }
+  if (resolve(target) !== resolve(realpathSync(src))) {
+    return [`      output style: ${link} points at ${target}, not this checkout — edits here are not what this machine reads`, fix]
+  }
+  return []
+}
+
+/**
+ * `machine`, not `style`. The flag means "this is the user-level file, so apply the checks that are
+ * about this box" — it was called `style` before anything here had an opinion about output styles,
+ * and `styleProblems` below now makes that one word mean two things in one function.
+ *
+ * @returns {'current'|'stale'|'absent'|'unreadable'}
+ */
+function check(label, path, { machine = false } = {}) {
   if (!existsSync(path)) {
     console.log(`  ABSENT   ${label}`)
     console.log(`           ${path}`)
@@ -356,9 +435,10 @@ function check(label, path, { style = false } = {}) {
     console.log(`           Fix: node ${rel(import.meta.url)} --write ${path}`)
     return 'stale'
   }
-  const keyIssues = style ? machineKeyProblems(got.value) : []
-  const hookIssues = style ? hookProblems(got.value) : []
-  if (same(perms, masterPerms) && !keyIssues.length && !hookIssues.length) {
+  const keyIssues = machine ? machineKeyProblems(got.value) : []
+  const hookIssues = machine ? hookProblems(got.value) : []
+  const styleIssues = machine ? styleProblems(got.value) : []
+  if (same(perms, masterPerms) && !keyIssues.length && !hookIssues.length && !styleIssues.length) {
     console.log(`  current  ${label}`)
     return 'current'
   }
@@ -367,9 +447,11 @@ function check(label, path, { style = false } = {}) {
   for (const l of describe(perms)) console.log(l)
   for (const l of keyIssues) console.log(l)
   for (const l of hookIssues) console.log(l)
-  // Only offer --write when --write can actually fix what was reported. The hook is not one of
-  // those things, and a repair command printed under a problem it does not repair is worse than
-  // no command: it gets run, it reports success, and the problem is still there.
+  for (const l of styleIssues) console.log(l)
+  // Only offer --write when --write can actually fix what was reported. Neither the hook nor the
+  // style symlink is one of those things, and a repair command printed under a problem it does not
+  // repair is worse than no command: it gets run, it reports success, and the problem is still
+  // there. Both carry their own fix line instead.
   if (!same(perms, masterPerms) || keyIssues.length) console.log(`           Fix: node ${rel(import.meta.url)} --write ${path}`)
   return 'stale'
 }
@@ -453,7 +535,7 @@ if (process.argv[1]?.endsWith('settings-policy.mjs')) {
   if (mode === 'write') write(resolve(writeTarget ?? USER_SETTINGS)) // exits
 
   const results = []
-  if (mode === 'user' || mode === 'all') results.push(check('user settings   (this machine, every project)', USER_SETTINGS, { style: true }))
+  if (mode === 'user' || mode === 'all') results.push(check('user settings   (this machine, every project)', USER_SETTINGS, { machine: true }))
   if (mode === 'repo' || mode === 'all') results.push(check('shared project  (committed; travels with the repo)', REPO_SETTINGS))
 
   const bad = results.filter((r) => r !== 'current').length

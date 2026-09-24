@@ -12,10 +12,10 @@
 // testing the thing. The hook checks take their paths as arguments precisely so they don't need it.
 
 import { describe, expect, it } from 'vitest'
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, symlinkSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
-import { hookProblems } from './settings-policy.mjs'
+import { hookProblems, styleProblems } from './settings-policy.mjs'
 
 const KEEP_TAPE = '/home/eric/jig/scripts/keep-tape.mjs'
 /** A settings doc with one SessionEnd command hook. */
@@ -115,5 +115,99 @@ describe('the retired machinery, which must keep being reported', () => {
     writeFileSync(join(queue, 'b.jsonl'), 'y'.repeat(1000))
     const out = hookProblems(wired(`node ${KEEP_TAPE}`), { tapeQueue: queue }).join('\n')
     expect(out).toMatch(/2 captured transcript\(s\)/)
+  })
+})
+
+/**
+ * The style file this machine is supposed to be reading through.
+ *
+ * Same shape of gap as the hook above and the same argument: `~/.claude/output-styles/one-piece.md`
+ * is a symlink into a jig checkout, made by hand once per machine, and nothing has ever checked it.
+ * A regular file there, or a link to a checkout that has moved, runs something other than jig's copy
+ * and the only symptom is a session that does not behave like the style says — which is not a
+ * symptom anyone attributes to a symlink.
+ */
+describe('the output style this machine reads through jig', () => {
+  /** A fake jig holding one style, plus a machine styles directory that starts empty. */
+  const bench = (name = 'One piece') => {
+    const jig = mkdtempSync(join(tmpdir(), 'sp-jig-'))
+    mkdirSync(join(jig, '.claude', 'output-styles'), { recursive: true })
+    const styleFile = join(jig, '.claude', 'output-styles', 'one-piece.md')
+    writeFileSync(styleFile, `---\nname: ${name}\ndescription: x\n---\n\nbody\n`)
+    const stylesDir = mkdtempSync(join(tmpdir(), 'sp-styles-'))
+    return { jig, styleFile, stylesDir, opts: { jig, stylesDir } }
+  }
+  const linked = 'one-piece.md'
+
+  it('says nothing when the setting names no style', () => {
+    // An unset `outputStyle` has no symptom: nothing is reading the file, so a missing link is a
+    // machine that never bootstrapped one rather than a machine running the wrong thing.
+    const b = bench()
+    expect(styleProblems({}, b.opts)).toEqual([])
+  })
+
+  it('says nothing when the setting names a style jig does not ship', () => {
+    // The operator's own style is the operator's business. jig only answers for its own.
+    const b = bench()
+    expect(styleProblems({ outputStyle: 'Explanatory' }, b.opts)).toEqual([])
+  })
+
+  it('reports the link missing when the setting names a style jig ships', () => {
+    const b = bench()
+    const out = styleProblems({ outputStyle: 'One piece' }, b.opts).join('\n')
+    expect(out).toMatch(/one-piece\.md/)
+    expect(out).toMatch(/ln -sfn/)
+  })
+
+  it('reports a regular file, which is a copy that will never follow jig', () => {
+    const b = bench()
+    writeFileSync(join(b.stylesDir, linked), '---\nname: One piece\n---\n\nan old copy\n')
+    const out = styleProblems({ outputStyle: 'One piece' }, b.opts).join('\n')
+    expect(out).toMatch(/not a symlink|regular file/)
+    expect(out).toMatch(/ln -sfn/)
+  })
+
+  it('reports a symlink into some other checkout', () => {
+    // The failure that leaves no trace: the link exists, so every "is it there" check passes, and
+    // the bytes come from a jig somebody moved or deleted.
+    const b = bench()
+    const other = bench()
+    symlinkSync(other.styleFile, join(b.stylesDir, linked))
+    const out = styleProblems({ outputStyle: 'One piece' }, b.opts).join('\n')
+    expect(out).toMatch(/one-piece\.md/)
+    expect(out).toMatch(other.jig)
+  })
+
+  it('reports a link whose target is gone, rather than calling it absent', () => {
+    // `existsSync` follows the link, so a dangling one reads as "nothing here" and would be
+    // reported as never bootstrapped — the wrong finding, with the wrong fix, on the machine where
+    // the right one matters most. This is the case `lstatSync` is here for.
+    const b = bench()
+    const gone = bench()
+    symlinkSync(join(gone.jig, '.claude', 'output-styles', 'vanished.md'), join(b.stylesDir, linked))
+    const out = styleProblems({ outputStyle: 'One piece' }, b.opts).join('\n')
+    expect(out).toMatch(/which does not exist/)
+    expect(out).toMatch(/vanished\.md/)
+  })
+
+  it('says nothing when the link points at this checkout', () => {
+    const b = bench()
+    symlinkSync(b.styleFile, join(b.stylesDir, linked))
+    expect(styleProblems({ outputStyle: 'One piece' }, b.opts)).toEqual([])
+  })
+
+  it("matches the style's frontmatter name, not a slug of its filename", () => {
+    // The setting says `One piece`; the file is `one-piece.md`. Slugifying works for that one style
+    // and breaks on the first whose name is not its filename — so the fixture is a file named
+    // `one-piece.md` whose frontmatter says `House rules`, with no link made.
+    //
+    // ASSERTS A FINDING, NOT ITS ABSENCE, and that is the whole point. The first spelling had the
+    // style linked correctly and expected `[]` from both spellings of the match — which a slug
+    // implementation also returns, by failing to find the file at all. Two ways of producing an
+    // empty array are indistinguishable, and a passing test said nothing.
+    const b = bench('House rules')
+    const out = styleProblems({ outputStyle: 'House rules' }, b.opts).join('\n')
+    expect(out).toMatch(/does not exist/)
+    expect(out).toMatch(/one-piece\.md/)
   })
 })

@@ -203,13 +203,13 @@ Occasional dry humor and sarcasm welcome. One good line beats three forced ones.
 
 **No repo carries either.** Jig's `.claude/settings.json` master defines no `outputStyle`, so `settings-policy.mjs` neither checks nor writes one, and `.claude/output-styles/**` is `jig-only`, so drift reports a project copy as NOT YOURS. The fix for a copy is deletion, never a sync. Edit the style in jig; the symlink means the edit is live at the next session start with nothing to copy.
 
-**Both are one-time hand steps per machine, and nothing checks the symlink.** A fresh machine has neither until someone does this, with `<jig>` as that machine's jig checkout:
+**Both are one-time hand steps per machine.** A fresh machine has neither until someone does this, with `<jig>` as that machine's jig checkout:
 
 ```
 mkdir -p ~/.claude/output-styles && ln -sfn <jig>/.claude/output-styles/one-piece.md ~/.claude/output-styles/one-piece.md
 ```
 
-`settings-policy.mjs` does not verify the link exists or points here. A regular file at that path, or a link to a stale checkout, silently runs something other than jig's copy, and the only symptom is a session that does not behave like the style says.
+**`settings-policy.mjs` checks the link, and only when the setting names a style jig ships.** Absent, a regular file, a link into another checkout, a link whose target is gone — each is a separate finding carrying the `ln -sfn` that fixes it. Reported, never repaired: `--write` edits `permissions` and the machine keys, and making a symlink in a home directory is not that. An unset `outputStyle` is silent, because nothing is reading the file. What it still cannot see is **which** style is on — that setting is deliberately unmanaged, so a link that is correct says the file is current, not that it is in use.
 
 **Precedence, lowest to highest.** For the setting: `~/.claude/settings.json`, then `<repo>/.claude/settings.json`, then `<repo>/.claude/settings.local.json`. For the file: `~/.claude/output-styles/` loses to `<repo>/.claude/output-styles/` — observed 2026-09-18, a repo holding a stale copy ran it over the machine's newer one. Both run the same way: the more specific location silently beats the machine. That is the trap. Jig shipped the key and the file until 2026-09-18, so setting either "at the machine level" did nothing, in any repo. A repo copy of the style file is therefore not untidy, it is the style that repo runs — delete it. If a style ever fails to take effect, look for the key or the file somewhere more specific than you looked.
 
