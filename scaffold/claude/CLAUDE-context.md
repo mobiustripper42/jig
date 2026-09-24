@@ -67,17 +67,16 @@ Project-specific docs beyond the shell's `## Key Docs`. jig ships three that are
 
 ## Workflow Mechanisms
 
-The shell's `## Micro Workflow` says what three steps must achieve and names a slot for how. Fill each one. **These are slots, not overrides** — the shell states no default to correct, and nothing here should cite a step *number*: numbers move, and a stale cross-reference in an always-loaded file fails silently.
+The shell's `## Micro Workflow` says what its two proof steps must achieve and names a slot for how. Fill each one. **These are slots, not overrides** — the shell states no default to correct, and nothing here should cite a step *number*: numbers move, and a stale cross-reference in an always-loaded file fails silently.
 
 | Slot | What it answers | This project |
 |---|---|---|
 | **Proof** | What counts as a check written before the change | `<what a check is, here>` |
 | **Proof command** | How to run the checks covering what you touched | `<the command>` |
-| **Surface check** | How to confirm the change is right where a person meets it | `<how you look at it — or: none, no human-facing surface>` |
 
 **The gate** (`npm run verify`, `cargo test`, …) is what `/kill-this` runs before committing — name it under `## Commands`, not here.
 
-**Every slot gets a real answer, including "none".** `Surface check: none — this is a library with no UI` is checkable and can be argued with. A blank slot is indistinguishable from one nobody has thought about.
+**Every slot gets a real answer, including "none".** `Proof: none — no test runner in this repo yet` is checkable and can be argued with. A blank slot is indistinguishable from one nobody has thought about.
 
 ## Median gaps
 

@@ -70,9 +70,10 @@ The three webapp-shaped docs jig *ships* — BRAND, USER_STORIES, DEV_REFERENCE 
 |---|---|
 | **Proof** | Vitest against the script under change, in `scripts/<name>.test.mjs`. For a gate, the proof is that it goes red on the defect and green after — a gate nobody watched fail is a gate that may assert nothing |
 | **Proof command** | `npm run test -- scripts/<name>.test.mjs` |
-| **Surface check** | Run the script and read its output. jig's entire human-facing surface is what a gate prints, so a check that passes while printing a misleading number has not met this bar — that has already happened once, when the tape-queue count reported 6 where there were 4 |
 
 **The gate** is `npm run verify`.
+
+**What a gate prints is part of what it does, so assert it.** jig's entire human-facing surface is what a gate prints, and a check can pass while printing a misleading number — that has happened, when the tape-queue count reported 6 where there were 4. The answer is a test over the output string, not a step telling a session to go and look: three sessions read that step three ways, which is why it is gone (DEC-J008).
 
 ## Median gaps
 

@@ -22,22 +22,21 @@ Project-specific docs are listed in `.claude/CLAUDE-context.md` under `## Additi
 
 ## Micro Workflow (every task, no exceptions)
 
-1. **Spec it** — poker estimate + acceptance criteria. Pin what "done" looks like before writing code: enumerate the concrete set from source and confirm it. Live words override prior docs. **Get the whole spec down before step 4** — the model does its best work on a complete brief in one turn, not one assembled across a dozen exchanges.
+1. **Spec it** — poker estimate + acceptance criteria. Pin what "done" looks like before writing code: enumerate the concrete set from source and confirm it. Live words override prior docs. **Get the whole spec down before any code is written** — the model does its best work on a complete brief in one turn, not one assembled across a dozen exchanges.
 2. **Plan it** — summarize what you're going to do. Wait for explicit approval.
 3. **Cut the branch** — `git checkout -b task/X.Y-short-description`.
 4. **Prove it first** — when behaviour changes, the check comes before the change: write it, run it, watch it fail *for the reason you expect*. That failure is what proves the check bites; one written afterwards has never been observed failing, so it may assert nothing. The check must exercise the thing in its own title — a test named for one thing that calls another turns an unverified claim into an apparently-verified one. **What counts as a check: the `Proof` slot in `.claude/CLAUDE-context.md` § Workflow Mechanisms.**
-5. **Build it** — until it passes. Writing code first and then reconstructing the proof by deleting it to watch the test fail is step 4 the long way round.
+5. **Build it** — until it passes. Writing code first and then reconstructing the proof by deleting it to watch the test fail is the prove-it step the long way round.
 6. **Run the proof** — the checks covering what you touched, not the whole suite. **The test is coverage, not confidence:** if the checks you ran exercise the files you changed, that is the whole proof. Running everything again *because you are about to hand back* is the banned case, and the one that actually happens — "I'm finishing" feels like a reason and isn't. If a change plausibly reaches code you can't name, say so and ask. **Command: the `Proof command` slot.**
-7. **Check the surface** — confirm the change is right where a person meets it, which a passing check does not tell you. **How: the `Surface check` slot.**
-8. **Stop. The task is built, not shipped.** Report what changed and what passes, then **stop and wait**. Do not commit, push, open a pull request, or start the next task. This is where the work gets looked at. Waiting is the correct end of a build turn — including when everything is green and the next task is obvious. Handing back *is* the finished state.
-9. **`/kill-this` — the user invokes it, you don't.** It commits, pushes, runs `@code-review`, opens the pull request with `closes #<issue>`, and appends a `## Task <N>` block to the session file. **Reaching the same end state by hand is never acceptable** — a hand-typed `git push` + `gh pr create` produces a pull request that looks identical and has never been read by `@code-review`, and that absence announces itself to nobody. If you believe a task is ready, say so and stop.
-10. **Pick up another task or close out** — step 1 with a new branch, or `/its-dead` once at the end of the window. Merge pull requests whenever.
+7. **Stop. The task is built, not shipped.** Report what changed and what passes, then **stop and wait**. Do not commit, push, open a pull request, or start the next task. This is where the work gets looked at. Waiting is the correct end of a build turn — including when everything is green and the next task is obvious. Handing back *is* the finished state. **If the change made something a person looks at — a screen, a report, a command's output — put it in front of them here**, rendered rather than described. That is part of handing back, not a gate before it.
+8. **`/kill-this` — the user invokes it, you don't.** It commits, pushes, runs `@code-review`, opens the pull request with `closes #<issue>`, and appends a `## Task <N>` block to the session file. **Reaching the same end state by hand is never acceptable** — a hand-typed `git push` + `gh pr create` produces a pull request that looks identical and has never been read by `@code-review`, and that absence announces itself to nobody. If you believe a task is ready, say so and stop.
+9. **Pick up another task or close out** — a new branch and a fresh spec, or `/its-dead` once at the end of the window. Merge pull requests whenever.
 
 **No proof, no push.**
 
-**Steps 4, 6 and 7 name a slot, not a tool.** The shell says what the step must achieve; the context file says how it's done here. Slots are filled, not overridden. Nothing cites a step *number* — numbers move, and a stale cross-reference in an always-loaded file fails silently.
+**The proof steps name a slot, not a tool.** The shell says what the step must achieve; the context file says how it's done here. Slots are filled, not overridden. Nothing cites a step *number* — numbers move, and a stale cross-reference in an always-loaded file fails silently.
 
-**An unfilled slot is a real answer and must be written as one.** `Surface check: none — no human-facing surface` is checkable. Blank is not.
+**An unfilled slot is a real answer and must be written as one.** `Proof: none — this repo has no test runner yet` is checkable. Blank is not.
 
 ## Migration Protocol
 
@@ -101,7 +100,7 @@ Default to the cheapest model that does the job. **Opus 5 is the standing model*
 | Default | `claude-opus-5` | $5 / $25 | Development and architecture. Most work |
 | Frontier (rare) | `claude-fable-5` | $10 / $50 | Only after Opus 5 at `max` has actually failed |
 
-- **Spec it fully, then let it run.** Opus 5's edge is largest on long, coherent, multi-file work handed the complete specification in one turn. Assembling it across turns costs quality and tokens both. This is what makes step 1 load-bearing rather than ceremonial.
+- **Spec it fully, then let it run.** Opus 5's edge is largest on long, coherent, multi-file work handed the complete specification in one turn. Assembling it across turns costs quality and tokens both. This is what makes the spec step load-bearing rather than ceremonial.
 - **`effort` is the primary lever, and it sweeps down.** It buys quality more cheaply than a model jump. Start at `xhigh` for coding and `high` elsewhere, then **try lower** — `low` and `medium` are unusually strong on Opus 5, and effort is what spends the allowance. `max` only when correctness must beat cost.
 - **Fast mode** runs ~2.5× faster at 2× the price. A deliberate choice for a specific impatience, never a default.
 - **Agents:** model in frontmatter. `@architect` is Opus 5; reviewers stay Sonnet. New agents default to Sonnet.
@@ -163,7 +162,7 @@ For every task — bug, feature, or question — explain the plan and wait befor
 2. For a bug or question: explain the cause and your proposed fix first.
 3. Wait for "go", "do it", or equivalent.
 
-**Answering a question you asked is not approval.** This is where "or equivalent" gets abused, and it is the observed failure — twice in one session, twice again in another. A scoping answer, a preference between options you offered, and a refusal to decide all say *what the thing should be*. None says *start building it*. Approval is a reply to the plan in step 1, so if no plan was written, nothing said since can have approved one. When the register is collaborative and fast and you're clearly agreeing, that is exactly when this goes wrong.
+**Answering a question you asked is not approval.** This is where "or equivalent" gets abused, and it is the observed failure — twice in one session, twice again in another. A scoping answer, a preference between options you offered, and a refusal to decide all say *what the thing should be*. None says *start building it*. Approval is a reply to the written plan, so if no plan was written, nothing said since can have approved one. When the register is collaborative and fast and you're clearly agreeing, that is exactly when this goes wrong.
 
 **Working through a numbered document is not the ordinary task loop.** A runbook, migration plan or checklist: each step is its own cycle — present, wait, do, wait again before commit or push. Don't fold investigate → edit → commit → push into one turn because the step is numbered and looks atomic.
 
