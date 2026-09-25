@@ -1,7 +1,7 @@
 ---
 schema: 1
 id: DEC-J009
-title: "Opus runs sessions, Sonnet runs agents, aliases only, effort medium"
+title: "Model and effort settings for sessions and agents"
 topic: "Model selection"
 status: "active"
 date: "2026-09-25"
@@ -22,7 +22,7 @@ claims:
 revisit_if: "An alias moves to a model that does its job worse, or the plan starts billing by model rather than effort."
 ---
 
-## DEC-J009: Opus runs sessions, Sonnet runs agents, aliases only, effort medium
+## DEC-J009: Model and effort settings for sessions and agents
 
 Replaces the guidance carried over from seeds, which named `claude-opus-5` and a Fable tier. The
 model string went stale within two releases, and a stale default in a file loaded every session is
