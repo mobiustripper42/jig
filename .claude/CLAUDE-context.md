@@ -49,6 +49,7 @@ npm run gen:decisions       # regenerate docs/DECISIONS.md — run after editing
 npm run test                # vitest
 
 node scripts/drift.mjs ../<project>          # what a project's copies differ from jig
+npm run fleet                                # every repo beside jig: its origin/main vs jig's, one line each
 node scripts/settings-policy.mjs             # is this machine's permission policy current
 node scripts/settings-policy.mjs --all ../<project>
 ```
