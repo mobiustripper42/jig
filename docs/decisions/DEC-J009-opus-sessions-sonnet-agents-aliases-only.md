@@ -36,5 +36,6 @@ and Opus, so what spends the allowance is effort, not model choice.
 it pins one, so each pins `high`: the reviewers earned their cost by re-running claims, which is
 what effort buys.
 
-Not managed: the machine's `model` key. One carried `claude-fable-5-1[1m]` unnoticed. With the key
+Not managed: the machine's `model` key. mill-dev's `~/.claude/settings.json`, read 2026-09-25,
+carried `claude-fable-5-1[1m]` unnoticed. With the key
 unset, Claude Code's default applies, and that tracks too.
