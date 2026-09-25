@@ -93,7 +93,7 @@
     ]
   },
   "theme": "dark",
-  "effortLevel": "high",
+  "effortLevel": "medium",
   "tui": "fullscreen",
   "agentPushNotifEnabled": true,
   "enabledPlugins": {

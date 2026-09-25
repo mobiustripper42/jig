@@ -85,25 +85,17 @@ Two things the gate cannot check, which is why they are here:
 
 | Agent | Model | When | Purpose |
 |-------|-------|------|---------|
-| @architect | Opus 5 | Before design decisions, new dependencies, scope creep | Coherence vs SPEC + decisions |
+| @architect | Opus | Before design decisions, new dependencies, scope creep | Coherence vs SPEC + decisions |
 | @code-review | Sonnet | After every commit (wired into `/kill-this`) | Catch issues early |
 | @pm | Sonnet | Session start/end via skills | Progress, risks |
 | @ui-reviewer | Sonnet | After interface work, phase boundaries | Design quality |
 
 ## Model Selection
 
-Default to the cheapest model that does the job. **Opus 5 is the standing model** for development and architecture; **Sonnet** handles cheap, scoped work. **Fable is rarely worth it** — on agentic coding at `max` effort Opus 5 lands within half a percent of Fable's peak at half the cost, so the frontier tier is a narrow exception, not an escalation path.
+**Opus runs sessions; Sonnet runs agents.** Write the aliases, `opus` and `sonnet`, never a version. An alias follows each new release on its own; a version number in a file loaded every session is stale the day the next one ships, which is how this section came to name a retired default (DEC-J009).
 
-| Tier | Model | $/MTok (in/out) | Use for |
-|------|-------|-----------------|---------|
-| Cheap | `claude-sonnet-5` | $3 / $15 | Trivial or scoped agents and reviews |
-| Default | `claude-opus-5` | $5 / $25 | Development and architecture. Most work |
-| Frontier (rare) | `claude-fable-5` | $10 / $50 | Only after Opus 5 at `max` has actually failed |
-
-- **Spec it fully, then let it run.** Opus 5's edge is largest on long, coherent, multi-file work handed the complete specification in one turn. Assembling it across turns costs quality and tokens both. This is what makes the spec step load-bearing rather than ceremonial.
-- **`effort` is the primary lever, and it sweeps down.** It buys quality more cheaply than a model jump. Start at `xhigh` for coding and `high` elsewhere, then **try lower** — `low` and `medium` are unusually strong on Opus 5, and effort is what spends the allowance. `max` only when correctness must beat cost.
-- **Fast mode** runs ~2.5× faster at 2× the price. A deliberate choice for a specific impatience, never a default.
-- **Agents:** model in frontmatter. `@architect` is Opus 5; reviewers stay Sonnet. New agents default to Sonnet.
+- **Effort is `medium` by default**, set by `effortLevel` in the settings master. `xhigh` for an 8-point task. `max` occasionally, when correctness has to beat cost.
+- **Agents pin model and effort in frontmatter.** `@architect` is `opus`, the other three are `sonnet`, and all four run at `effort: high` so they do not drop with the session default. A new agent starts at `sonnet` and `high`.
 
 ## Pull Request Workflow
 

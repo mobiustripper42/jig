@@ -51,6 +51,9 @@ that never reached the spec is a red build rather than prose nobody cross-read.
 - DEC-J006 — Transcripts are kept with no reader
 - DEC-J008 — The surface-check step is retired
 
+### Model selection
+- DEC-J009 — Model and effort settings for sessions and agents
+
 _**This file is GENERATED** by `npm run gen:decisions` —
 edit `docs/decisions/DEC-*.md`, not this file. `npm run check:decisions` fails on a stale index, a
 duplicate id, an unknown topic, an unlanded SPEC amendment, or a reference to a decision
