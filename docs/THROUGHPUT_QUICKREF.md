@@ -73,8 +73,7 @@ view (lots of 2s? any 13s?). Not joined to time.
 - **Full rationale + what was tried and rejected:** DEC-S026. Written in seeds and not
   carried into this record, which starts at DEC-J001 — the id resolves in seeds' archive
   and in muster's corpus, nowhere here.
-- **The phase-end ritual that records throughput:** `/retro` (Step 2). It computes phase
-  throughput itself from GitHub and never calls the extractor; this tool answers the
-  lifetime and cross-repo question instead.
+- **The phase-end ritual:** `/retro` records points, days and drift per phase and computes
+  no rate. This tool is where a rate comes from, for one project or across several.
 - **Methodology guide:** `docs/VELOCITY_AND_POKER_GUIDE.md`, which describes the same
   throughput model at length. That page is the *why*; this one is the *how to read it*.

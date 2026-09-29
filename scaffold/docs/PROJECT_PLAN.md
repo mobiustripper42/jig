@@ -71,16 +71,16 @@ stack needs. Points are yours to set.
 
 ---
 
-## Throughput
+## Phases
 
-Updated at end of each phase. Used by @pm to project remaining time.
+One row per phase, written by `/retro` at close.
 
-| Phase | Closed | Points | Span | Throughput | Re-estimated | Net drift |
-|-------|-------------|---------------|--------|-------|
-| 0 | — | — | — | |
-| 1 | — | — | — | |
+| Phase | Closed | Points | Days | Re-estimated | Net drift |
+|-------|--------|--------|------|--------------|-----------|
+| 0 | — | — | — | — | — |
+| 1 | — | — | — | — | — |
 
-**Throughput** is points per calendar week, or `burst` for a phase closing inside one week. Never reported without the calibration tally beside it: if points quietly shrink, throughput rises while nothing got faster.
+**Points** is done / planned. **Net drift** is final points minus original estimates; positive means tasks ran bigger than pointed.
 
 ---
 
@@ -99,9 +99,8 @@ Unresolved estimate disagreements. Revisit when the task starts.
 At the end of every phase:
 1. The gate is green — the one command `/kill-this` runs before every commit
 2. Every check the `Proof` slot names for this project passes
-3. @pm phase retrospective — velocity check, timeline update
-4. Write retrospective entry in `docs/RETROSPECTIVES.md` (velocity, scope changes, process notes, forecast update)
-5. Return to primary planning chat — review docs against intent
+3. Run `/retro` — it writes the retrospective entry in `docs/RETROSPECTIVES.md` and the phase row above
+4. Return to primary planning chat — review docs against intent
 
 ---
 

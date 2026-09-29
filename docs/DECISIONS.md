@@ -50,6 +50,7 @@ that never reached the spec is a red build rather than prose nobody cross-read.
 - DEC-J002 — A skill invocation approves the pushes inside its own ritual
 - DEC-J006 — Transcripts are kept with no reader
 - DEC-J008 — The surface-check step is retired
+- DEC-J010 — A retro fits on one screen, and computes no rate
 
 ### Model selection
 - DEC-J009 — Model and effort settings for sessions and agents
