@@ -9,10 +9,9 @@ requests merged like anywhere else.
 
 ## Estimation Method
 
-Fibonacci points, 2/3/5/8/13, sized by review burden and risk rather than hours. Throughput is
-points per calendar week, computed by `/retro` from GitHub issue dates and `points:N` labels.
-Most solo phases close inside one week and record as `burst` instead of a rate — see
-`docs/VELOCITY_AND_POKER_GUIDE.md`.
+Fibonacci points, 2/3/5/8/13, sized by review burden and risk rather than hours. `/retro`
+records each phase's points, days and drift from GitHub `points:N` labels and computes no rate
+(DEC-J010); `docs/VELOCITY_AND_POKER_GUIDE.md` covers deriving one.
 
 ## Phase 1: Foundations — CLOSED 2026-08-27
 
