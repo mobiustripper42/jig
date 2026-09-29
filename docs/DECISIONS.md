@@ -41,6 +41,7 @@ that never reached the spec is a red build rather than prose nobody cross-read.
 - DEC-J001 — One copy — `.claude/` is the template jig ships
 - DEC-J003 — Scaffolds are linted against jig, not diffed against a copy
 - DEC-J007 — The output style lives in jig and is read through the machine
+- DEC-J011 — @pm is logic class; the three reviewers stay context
 
 ### Decision record & dictionary discipline
 - DEC-J004 — Records predating schema v1 are frozen by a generated baseline
