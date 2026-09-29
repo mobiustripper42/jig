@@ -113,7 +113,14 @@ file-classes:
   - ".claude/agents/ui-reviewer.md": context
   - ".claude/agents/architect.md": context
   - ".claude/agents/code-review.md": context
-  - ".claude/agents/pm.md": context
+
+  # @pm is the exception (DEC-J011), and the argument above is why. It holds no
+  # project substance: every fact it uses comes from the plan, the session files
+  # and the retro log, so a good one is the same everywhere — workflow machinery,
+  # like a skill. As `context` it drifted silently: /retro stopped computing a
+  # rate while @pm went on telling itself to track hours per point, and nothing
+  # compared the two.
+  - ".claude/agents/pm.md": logic
 
   # The shell (DEC-S019/DEC-S049). Byte-identical everywhere; everything specific
   # to a project lives in the paired `.claude/CLAUDE-context.md`, which is the
