@@ -1,11 +1,8 @@
 # jig — Phase Retrospectives
 
-Written at each phase boundary by `/retro`. Format per entry: throughput + calibration, scope
-changes, what worked, what didn't.
-
-Throughput is points per calendar week, or `burst` for a phase that opens and closes inside one
-week. It is never reported without the calibration tally beside it: if points quietly shrink,
-throughput rises while nothing actually got faster.
+Written at each phase boundary by `/retro`, newest first. From DEC-J010 on, an entry is one
+screen: a numbers line, what happened, the operator's take, and a one-paragraph @pm read. Entries
+before it used the older throughput format and stay as written.
 
 ---
 

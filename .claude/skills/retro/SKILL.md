@@ -44,13 +44,16 @@ gh issue list --label "phase:<N>" --state closed --json number,createdAt,closedA
 
 - `points` = Σ of each closed issue's `points:M` label. An issue with **no** `points:` label is skipped and listed in the retro so it is visible — never guess a value.
 - `planned` = Σ of the phase's original estimates in PROJECT_PLAN.md.
-- `days` = last `closedAt` − first `createdAt`, in days.
+- `phase_start_iso` = the first `createdAt`; `phase_end_iso` = the last `closedAt`. `days` = the gap between them, in days.
 - `re_estimated` = tasks whose points changed between original estimate and final. `net_drift` = Σ final − Σ original; positive means tasks ran bigger than pointed.
-- `prs` = PRs merged between those two dates.
+- `prs` = PRs merged between those two dates. Count them here, since the numbers line needs them before the version bumps run; Step 9.1 reuses this list:
+  ```
+  gh pr list --state merged --search "merged:>=<phase_start_iso> merged:<=<phase_end_iso>" --json number,title,mergedAt --limit 100
+  ```
 
 **No rate is computed.** Points, days and drift are enough to derive one later if it is ever wanted, and a per-week number was the thing the old retro led with while nobody used it. Never re-pair PR-open → PR-merge to recover "effort" — that window math is the bug an earlier velocity model died on.
 
-The numbers line, used in Steps 6 and 10:
+The numbers line, used in Steps 6, 7 and 10:
 
 ```
 **Numbers:** <points> / <planned> pts · <days> days · <re_estimated> re-estimated, drift <±net_drift> · <prs> PRs
@@ -153,13 +156,9 @@ Bumps and tags land on `main` directly; `production` (if any) only moves at `/pr
 
 If `BRANCH != $WORKING_BRANCH`: STOP. Tell the user "Switch to `$WORKING_BRANCH` and re-run /retro." Wait.
 
-### Step 9.1 — Enumerate merged PRs in the phase window
+### Step 9.1 — The merged PRs in the phase window
 
-```
-gh pr list --state merged --search "merged:>=<phase_start_iso> merged:<=<phase_end_iso>" --json number,title,mergedAt --limit 100
-```
-
-Sort by `mergedAt` ascending. On **deploy-off-main** projects each PR earns one patch bump + CHANGELOG entry (Step 9.2). On **production-branch** projects patches already landed at `/promote-production` (one release = one patch), so Step 9.2 is skipped and this list feeds only the phase CHANGELOG summary.
+Use the list Step 2 fetched. Sort by `mergedAt` ascending. On **deploy-off-main** projects each PR earns one patch bump + CHANGELOG entry (Step 9.2). On **production-branch** projects patches already landed at `/promote-production` (one release = one patch), so Step 9.2 is skipped and this list feeds only the phase CHANGELOG summary.
 
 ### Step 9.2 — Patch-bump per PR (deploy-off-main projects only)
 
