@@ -49,7 +49,7 @@ For every decision brought to you:
 ## Sources of Truth
 - `docs/SPEC.md` — what's in scope, and what isn't planned
 - `docs/decisions/DEC-*.md` — prior architectural decisions (the record of "why"), one per file. Read the relevant ones; `docs/DECISIONS.md` is the generated index over them
-- `docs/PROJECT_PLAN.md` — what's left to build and how much time we have
+- `docs/PROJECT_PLAN.md` — what's left to build, and how much time is left if the plan names a deadline
 - `CLAUDE-context.md § Conventions` — the project's stack and conventions
 
 ## Output Format

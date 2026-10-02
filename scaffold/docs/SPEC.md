@@ -6,7 +6,7 @@
 ## Philosophy
 [The guiding principle. How should users feel? What does the app stand for? What should it NOT be?]
 
-## Target Launch
+## Target
 - **Target:** TBD — a date, if there is one
 - **Critical path:** [What must be true before this is useful to anyone — e.g., "payments live"]
 
