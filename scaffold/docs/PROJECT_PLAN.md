@@ -1,8 +1,8 @@
 # [Project Name] — Project Plan
 
 **Start date:** [YYYY-MM-DD]
-**V1 target:** TBD
-**Critical path:** [What must be true for V1 to ship]
+**Target:** TBD — a date, if there is one
+**Critical path:** [What must be true before this is useful to anyone]
 
 ---
 
@@ -12,8 +12,6 @@ Fibonacci scale (2, 3, 5, 8, 13). See `VELOCITY_AND_POKER_GUIDE.md` for definiti
 All estimates from planning poker between [your name] and Claude.
 Disagreements logged in the Standing Disagreements table at the bottom.
 Tests are baked into every task estimate — no separate testing tasks.
-
-**Velocity baseline:** Not yet established. Will update after first 5 sessions.
 
 ---
 
@@ -106,8 +104,8 @@ At the end of every phase:
 
 ## Cuttable Tasks (if behind)
 
-Tasks that can be deferred to V2 without breaking core functionality. Reference before any scope cut conversation.
+Tasks that can move to a later phase, or out of scope, without breaking core functionality. Reference before any scope cut conversation.
 
-| Task | Why it's cuttable | Defer to |
+| Task | Why it's cuttable | Move to |
 |------|------------------|---------|
-| [task ID] | [reason] | V2 |
+| [task ID] | [reason] | Phase [N], or out of scope |
