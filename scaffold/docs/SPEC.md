@@ -6,9 +6,9 @@
 ## Philosophy
 [The guiding principle. How should users feel? What does the app stand for? What should it NOT be?]
 
-## Target Launch
-- **V1 target:** TBD
-- **V1 critical path:** [What must be true for V1 to ship — e.g., "payments live"]
+## Target
+- **Target:** TBD — a date, if there is one
+- **Critical path:** [What must be true before this is useful to anyone — e.g., "payments live"]
 
 ## Stack
 
@@ -30,7 +30,9 @@ not have rather than writing `none` beside half of them.
 - **[Concept 1]** — [definition and why it exists as a distinct thing]
 - **[Concept 2]** — [definition]
 
-## V1 Scope
+## Phases
+
+Scope is described by phase, and only by phase. A label for a release ("V1", "MVP", "launch") invites every session to argue what belongs in it, and the answers end up scattered through the docs disagreeing with each other.
 
 ### Phase 0 — Infrastructure
 A local environment that runs the thing, a test harness with one real test passing, a green gate, and the docs filled in. See `docs/PROJECT_PLAN.md` Phase 0.
@@ -41,8 +43,8 @@ A local environment that runs the thing, a test harness with one real test passi
 ### Phase 2 — [Name]
 [etc.]
 
-## Not V1
-[List things explicitly out of scope for V1. This is the scope guardrail — Claude will check here before adding anything.]
+## Out of scope
+[Things no phase above plans to build. This is the scope guardrail — Claude checks here before adding anything. Moving one into a phase is a decision, made out loud.]
 
-- [Feature X] — defer to V2
-- [Feature Y] — defer to V2
+- [Feature X] — not planned
+- [Feature Y] — not planned

@@ -64,7 +64,7 @@ carries seeds' `CLAUDE.md` byte-identical, plus four skills jig does not ship.
 | 4.3 | Three script fixes muster is behind on | 2 | jig is upstream now |
 | 4.4 | `.claude/jig-version` | 2 | Retire `.claude/seeds-version` |
 
-## Not V1
+## Out of scope
 
 - **A word ceiling on the always-loaded files.** Parked in `docs/FUTURE_IDEAS.md` — it cannot
   currently say what "loaded" means, and the surface is not growing.
