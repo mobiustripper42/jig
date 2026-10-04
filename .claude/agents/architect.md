@@ -18,7 +18,7 @@ Review architectural and design decisions before they're committed. Keep the pro
 Decisions live **one per file** in `docs/decisions/DEC-*.md`; `docs/DECISIONS.md` is a generated topic index over them. Before you reason:
 
 1. `git branch --show-current` — establish what you're reviewing.
-2. Skim the index for the areas the proposal touches, then **read those files**. `grep -rl DEC-042 docs/decisions/` resolves any id; `grep -rl 'topic: "Auth' docs/decisions/` pulls a whole topic. An amended decision carries a generated banner at the top of its file naming what amended it and in what scope — read it before relying on the body.
+2. Skim the index for the areas the proposal touches, then **read those files**. `grep -rl DEC-042 docs/decisions/` resolves any id; `grep -rl 'topic: "Auth' docs/decisions/` pulls a whole topic. A decision that was changed carries `status: superseded` and `superseded_by:` in its frontmatter — read the successor before relying on the body.
 3. Read the relevant part of `docs/SPEC.md`, especially its out-of-scope list. An amended section carries a generated block under its heading naming the decision and the scope; read it before treating the prose beneath as current.
 4. Read `.claude/CLAUDE-context.md` for the project's stack, data model, and conventions. It is authoritative.
 
@@ -26,7 +26,7 @@ Decisions live **one per file** in `docs/decisions/DEC-*.md`; `docs/DECISIONS.md
 
 **Allocating a new DEC number:** take the next one after the highest in `docs/decisions/`. A collision is no longer silent — `check:decisions` fails on a duplicate id, a dangling reference, a backwards-pointing amendment, and a spec amendment that never landed.
 
-**Search the record before drafting a decision, and say what came back.** `grep -rli "<subject>" docs/decisions/`. If a decision on that subject exists, this is an amendment to it — a dated `## Amendment` section inside that file, not a new id. A new id is only for a subject the record has no decision about. **Never hand-write an index row**; `gen:decisions` writes the index.
+**Search the record before drafting a decision, and say what came back.** `grep -rli "<subject>" docs/decisions/`. If a decision on that subject exists and this changes it, the change is a new record carrying `supersedes: [DEC-<id>]`, and the old one flips to `status: superseded` (DEC-J005: amending in place is retired). Two decisions that merely relate carry a plain see also. **Never hand-write an index row**; `gen:decisions` writes the index.
 
 ## When You Should Be Consulted
 
@@ -64,7 +64,7 @@ For every decision brought to you:
 
 **Simpler alternative:** [if applicable]
 
-**Decision:** [state the `grep -rli` result first. If it hit, draft the `## Amendment, YYYY-MM-DD (who)` section to append to that decision's file — what changes and what still stands. If it did not, draft `docs/decisions/DEC-<id>-<slug>.md` — frontmatter (`id`, `title`, `topic`, plus `amends_spec:` if it changes a numbered spec section) and the body. Do not hand-write an index row.]
+**Decision:** [state the `grep -rli` result first. Draft `docs/decisions/DEC-<id>-<slug>.md` — frontmatter (`id`, `title`, `topic`, `supersedes:` if it hit and this changes that decision, plus `amends_spec:` if it changes a numbered spec section) and the body. Do not hand-write an index row.]
 ```
 
 ## Behavior
