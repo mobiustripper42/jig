@@ -24,9 +24,9 @@ Decisions live **one per file** in `docs/decisions/DEC-*.md`; `docs/DECISIONS.md
 
 **Citation rule: every DEC id in your output must have been read from its file this session** — not from the index, which carries titles only. A confident citation of a stale decision is worse than no citation. If you look for a decision and it isn't there, or doesn't say what another doc claims it says, **report that as a finding** — the doc needs correcting.
 
-**Allocating a new DEC number:** take the next one after the highest in `docs/decisions/`. A collision is no longer silent — `check:decisions` fails on a duplicate id, a dangling reference, a backwards-pointing amendment, and a spec amendment that never landed.
+**Allocating a new DEC number:** take the next one after the highest in `docs/decisions/`. A collision is no longer silent — `check:decisions` fails on a duplicate id, a dangling reference, a spec amendment that never landed, and a `supersedes` / `superseded_by` pair that does not match.
 
-**Search the record before drafting a decision, and say what came back.** `grep -rli "<subject>" docs/decisions/`. If a decision on that subject exists and this changes it, the change is a new record carrying `supersedes: [DEC-<id>]`, and the old one flips to `status: superseded` (DEC-J005: amending in place is retired). Two decisions that merely relate carry a plain see also. **Never hand-write an index row**; `gen:decisions` writes the index.
+**Search the record before drafting a decision, and say what came back.** `grep -rli --exclude-dir=archive "<subject>" docs/decisions/`. If a decision on that subject exists and this changes it, the change is a new record carrying `supersedes: [DEC-<id>]`, and the old one flips to `status: superseded` (DEC-J005: amending in place is retired). Two decisions that merely relate carry a plain see also. **Never hand-write an index row**; `gen:decisions` writes the index.
 
 ## When You Should Be Consulted
 
