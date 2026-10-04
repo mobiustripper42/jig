@@ -18,7 +18,7 @@ grep -l "^status: open" .sessions-worktree/sessions/*.md 2>/dev/null
 
 **No match:** stop. There is no open session; tell the user to run `/its-alive`.
 
-**More than one match:** narrow by checkout before asking. `/its-alive` records the transcript path, and that path is built from the directory the session was opened in (`its-alive/SKILL.md` § Step 4), so it names the checkout:
+**More than one match:** narrow by checkout before asking. `/its-alive` records the transcript path, and that path is built from the directory the session was opened in (`/its-alive`'s transcript-path step), so it names the checkout:
 
 ```
 HERE="$HOME/.claude/projects/$(pwd | tr '/' '-')/"
@@ -39,7 +39,7 @@ Read the file first. If Next Steps already holds a save, it is the starting poin
 
 ## Step 2 — Replace Next Steps
 
-Replace **everything after the `**Next Steps:**` line, up to but not including the `**Context:**` line**. If there is no `**Context:**` line, replace to the end of the file. Leave the frontmatter, every `## Task` block and the Context section untouched.
+Replace **everything after the line that is exactly `**Next Steps:**`, up to but not including the line that is exactly `**Context:**`** — whole lines with nothing else on them, so a note that quotes either heading cannot move the boundary. If there is no `**Context:**` line, replace to the end of the file. If either heading appears as a whole line more than once, stop and say so rather than guess. Leave the frontmatter, every `## Task` block and the Context section untouched.
 
 A replace, not an append: Next Steps always says what is open now. The section's shape:
 
@@ -86,4 +86,4 @@ You cannot run `/clear`. It is a built-in command, and only the user types it.
 
 ## The other half — reading it back
 
-A save nothing reads is worse than none, and `CLAUDE.md`'s spec step says what reads it: a fresh context starts by reading the open session file's Next Steps (found the same way as Step 0). **Reading restores:** the saved parking lot becomes the conversation's parking lot again — open threads carried across the clear, not a copy to drop because the file has them. Standing rules and carry-over stay in the file and are obeyed from there; the next save carries them on.
+A save nothing reads is worse than none, and `CLAUDE.md`'s spec step says what reads it: a fresh context starts by reading the open session file's Next Steps (found the same way as above). **Reading restores:** the saved parking lot becomes the conversation's parking lot again — open threads carried across the clear, not a copy to drop because the file has them. Standing rules and carry-over stay in the file and are obeyed from there; the next save carries them on.

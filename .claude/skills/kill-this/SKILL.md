@@ -16,7 +16,7 @@ BRANCH=$(git branch --show-current)
 
 **No match:** STOP. The user must run `/its-alive` first.
 
-**More than one match:** another window has a session open. Narrow by checkout before asking. `/its-alive` records the transcript path, and that path is built from the directory the session was opened in (`its-alive/SKILL.md` § Step 4), so it names the checkout:
+**More than one match:** another window has a session open. Narrow by checkout before asking. `/its-alive` records the transcript path, and that path is built from the directory the session was opened in (`/its-alive`'s transcript-path step), so it names the checkout:
 
 ```
 HERE="$HOME/.claude/projects/$(pwd | tr '/' '-')/"
