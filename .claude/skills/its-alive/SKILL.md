@@ -67,7 +67,7 @@ The session file lives on an orphan `sessions` branch checked out at `.sessions-
 
 **If missing — three sub-cases:**
 
-a. **`origin/sessions` exists on remote** (fresh clone / accidental delete): `git fetch origin sessions` then `git worktree add .sessions-worktree sessions`. Continue. (`git worktree add <path> [<commit-ish>]` takes **one** ref — the two-ref form `… sessions origin/sessions` is a usage error, and git answers it with a fragment of its own `--help` output rather than anything that reads like a failure.)
+a. **`origin/sessions` exists on remote** (fresh clone / accidental delete): `git fetch origin sessions` then `git worktree add .sessions-worktree sessions`. Continue. (`git worktree add <path> [<commit-ish>]` takes **one** ref — the two-ref form `… sessions origin/sessions` is a usage error, and git answers it with a fragment of its own `--help` output rather than anything that reads like a failure.) In a linked worktree this fails with `already checked out`: the lane was made without the link from the concurrent-session recipe in Step 2. Stop and give the user that recipe's `ln -s` and ignore lines.
 
 b. **`origin/sessions` does NOT exist** (first run on this project — migration path): bootstrap the orphan branch.
 ```
@@ -118,7 +118,7 @@ Sanitize: lowercase, replace any non-`[a-z0-9.-]` with `-`, collapse repeats.
 
 **Concurrent session check:** `grep -l "^status: open" .sessions-worktree/sessions/*.md 2>/dev/null`. If a session is already open, report it — session number, branch, started — and ask whether it is **live** (another window is working right now: say so and continue, nothing to resolve) or **stale** (mark `status: abandoned` in that file and continue).
 
-**This skill creates exactly one worktree, `.sessions-worktree/`, and never another**. A concurrent session's code worktree is made **before** the session exists, by the user, in a terminal, from the main checkout:
+**This skill creates exactly one worktree, `.sessions-worktree/`, and never another**. A concurrent session's code worktree is made **before** the session exists, by the user, in a terminal, from the main checkout — the original one, never a lane, where `.git` is a directory and `.sessions-worktree` is real:
 
 ```
 git worktree add ../<repo>-<slug> -b task/<slug> main
@@ -133,12 +133,13 @@ When the lane is finished — its session closed by `/its-dead`, its pull reques
 
 ```
 git worktree remove ../<repo>-<slug>
-git branch --delete task/<slug>
 ```
+
+Then the local branch, with `git branch -D` and its name. That one is the user's to run: the permission policy denies it to a session, and the safe `--delete` refuses after a squash merge, which leaves the branch's commits off `main`.
 
 Do not offer to create it here, and do not create it if asked. A worktree made mid-session cannot capture the shell — the harness pins the working directory where `claude` launched and resets any `cd`. The session would end up with its code in one checkout and its shell in another, which is the split every downstream skill then has to detect and work around. Creating the worktree first makes the session's shell, checkout and branch the same thing, which is what every skill already assumes.
 
-If the user asks for a concurrent worktree here, give them those four lines and stop; asked to clean one up, give them those two. Starting the session is their next move, not this one's.
+If the user asks for a concurrent worktree here, give them those four lines and stop; asked to clean one up, give them the removal line and the branch deletion. Starting the session is their next move, not this one's.
 
 ## Step 3 — Determine session number
 
