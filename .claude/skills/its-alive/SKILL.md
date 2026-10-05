@@ -118,16 +118,27 @@ Sanitize: lowercase, replace any non-`[a-z0-9.-]` with `-`, collapse repeats.
 
 **Concurrent session check:** `grep -l "^status: open" .sessions-worktree/sessions/*.md 2>/dev/null`. If a session is already open, report it — session number, branch, started — and ask whether it is **live** (another window is working right now: say so and continue, nothing to resolve) or **stale** (mark `status: abandoned` in that file and continue).
 
-**This skill creates exactly one worktree, `.sessions-worktree/`, and never another**. A concurrent session's code worktree is made **before** the session exists, by the user, in a terminal:
+**This skill creates exactly one worktree, `.sessions-worktree/`, and never another**. A concurrent session's code worktree is made **before** the session exists, by the user, in a terminal, from the main checkout:
 
 ```
 git worktree add ../<repo>-<slug> -b task/<slug> main
+ln -s "$PWD/.sessions-worktree" ../<repo>-<slug>/.sessions-worktree
+git -C ../<repo>-<slug> check-ignore -q .sessions-worktree || echo .sessions-worktree >> .git/info/exclude
 cd ../<repo>-<slug> && claude
+```
+
+The link gives the new lane the main checkout's `sessions` worktree: adding a second one fails, because `sessions` is already checked out there. The ignore line is needed because a `.sessions-worktree/` pattern matches only a directory and a link is not one; it does nothing when the link is already ignored.
+
+When the lane is finished — its session closed by `/its-dead`, its pull request merged — clean it up from the main checkout. Removing the worktree takes the link, never the session files behind it. Or keep the lane and cut its next branch there; the setup is then once per repo.
+
+```
+git worktree remove ../<repo>-<slug>
+git branch --delete task/<slug>
 ```
 
 Do not offer to create it here, and do not create it if asked. A worktree made mid-session cannot capture the shell — the harness pins the working directory where `claude` launched and resets any `cd`. The session would end up with its code in one checkout and its shell in another, which is the split every downstream skill then has to detect and work around. Creating the worktree first makes the session's shell, checkout and branch the same thing, which is what every skill already assumes.
 
-If the user asks for a concurrent worktree here, give them those two lines and stop. Starting the session is their next move, not this one's.
+If the user asks for a concurrent worktree here, give them those four lines and stop; asked to clean one up, give them those two. Starting the session is their next move, not this one's.
 
 ## Step 3 — Determine session number
 
