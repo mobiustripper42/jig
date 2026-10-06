@@ -118,24 +118,30 @@ A push is not a deploy. A host can pull the commit and fail to build it, keep se
 
 Each check there is one command that does its own waiting: it polls the host until the host reports the commit or tag just pushed, exits 0 when it does, and exits non-zero with its own message when it gives up. The project owns the polling and the time limit, because it knows its host; this step runs the command and reads the exit code.
 
-For each check, in order:
+Run every check, in order — a failure does not skip the rest, since each one reports on a different thing:
 
 1. Say what it waits on, in one line, before running it — a check can take minutes, and silence reads as a hang.
-2. Run it, with a tool timeout longer than the check's own limit.
+2. Run it, with a tool timeout longer than the check's own limit. The Bash tool caps a call at ten minutes; a check whose limit is that long or longer runs in the background, and this step waits for it to exit.
 3. Exit 0: **landed**. Anything else: **not landed** — name the check, pass on its output, and say where the section says to look (a deploy log, a dashboard). Never report a promotion as done when a check did not pass.
 
 Never undo the push. `production` is where the operator asked it to be; a failed deploy is a host problem to fix forward, and reverting a ref behind a host that may be mid-deploy is a second incident.
 
 ## Step 6 — Summary
 
+When any check did not pass, the reply opens with one line per failed check, above everything else — it is what changes what the user does next:
+
+```
+NOT LANDED — <check>: <its message>. Look at <where the section says>.
+```
+
+Then the summary:
+
 ```
 Promoted main → production at <SHIP_TAG or short commit hash>
 production now at <short commit hash>
 Host deploy on `production` triggered (if the host watches the production branch).
-Deploy: <landed | NOT LANDED (<check>) — <where to look> | not checked>
+Deploy: <landed | NOT LANDED (<failed checks>) | not checked>
 ```
-
-`NOT LANDED` leads the reply, ahead of the rest of the summary: it is the line that changes what the user does next.
 
 `not checked` means the project has no `## Post-promote checks` section. Remind the user to verify the deploy by hand — open the production URL and confirm it shows the shipped version — and suggest adding a check, so the next promote waits for it instead.
 
