@@ -128,6 +128,19 @@ and a mechanism that refuses the dangerous subcommands. State both, and state wh
 misses — a wrapper around one binary does not stop a direct database connection, and writing that
 down is what keeps the discipline load-bearing rather than assumed.
 
+## Post-promote checks
+
+What `/promote-production` runs after pushing `production`, to see the deploy land. Each check is
+one command that does its own waiting: it polls the host until the host reports the commit or tag
+just pushed, exits 0 when it does, and exits non-zero with a message when it gives up. Say where to
+look when it fails. Projects without a `production` branch, or that want no check: delete this
+section, and the skill reports the deploy as not checked.
+
+The command must be one the permission policy allows a session to run — `curl` is denied, so wrap
+the fetch in an `npm run` script.
+
+- [`npm run deploy:wait` — waits up to N minutes for the host to report the pushed commit. On failure: where the deploy log is.]
+
 ## Conventions
 
 How this project is written — typing, structure, data fetching, auth, error handling, naming,
