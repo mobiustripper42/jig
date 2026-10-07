@@ -156,9 +156,10 @@ function history() {
  * A commit from before `jig-version` existed has no generation, and reads as 0: it predates every
  * migration, so no project can owe one for it.
  */
+const landing = (path) => git(JIG, 'log', '--first-parent', '-1', '--format=%H', REF, '--', path).trim()
 const genCache = new Map()
 function landedAt(path) {
-  const commit = git(JIG, 'log', '--first-parent', '-1', '--format=%H', REF, '--', path).trim()
+  const commit = landing(path)
   if (!genCache.has(commit)) genCache.set(commit, generation(tryGit(JIG, 'show', `${commit}:jig-version`)) ?? 0)
   return genCache.get(commit)
 }
@@ -255,8 +256,21 @@ for (const rel of templates) {
 const RETIRABLE = ['.claude/skills/', '.claude/agents/', '.claude/output-styles/']
 for (const [rel, theirs] of projTree) {
   if (!RETIRABLE.some((p) => rel.startsWith(p)) || jigTree.has(rel) || !once.has(rel)) continue
-  const cls = classOf(rel)
-  if (cls === 'context' || cls === 'presence') continue
+  /**
+   * Classed as it was while jig shipped it — the registry in the commit before the retirement
+   * landed — as well as by today's. Today's alone was the bug @code-review found: the reviewer
+   * agents are each named in the registry with no glob behind them, so retiring one AND its line
+   * left the path with no class, and an untouched `context` copy came out DELETE. Either registry
+   * calling it project-owned keeps it out; neither giving it a class at all holds it as
+   * unclassified rather than defaulting to removable.
+   */
+  const then = classifier(parseFileClasses(tryGit(JIG, 'show', `${landing(rel)}^:.claude/file-classes.yaml`) ?? ''))(rel)
+  const classes = [then, classOf(rel)]
+  if (classes.some((c) => c === 'context' || c === 'presence')) continue
+  if (!classes.some((c) => c === 'logic' || c === 'hybrid' || c === 'jig-only')) {
+    unclassified.push([rel, 'retired, and had no class while jig shipped it'])
+    continue
+  }
   if (!once.get(rel).has(theirs)) {
     edited.push([rel])
     continue

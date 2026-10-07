@@ -289,6 +289,33 @@ describe('sync — the dry run', { timeout: 30_000 }, () => {
     expect(out).not.toMatch(/skills\/mine/)
   })
 
+  it('never deletes a retired context file whose registry line went with it', () => {
+    // Found by @code-review. The three reviewer agents are each named in the registry, with no glob
+    // behind them, so retiring one AND its registry line leaves the path with no class today.
+    // Judged by today's registry, the untouched copy read as a retired file and came out DELETE —
+    // a `context` file, which a sync must never touch. The class that counts is the one the file
+    // had while jig shipped it.
+    const b = bench()
+    const withReviewer = `file-classes:\n  - ".claude/agents/retiring.md": context\n${CLASSES.split('\n').slice(1).join('\n')}`
+    const jig = repo(b, 'jig', { ...JIG, '.claude/file-classes.yaml': withReviewer, '.claude/agents/retiring.md': 'reviewer v1\n' })
+    const proj = repo(b, 'alpha', { ...PROJECT, '.claude/agents/retiring.md': 'reviewer v1\n' })
+    commit(jig, { '.claude/agents/retiring.md': null, '.claude/file-classes.yaml': CLASSES })
+    const { out, code } = sync(jig, proj)
+    expect(out).not.toMatch(/retiring\.md/)
+    expect(out).toMatch(/^nothing to sync\.$/m)
+    expect(code).toBe(0)
+  })
+
+  it('holds a retired file that never had a class, rather than deleting it', () => {
+    const b = bench()
+    const jig = repo(b, 'jig', { ...JIG, '.claude/agents/orphan.md': 'orphan v1\n' })
+    const proj = repo(b, 'alpha', { ...PROJECT, '.claude/agents/orphan.md': 'orphan v1\n' })
+    commit(jig, { '.claude/agents/orphan.md': null })
+    const { out } = sync(jig, proj)
+    expect(verdictsOf(out, '.claude/agents/orphan.md')).toEqual([])
+    expect(paths(out, 'UNCLASSIFIED in jig')).toEqual(['.claude/agents/orphan.md'])
+  })
+
   it('holds a retired skill the project edited', () => {
     const { b, proj } = setup({ project: { '.claude/skills/old/SKILL.md': 'old v1, kept alive here\n' } })
     const jig = join(b.root, 'jig')
