@@ -63,7 +63,7 @@ The session file lives on an orphan `sessions` branch checked out at `.sessions-
 
 **Check for worktree.** `[ -e .sessions-worktree/.git ] && echo present || echo missing`. (`-e`, not `-d`: in a linked worktree `.git` is a *file* — a `gitdir:` pointer — so `-d` reports `missing` on a worktree that is present, and sends the session into sub-case (a) below to fail on `already exists`.)
 
-**If present:** `git -C .sessions-worktree fetch origin sessions && git -C .sessions-worktree reset --hard origin/sessions`. Continue to Step 1. (`git -C`, not `cd` — shell state doesn't persist between Bash calls, and a stray `cd` that fails leaves the next command running in the wrong tree. The `&&` chain here made it safer than the unchained version but not correct.)
+**If present:** `git -C .sessions-worktree fetch origin sessions && git -C .sessions-worktree reset --hard origin/sessions`. Continue to Step 1. (`git -C`, not `cd` — shell state doesn't persist between Bash calls, and a stray `cd` that fails leaves the next command running in the wrong tree. The `&&` chain here made it safer than the unchained version but not correct.) This `reset --hard` is why the permission policy denies the `-C` spellings of force-push, `clean -f` and `branch -D` but not of `reset --hard`: denying it would stop every session from opening.
 
 **If missing — three sub-cases:**
 

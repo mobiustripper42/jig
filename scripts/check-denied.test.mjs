@@ -27,6 +27,7 @@ writeFileSync(
         'Bash(rm -rf ..*)',
         'Bash(bash)', // exact, no wildcard — must not become a prefix
         'Bash(* -m pip install *)', // leading wildcard — unsearchable
+        'Bash(git -C * branch -D *)', // a wildcard in the middle stands for a path
         'Read(**/.env*)', // not a command at all
       ],
     },
@@ -93,6 +94,17 @@ describe('invocations inside a code block', () => {
     // their canonical spelling.
     expect(fired('```\nrm -rf ~/.cache/foo\n```\n')).toEqual([2])
     expect(fired('```\nrm -rf ../build\n```\n')).toEqual([2])
+  })
+
+  it('reads a wildcard in the middle of a rule as any path, not a literal asterisk', () => {
+    // `Bash(git -C * branch -D *)` was escaped whole, so the gate hunted for a real `*` between
+    // `-C` and `branch` — a spelling no invocation has — and passed every doc that ran the command.
+    expect(fired('```\ngit -C ~/muster branch -D old\n```\n')).toEqual([2])
+    expect(fired('Then `git -C ../repo branch -D task/x` and done.\n')).toEqual([1])
+  })
+
+  it('leaves the same -C shape alone when the subcommand is not the denied one', () => {
+    expect(fired('```\ngit -C ~/muster status\n```\n')).toEqual([])
   })
 })
 
