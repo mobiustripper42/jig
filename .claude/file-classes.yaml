@@ -1,7 +1,8 @@
-# What a copy needs to know about each template jig ships — a copy made by a jig
-# session, by hand, when the operator asks; there is no sync script. Is this file
-# identical in every project and safe to `cp` wholesale, or does the project own
-# its version and it must never be copied at all?
+# What a copy needs to know about each template jig ships — a copy made when the
+# operator asks, by `scripts/sync.mjs` for the files nobody edited (DEC-J012) and
+# by a jig session for the rest. Is this file identical in every project and safe
+# to `cp` wholesale, or does the project own its version and it must never be
+# copied at all?
 #
 #   logic    → copy wholesale; jig is canonical, and a difference is staleness
 #   context  → never copy; the project owns its version and differing is correct
@@ -12,7 +13,7 @@
 #              and the one file every session reads from here through the machine
 #              (`.claude/output-styles/**`). Same rule either way — a project copy is a fork.
 #
-# Read by `scripts/drift.mjs`. First match wins, so carve-outs precede globs.
+# Read by `scripts/drift.mjs` and `scripts/sync.mjs`. First match wins, so carve-outs precede globs.
 #
 # THIS LIVED IN `routine-config.yaml` IN SEEDS and does not any more. The Routine
 # was switched off (DEC-S038) and its scheduling keys described a mechanism that

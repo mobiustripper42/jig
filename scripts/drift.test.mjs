@@ -341,7 +341,7 @@ describe('the all-clear line', () => {
    * Every other case in this file compares against `JIG`, where a throwaway project is absent two
    * dozen templates — so `rows` is never empty, the all-clear is unreachable, and a test written
    * that way would pass against the broken code while asserting nothing. Holding `jig-version` is
-   * the whole test for a jig checkout (`drift.mjs:87`), so a fake one is three files.
+   * the whole test for a jig checkout (`drift.mjs:98`), so a fake one is three files.
    */
   const fakeJig = (classes, files) => {
     const dir = mkdtempSync(join(tmpdir(), 'driftjig-'))

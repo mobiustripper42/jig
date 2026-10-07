@@ -23,7 +23,17 @@ import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import { basename, join, resolve } from 'node:path'
 import { createHash } from 'node:crypto'
-import { classifier, fileClasses as readFileClasses, toProject } from './lib/file-classes.mjs'
+import {
+  TEMPLATE_ROOTS,
+  classifier,
+  fileClasses as readFileClasses,
+  isShippedGate,
+  isTemplate,
+  notRunGates,
+  packageScripts,
+  scaffoldTargets,
+  toProject,
+} from './lib/file-classes.mjs'
 
 /**
  * `die` is a function DECLARATION, not a const arrow, and that is load-bearing. `findJig` runs
@@ -135,44 +145,10 @@ function fileClasses() {
   }
 }
 
-/**
- * The roots this script walks on jig's side. Under seeds this was one directory, `dev/claude/`,
- * and every template lived beneath it. DEC-J001 removed that prefix, so the template set is now
- * a list of the real paths jig ships from.
- *
- * `.claude/settings.local.json` is never a template — it is per-machine and gitignored — and
- * `.claude/file-classes.yaml` is this script's own config rather than something a project holds.
- * Both are excluded here rather than classified, because a registry entry saying "ignore this"
- * still has to be read and kept true; a file the walk never yields cannot go stale.
- */
-const TEMPLATE_ROOTS = ['CLAUDE.md', '.claude', 'scripts', 'scaffold', 'docs']
-const NOT_TEMPLATES = new Set(['.claude/settings.local.json', '.claude/file-classes.yaml'])
-
-/**
- * `docs/` is walked because two files in it are `logic` — `AGENTS.md` and `CHEATSHEET.md`
- * describe the skills and agents, which are identical in every project, so jig holds the one
- * copy and a project's copy going stale is drift. They were briefly filed under `scaffold/`,
- * which made them a second copy of a shared file; moving them here was the fix, and the walk not
- * reaching `docs/` left both entries unreachable — the policing the move was for never happened.
- *
- * Everything else under `docs/` is jig's own and is classed `jig-only` in the registry.
- * `docs/decisions/` is excluded: it is `check-decisions`' subject, and a project's record has
- * nothing to do with jig's.
- *
- * THE EXCLUSION WAS RIGHT ABOUT RECORDS AND WRONG ABOUT THE SCHEMA SITTING BESIDE THEM.
- * `decision-record.schema.json` is not a decision — it is the rules every project validates its
- * own records against, and `check-decisions.mjs` reads it from the PROJECT's `docs/decisions/`.
- * Excluding the directory outright meant no project ever received it, so an adopting repo could
- * not add a decision record at all: a `schema: 1` record failed for the missing schema, and one
- * without the key failed as not-in-baseline. A directory-wide skip is too blunt an instrument for
- * a directory holding two different kinds of thing.
- */
-const EXCLUDED_PREFIXES = ['docs/decisions/']
-const EXCLUSION_EXCEPTIONS = new Set(['docs/decisions/decision-record.schema.json'])
-
-// `toProject` — jig-side path → project-side path — is imported from `lib/file-classes.mjs`, which
-// carries the mapping and the reason it exists. `check-shipped-citations.mjs` needs the same answer
-// about the same four scaffold collisions, and two copies of it would be two answers.
+// Which paths are templates at all — `TEMPLATE_ROOTS` and `isTemplate` — and `toProject`, the
+// jig-side → project-side mapping, are imported from `lib/file-classes.mjs`, which carries the
+// reasons for each. `check-shipped-citations.mjs` and `sync.mjs` need the same answers, and two
+// copies of them would be two answers.
 
 /**
  * TYPE GATING IS NOT IMPLEMENTED HERE, DELIBERATELY, and this note exists so the next reader does
@@ -216,11 +192,7 @@ const templates = TEMPLATE_ROOTS.flatMap((root) => {
   const abs = join(JIG, root)
   if (!existsSync(abs)) return []
   return statSync(abs).isDirectory() ? walk(abs).map((r) => `${root}/${r}`) : [root]
-}).filter(
-  (rel) =>
-    !NOT_TEMPLATES.has(rel) &&
-    (EXCLUSION_EXCEPTIONS.has(rel) || !EXCLUDED_PREFIXES.some((p) => rel.startsWith(p))),
-)
+}).filter(isTemplate)
 
 const rows = []
 const missing = []   // `presence` class — reported when absent, never diffed. See below.
@@ -305,25 +277,12 @@ for (const kind of ['skills', 'agents', 'output-styles']) {
  * to hold a file at the path is what makes the finding mean something: two copies exist, and one
  * of them was never supposed to.
  */
-/**
- * Derived through `toProject` rather than from a hand-listed set of paths, so it cannot disagree
- * with the mapping it exists to invert. `scaffold/templates/**` has no mapping and so contributes
- * its own unmapped path as a key nothing can match — inert by construction, and left that way on
- * purpose: filtering it out would mean naming the mapped prefixes in a second place, which is the
- * drift this derivation avoids.
- */
-const scaffolded = new Set(templates.filter((r) => r.startsWith('scaffold/')).map(toProject))
+// Why the scaffold targets are skipped, and why the set is derived rather than listed: the note on
+// `scaffoldTargets` in `lib/file-classes.mjs`.
+const scaffolded = scaffoldTargets(templates)
 const notYours = []
 for (const rel of templates) {
   if (classOf(rel) !== 'jig-only') continue
-  /**
-   * A scaffold installs to a path jig ALSO has its own unrelated file at, and jig's copy is
-   * jig-only. `scaffold/docs/SPEC.md` → `docs/SPEC.md`, where jig keeps the spec for jig; same for
-   * PROJECT_PLAN, RETROSPECTIVES and FUTURE_IDEAS. Four collisions, so without this every project
-   * gets four confident false findings on its first run — and they are the exact basename pair
-   * DEC-S049 proved must never be compared. The scaffold is `context`: the project owns what it
-   * filled in, and jig's file at that path is not a template for it.
-   */
   if (scaffolded.has(rel)) continue
   if (existsSync(join(PROJECT, rel))) notYours.push(rel)
 }
@@ -346,34 +305,12 @@ for (const rel of templates) {
  * SHIPS for the same reason — a project's own tooling missing from its own `verify` is the
  * project's business and not a difference from anything here.
  *
- * Known limit, stated rather than discovered: the parse is `npm run <name>` chains and nothing
- * else. A gate reached indirectly through another script reads as absent, and so would one wired
- * with `npm-run-all`, `run-s`, `yarn <script>` or bare `pnpm <script>` — that spelling would flag
- * every gate at once, which is at least loud rather than silent. Acceptable while the fleet is
- * plain `npm run` chains; revisit on the first project that is not.
+ * The parse, and its known limit, live with `notRunGates` in `lib/file-classes.mjs`, which
+ * `sync.mjs` shares.
  */
-const gateScripts = new Set(
-  templates.filter((rel) => /^scripts\/check-[\w-]+\.mjs$/.test(rel) && classOf(rel) === 'logic'),
-)
-const notRun = []
+const gateScripts = new Set(templates.filter((rel) => isShippedGate(rel, classOf)))
 const pkgPath = join(PROJECT, 'package.json')
-if (existsSync(pkgPath)) {
-  let scripts = {}
-  try {
-    scripts = JSON.parse(readFileSync(pkgPath, 'utf8')).scripts ?? {}
-  } catch {
-    // A package.json this script cannot parse is not this script's finding to make. Every other
-    // tool in the project will say so louder, and guessing at a malformed file is how a differ
-    // starts having opinions.
-    scripts = {}
-  }
-  const referenced = new Set([...(scripts.verify ?? '').matchAll(/npm run ([\w:-]+)/g)].map((m) => m[1]))
-  for (const [name, cmd] of Object.entries(scripts)) {
-    if (name === 'verify') continue
-    if (![...gateScripts].some((g) => cmd.includes(g))) continue
-    if (!referenced.has(name)) notRun.push(name)
-  }
-}
+const notRun = existsSync(pkgPath) ? notRunGates(packageScripts(readFileSync(pkgPath, 'utf8')), gateScripts) : []
 
 const v = (p) => (existsSync(p) ? readFileSync(p, 'utf8').trim() : '?')
 const sv = v(join(JIG, 'jig-version'))

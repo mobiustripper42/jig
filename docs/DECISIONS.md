@@ -42,6 +42,7 @@ that never reached the spec is a red build rather than prose nobody cross-read.
 - DEC-J003 — Scaffolds are linted against jig, not diffed against a copy
 - DEC-J007 — The output style lives in jig and is read through the machine
 - DEC-J011 — @pm is logic class; the three reviewers stay context
+- DEC-J012 — A script carries untouched jig files into a project; a person still merges
 
 ### Decision record & dictionary discipline
 - DEC-J004 — Records predating schema v1 are frozen by a generated baseline
