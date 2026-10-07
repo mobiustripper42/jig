@@ -67,7 +67,7 @@ The session file lives on an orphan `sessions` branch checked out at `.sessions-
 
 **If missing — three sub-cases:**
 
-a. **`origin/sessions` exists on remote** (fresh clone / accidental delete): `git fetch origin sessions` then `git worktree add .sessions-worktree sessions`. Continue. (`git worktree add <path> [<commit-ish>]` takes **one** ref — the two-ref form `… sessions origin/sessions` is a usage error, and git answers it with a fragment of its own `--help` output rather than anything that reads like a failure.) In a linked worktree this fails with `already checked out`: the lane was made without the link from the concurrent-session recipe in Step 2. Stop and give the user that recipe's `ln -s` and ignore lines.
+a. **`origin/sessions` exists on remote** (fresh clone / accidental delete): `git fetch origin sessions` then `git worktree add .sessions-worktree sessions`. Continue. (`git worktree add <path> [<commit-ish>]` takes **one** ref — the two-ref form `… sessions origin/sessions` is a usage error, and git answers it with a fragment of its own `--help` output rather than anything that reads like a failure.) In a linked worktree this fails with `already checked out`: the lane was made without the link from the concurrent-session recipe in Step 2. Stop and give the user that recipe's `ln -s`, settings and ignore lines.
 
 b. **`origin/sessions` does NOT exist** (first run on this project — migration path): bootstrap the orphan branch.
 ```
@@ -124,11 +124,11 @@ Sanitize: lowercase, replace any non-`[a-z0-9.-]` with `-`, collapse repeats.
 git worktree add ../<repo>-<slug> -b task/<slug> main
 ln -s "$PWD/.sessions-worktree" ../<repo>-<slug>/.sessions-worktree
 printf '{ "permissions": { "additionalDirectories": ["%s"] } }\n' "$PWD/.sessions-worktree" > ../<repo>-<slug>/.claude/settings.local.json
-git -C ../<repo>-<slug> check-ignore -q .sessions-worktree || echo .sessions-worktree >> .git/info/exclude
+for p in .sessions-worktree .claude/settings.local.json; do git -C ../<repo>-<slug> check-ignore -q $p || echo $p >> .git/info/exclude; done
 cd ../<repo>-<slug> && claude
 ```
 
-The link gives the new lane the main checkout's `sessions` worktree: adding a second one fails, because `sessions` is already checked out there. The settings line lets the lane write through the link: the session file resolves outside the lane's working directory, so without it every session-file edit asks for approval. A new worktree has no `settings.local.json` — it is per-checkout and never committed — so writing it fresh overwrites nothing. The ignore line is needed because a `.sessions-worktree/` pattern matches only a directory and a link is not one; it does nothing when the link is already ignored.
+The link gives the new lane the main checkout's `sessions` worktree: adding a second one fails, because `sessions` is already checked out there. The settings line lets the lane write through the link: the session file resolves outside the lane's working directory, so without it every session-file edit asks for approval. A new worktree has no `settings.local.json` — it is per-checkout and never committed — so writing it fresh overwrites nothing. The ignore line is needed because a `.sessions-worktree/` pattern matches only a directory and a link is not one, and because not every project's `.gitignore` covers `settings.local.json`; it does nothing for a path already ignored.
 
 When the lane is finished — its session closed by `/its-dead`, its pull request merged — clean it up from the main checkout. Removing the worktree takes the link, never the session files behind it. Or keep the lane and cut its next branch there; the setup is then once per repo.
 
