@@ -11,7 +11,10 @@
 // against — a muted guard is worse than none, because the docs claim it is covered.
 
 import { describe, expect, it } from "vitest";
-import { existsSync, mkdirSync, renameSync } from "node:fs";
+import { execFileSync, spawnSync } from "node:child_process";
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join } from "node:path";
 import {
   DOCS,
   HISTORICAL,
@@ -233,6 +236,42 @@ describe("checkPaths", () => {
     // The list is exemptions rather than an allowlist on purpose: a doc added next year is
     // checked by default, and skipping it takes a deliberate line with a reason attached.
     expect(checkPaths([{ path: "docs/BRAND.md", text: "`scripts/gone.mjs`" }])[0]).toMatch(/does not exist/);
+  });
+
+  it("takes on trust an absent path git ignores, through the same resolver as check-context (issue #75)", () => {
+    // Against jig's own tree, like the rest of this file: `*.log` and `__pycache__/` are in jig's
+    // `.gitignore`. The second is directory-only, which git never matches against an absent path
+    // written without its slash. `scripts/never/` keeps it absent on any machine py_compile ran on.
+    expect(checkPaths(doc("`scripts/never-written.log`"))).toEqual([]);
+    expect(checkPaths(doc("`scripts/never/__pycache__`"))).toEqual([]);
+    expect(checkPaths(doc("`scripts/never-written.txt`"))[0]).toMatch(/does not exist/);
+  });
+
+  it("names on its ✓ line the paths it took on trust", () => {
+    // A fresh repository rather than jig, because jig's docs cite nothing gitignored and so would
+    // only ever print the line without the note.
+    const repo = mkdtempSync(join(tmpdir(), "check-docs-trust-"));
+    const files = {
+      ".claude/doc-check.json": '{ "repo": "x/y" }\n',
+      "gateway/.gitignore": ".venv/\n",
+      "gateway/app.py": "",
+      "docs/GUIDE.md": "The app is `gateway/app.py`; its tests run in `gateway/.venv`.\n",
+    };
+    for (const [rel, text] of Object.entries(files)) {
+      mkdirSync(dirname(join(repo, rel)), { recursive: true });
+      writeFileSync(join(repo, rel), text);
+    }
+    // check-docs loads the decision index, which will not start without its config.
+    mkdirSync(join(repo, "docs/decisions"));
+    copyFileSync("docs/decisions/_config.json", join(repo, "docs/decisions/_config.json"));
+    execFileSync("git", ["init", "-q"], { cwd: repo });
+    try {
+      const r = spawnSync(process.execPath, [join(process.cwd(), "scripts", "check-docs.mjs")], { cwd: repo, encoding: "utf8" });
+      expect(r.status, r.stderr).toBe(0);
+      expect(r.stdout).toMatch(/\(0 historical ledgers exempt\); taken on trust as gitignored: gateway\/\.venv\n$/);
+    } finally {
+      rmSync(repo, { recursive: true, force: true });
+    }
   });
 });
 

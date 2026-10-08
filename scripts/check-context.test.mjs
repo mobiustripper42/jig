@@ -24,6 +24,7 @@
 // is what checks a project's actual docs, on every run, against the real tree. A unit suite
 // doing it too only bought a second opinion in one repo while making it unrunnable everywhere.
 
+import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -56,7 +57,14 @@ const FIXTURE_FILES = [
   // A top-level `components/` so the `<placeholder>` case proves the angle-bracket rule rather
   // than passing for the uninteresting reason that `components` is not a root here.
   "components/.keep",
+  // Roots for the gitignored-citation cases (issue #75), shaped after the two real ones: soundings'
+  // virtualenv under `gateway/` and centerline's build output under `public/`. The ignored paths
+  // themselves are absent on purpose — absent is what a fresh worktree looks like.
+  "gateway/app.py",
+  "public/index.html",
 ];
+// soundings' rule, verbatim from its `gateway/.gitignore`, and centerline's from its root one.
+const GITIGNORES = { "gateway/.gitignore": ".venv/\n", ".gitignore": "/public/maplibre/\n" };
 
 // Deliberately ABSENT from the fixture, and each absence is load-bearing:
 //   dev/                        — so `dev/claude/...` reads as another repo's path, not a claim
@@ -116,6 +124,8 @@ beforeAll(async () => {
       "",
     ].join("\n"),
   );
+  for (const [rel, text] of Object.entries(GITIGNORES)) writeFileSync(join(fixture, rel), text);
+  execFileSync("git", ["init", "-q"], { cwd: fixture });
   cwdBefore = process.cwd();
   process.chdir(fixture);
   // Imported AFTER the chdir on purpose — see the header note.
@@ -241,6 +251,120 @@ describe("check", () => {
   it("reports the line number, so a failure is one click from the claim", () => {
     const failures = check([{ path: "fixture.md", text: "line one\nline two\n`src/nope/gone.ts`" }]);
     expect(failures[0]).toContain("fixture.md:3");
+  });
+});
+
+// Issue #75. A sync worktree is a fresh checkout, and a fresh checkout has none of what git
+// ignores. soundings' first `sync.mjs --pr` went red on exactly one line: its context file citing
+// `gateway/.venv`, a virtualenv that exists in every checkout anyone works in and in no worktree.
+// The citation was right; the gate called it dead.
+describe("gitignored citations", () => {
+  const withEnv = (vars, fn) => {
+    const before = Object.fromEntries(Object.keys(vars).map((k) => [k, process.env[k]]));
+    Object.assign(process.env, vars);
+    try {
+      return fn();
+    } finally {
+      for (const [k, v] of Object.entries(before)) {
+        if (v === undefined) delete process.env[k];
+        else process.env[k] = v;
+      }
+    }
+  };
+
+  it("takes on trust an absent path a directory-only pattern ignores — soundings' `gateway/.venv`", () => {
+    // Git reads an absent path as a FILE, so `.venv/` never matches `gateway/.venv` as written.
+    // Asking only once would have missed the case that motivated the change.
+    expect(check([{ path: "f.md", text: "pytest runs in `gateway/.venv`" }])).toEqual([]);
+  });
+
+  it("takes on trust an absent directory an anchored pattern ignores — centerline's `public/maplibre/`", () => {
+    expect(check([{ path: "f.md", text: "the worker is copied into `public/maplibre/`" }])).toEqual([]);
+  });
+
+  it("still calls an absent path git does not ignore dead, in the same repository", () => {
+    // The negative control: a resolver that trusted every miss would pass both cases above.
+    const failures = check([{ path: "f.md", text: "`gateway/missing.py`" }]);
+    expect(failures).toHaveLength(1);
+    expect(failures[0]).toMatch(/gateway\/missing\.py.*does not exist/);
+  });
+
+  it("still calls a glob dead when nothing on disk matches, whatever .gitignore would say of its text", () => {
+    const failures = check([{ path: "f.md", text: "`gateway/.ven*` and `public/maplibre/*.js`" }]);
+    expect(failures).toHaveLength(2);
+  });
+
+  it("calls the same path dead outside a git repository, as before", () => {
+    const elsewhere = mkdtempSync(join(tmpdir(), "check-context-not-a-repo-"));
+    try {
+      process.chdir(elsewhere);
+      // The ceiling stops git walking up into whatever repository holds the temp directory.
+      const failures = withEnv({ GIT_CEILING_DIRECTORIES: dirname(elsewhere) }, () =>
+        check([{ path: "f.md", text: "`gateway/.venv`" }]),
+      );
+      expect(failures[0]).toMatch(/gateway\/\.venv.*does not exist/);
+    } finally {
+      process.chdir(fixture);
+      rmSync(elsewhere, { recursive: true, force: true });
+    }
+  });
+
+  it("judges by the repository's ignore rules, not this machine's global excludes file", () => {
+    // A gate's verdict on a project's docs must not depend on whose laptop runs it. Otherwise one
+    // machine's personal `excludesFile` would quietly pass a citation that is red everywhere else.
+    const home = mkdtempSync(join(tmpdir(), "check-context-home-"));
+    writeFileSync(join(home, "excludes"), "gateway/personal.txt\n");
+    writeFileSync(join(home, "gitconfig"), `[core]\n\texcludesFile = ${join(home, "excludes")}\n`);
+    try {
+      withEnv({ GIT_CONFIG_GLOBAL: join(home, "gitconfig") }, () => {
+        // The setup bites: plain git, with this machine's config, does call the path ignored.
+        expect(spawnSync("git", ["check-ignore", "-q", "gateway/personal.txt"]).status).toBe(0);
+        expect(check([{ path: "f.md", text: "`gateway/personal.txt`" }])[0]).toMatch(/does not exist/);
+      });
+    } finally {
+      rmSync(home, { recursive: true, force: true });
+    }
+  });
+
+  it("never runs a shell on the path it now hands to git", () => {
+    // The earlier shell case is a glob, so it never reaches `git check-ignore`. This one is a plain
+    // path, so it does.
+    const payload = "gateway/x;touch$IFS/tmp/check-context-ignore-should-not-exist";
+    expect(check([{ path: "evil.md", text: `\`${payload}\`` }])[0]).toMatch(/does not exist/);
+    expect(existsSync("/tmp/check-context-ignore-should-not-exist")).toBe(false);
+  });
+
+  it("names on the ✓ line what it took on trust, and prints today's line when it took nothing", () => {
+    // What the gate prints is part of what it does. A trusted path is one nobody verified, so the
+    // gate says which, sorted and once each, rather than passing it silently.
+    const repo = mkdtempSync(join(tmpdir(), "check-context-trust-"));
+    const files = {
+      ...GITIGNORES,
+      "gateway/app.py": "",
+      "public/index.html": "",
+      "CLAUDE.md": "See `gateway/app.py`.\n",
+      ".claude/CLAUDE-context.md": "Workers in `public/maplibre/`. Tests in `gateway/.venv`, as `gateway/.venv` says.\n",
+    };
+    for (const [rel, text] of Object.entries(files)) {
+      mkdirSync(dirname(join(repo, rel)), { recursive: true });
+      writeFileSync(join(repo, rel), text);
+    }
+    execFileSync("git", ["init", "-q"], { cwd: repo });
+    const gate = () => spawnSync(process.execPath, [join(cwdBefore, "scripts", "check-context.mjs")], { cwd: repo, encoding: "utf8" });
+    try {
+      const trusting = gate();
+      expect(trusting.status, trusting.stderr).toBe(0);
+      expect(trusting.stdout).toBe(
+        "✓ context docs — every path, glob and § section cited in CLAUDE.md + .claude/CLAUDE-context.md resolves; " +
+          "taken on trust as gitignored: gateway/.venv, public/maplibre/\n",
+      );
+      writeFileSync(join(repo, ".claude/CLAUDE-context.md"), "See `gateway/app.py`.\n");
+      expect(gate().stdout).toBe(
+        "✓ context docs — every path, glob and § section cited in CLAUDE.md + .claude/CLAUDE-context.md resolves\n",
+      );
+    } finally {
+      rmSync(repo, { recursive: true, force: true });
+    }
   });
 });
 

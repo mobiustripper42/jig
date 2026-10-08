@@ -28,6 +28,7 @@
 // than the code below: a guard whose blind spot is undocumented gets trusted for things it never
 // checked.
 
+import { execFileSync } from 'node:child_process'
 import { existsSync, globSync, readFileSync, readdirSync, statSync } from 'node:fs'
 
 /** Every `.md` under a directory, recursively. Absent directory yields nothing. */
@@ -162,7 +163,45 @@ export function resolves(raw) {
   // over `docs/*.md` and reported three live files as dead — the blind spot nobody would have
   // found from this script's own corpus, because context docs happen to cite only lists.
   const path = raw.replace(/:[\d,-]+$/, '').replace(/\\(?=[()])/g, '')
-  return isPattern(path) ? patternMatches(path) : existsSync(path)
+  if (isPattern(path)) return patternMatches(path)
+  if (existsSync(path)) return true
+  if (!gitIgnores(path)) return false
+  trusted.add(path)
+  return true
+}
+
+/**
+ * Cited paths the disk lacks and git ignores: believed, not checked, and named on each gate's ✓
+ * line so a stale one can be seen. Shared by both gates through this module (issue #75).
+ */
+export const trusted = new Set()
+export const trustNote = () => (trusted.size ? `; taken on trust as gitignored: ${[...trusted].sort().join(', ')}` : '')
+
+/**
+ * Does the repository ignore this path? A fresh checkout has none of what git ignores, so a
+ * correct citation of a virtualenv or a build output is absent in every worktree — soundings'
+ * first `sync.mjs --pr` went red on nothing else, its context file citing `gateway/.venv`. The
+ * citation was right and the gate called it dead.
+ *
+ * Asked twice, and the second ask is the one that mattered: git reads an absent path as a FILE, so
+ * a directory-only pattern — soundings' `.venv/` — never matches `gateway/.venv` as written, only
+ * `gateway/.venv/`. One ask would have missed the case that motivated this.
+ *
+ * `core.excludesFile` is switched off so the verdict is the repository's: a personal global ignore
+ * file would otherwise pass a citation on one laptop that is red on every other. An argument array
+ * and never a shell, for the reason `resolves()` gives above. Outside a repository, or with no
+ * git, every ask fails and the path is dead, as it always was.
+ */
+function gitIgnores(path) {
+  for (const ask of path.endsWith('/') ? [path] : [path, `${path}/`]) {
+    try {
+      execFileSync('git', ['-c', 'core.excludesFile=/dev/null', 'check-ignore', '-q', '--', ask], { stdio: 'ignore' })
+      return true
+    } catch {
+      // Exit 1 is "not ignored", 128 is "not a repository", ENOENT is "no git". All three: dead.
+    }
+  }
+  return false
 }
 
 /**
@@ -382,5 +421,5 @@ if (process.argv[1]?.endsWith('check-context.mjs')) {
     console.error('')
     process.exit(1)
   }
-  console.log(`✓ context docs — every path, glob and § section cited in ${DOCS.join(' + ')} resolves`)
+  console.log(`✓ context docs — every path, glob and § section cited in ${DOCS.join(' + ')} resolves${trustNote()}`)
 }
