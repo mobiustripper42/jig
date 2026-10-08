@@ -1,10 +1,15 @@
 #!/usr/bin/env node
 /**
- * What a jig sync would carry into one project, file by file. A dry run: it writes nothing but the
- * remote-tracking refs `git fetch` updates. Issue #71; the write half is issue #72.
+ * What a jig sync would carry into one project, file by file, and with `--pr`, carrying it.
  *
- *   node scripts/sync.mjs ../muster
- *   node scripts/sync.mjs --jig <path> ../muster
+ *   node scripts/sync.mjs ../muster           the dry run: writes nothing but the refs `git fetch` updates
+ *   node scripts/sync.mjs ../muster --pr      carry it in a worktree; push and open the pull request if the gates pass
+ *   node scripts/sync.mjs ../muster --clean   remove what a red `--pr` left behind
+ *   node scripts/sync.mjs --jig <path> ...    a jig other than the one this script is in
+ *
+ * Issue #71 is the dry run and issue #72 the write half. `--pr` pushes and opens a pull request, so
+ * it is an environment-changing command (CLAUDE.md § Workflow Notes): the operator runs it, or a
+ * session does after the operator says go for that project.
  *
  * THE RULE UNDER EVERY VERDICT: jig may replace or remove a project's file only when the project's
  * bytes match a version jig once shipped at that path. A match means nobody edited the file there,
@@ -22,8 +27,9 @@
  * does say, and only for the case where the answer is a lookup: an untouched copy is stale.
  */
 
-import { execFileSync } from 'node:child_process'
-import { existsSync, realpathSync } from 'node:fs'
+import { execFileSync, spawnSync } from 'node:child_process'
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, unlinkSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { basename, dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
@@ -49,12 +55,16 @@ const REF = 'origin/main'
 const argv = process.argv.slice(2)
 const positional = []
 let jigArg = null
+let mode = 'dry'
 for (let i = 0; i < argv.length; i++) {
   if (argv[i] === '--jig') jigArg = argv[++i] ?? die('--jig needs a path')
-  else if (argv[i].startsWith('--')) die(`unknown flag ${argv[i]} — the only flag is --jig`)
+  else if (argv[i] === '--pr' || argv[i] === '--clean') {
+    if (mode !== 'dry') die('--pr and --clean are separate runs — pass one')
+    mode = argv[i].slice(2)
+  } else if (argv[i].startsWith('--')) die(`unknown flag ${argv[i]} — the flags are --jig, --pr and --clean`)
   else positional.push(argv[i])
 }
-if (positional.length !== 1) die('usage: node scripts/sync.mjs [--jig <path>] <project>')
+if (positional.length !== 1) die('usage: node scripts/sync.mjs [--jig <path>] [--pr | --clean] <project>')
 
 const jigPath = resolve(jigArg ?? join(HERE, '..'))
 if (!existsSync(join(jigPath, 'jig-version'))) die(`${jigPath} is not a jig checkout`)
@@ -86,13 +96,96 @@ const commonDir = (dir) => tryGit(dir, 'rev-parse', '--path-format=absolute', '-
 if (!commonDir(PROJECT)) die(`${PROJECT} is not a git repository`)
 if (commonDir(PROJECT) === commonDir(JIG)) die('that is jig itself — point this at a project')
 
+const NAME = basename(PROJECT)
+
+/**
+ * Where `--pr` works: a worktree beside the project, never the project's own checkout. Every
+ * sibling is somebody's parked session, often mid-task with untracked files, and a worktree leaves
+ * that checkout exactly as it was (checklist step 2 in `.claude/CLAUDE-context.md`).
+ *
+ * The date is UTC, so two runs either side of local midnight cannot disagree about the branch.
+ */
+const WORKTREE = join(dirname(PROJECT), `${NAME}-jig-sync`)
+const BRANCH = `jig-sync/${new Date().toISOString().slice(0, 10)}`
+
+/**
+ * The exclude line that keeps the hard-linked `node_modules` out of a commit. Git keeps
+ * `info/exclude` in the repository's common directory, shared by every worktree, so while it is
+ * there the real checkout ignores `/node_modules` too — which changes nothing in a project whose
+ * `.gitignore` already does, and every Node project's does. The marker names the worktree, so the
+ * removal takes out exactly the lines this script added and nothing a person wrote.
+ */
+const EXCLUDE = join(commonDir(PROJECT), 'info', 'exclude')
+const EXCLUDE_BLOCK = `# jig sync: node_modules is hard-linked into ${WORKTREE}. scripts/sync.mjs removes these two lines.\n/node_modules\n`
+function addExclude() {
+  mkdirSync(dirname(EXCLUDE), { recursive: true })
+  const text = existsSync(EXCLUDE) ? readFileSync(EXCLUDE, 'utf8') : ''
+  if (!text.includes(EXCLUDE_BLOCK)) writeFileSync(EXCLUDE, `${text}${text === '' || text.endsWith('\n') ? '' : '\n'}${EXCLUDE_BLOCK}`)
+}
+function dropExclude() {
+  if (!existsSync(EXCLUDE)) return false
+  const text = readFileSync(EXCLUDE, 'utf8')
+  if (!text.includes(EXCLUDE_BLOCK)) return false
+  const rest = text.replace(EXCLUDE_BLOCK, '')
+  if (rest === '') unlinkSync(EXCLUDE)
+  else writeFileSync(EXCLUDE, rest)
+  return true
+}
+
+/** For the write path: a failure carries git's own message rather than a bare exit status. */
+const sh = (dir, ...args) => execFileSync('git', ['-C', dir, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] })
+function step(what, fn) {
+  try {
+    return fn()
+  } catch (e) {
+    console.error(`sync: ${what} failed: ${String(e.stderr || e.message).trim()}`)
+    if (existsSync(WORKTREE)) console.error(`The worktree is at ${WORKTREE}. node scripts/sync.mjs --clean ${PROJECT} removes it.`)
+    process.exit(2)
+  }
+}
+
+/**
+ * `--clean`: undo a red `--pr`. It finds the worktree by its path, not by today's branch name, so
+ * it still works the day after the run. Only a worktree on a `jig-sync/` branch is removed: a
+ * directory at that path that is anything else is somebody's, and is left alone.
+ */
+if (mode === 'clean') {
+  const entries = git(PROJECT, 'worktree', 'list', '--porcelain').split('\n\n').map((e) => e.split('\n'))
+  const entry = entries.find((lines) => lines[0] === `worktree ${WORKTREE}`)
+  const done = []
+  if (entry) {
+    const branch = entry.find((l) => l.startsWith('branch refs/heads/'))?.slice('branch refs/heads/'.length)
+    if (!branch?.startsWith('jig-sync/')) die(`${WORKTREE} is a worktree on ${branch ?? 'a detached HEAD'}, not a jig sync — not touching it`)
+    step('removing the worktree', () => sh(PROJECT, 'worktree', 'remove', '--force', WORKTREE))
+    step(`deleting ${branch}`, () => sh(PROJECT, 'branch', '--quiet', '-D', branch))
+    done.push(`removed the worktree ${WORKTREE}`, `deleted the local branch ${branch}`)
+  } else if (existsSync(WORKTREE)) {
+    die(`${WORKTREE} exists but is not a worktree of ${NAME} — not touching it`)
+  }
+  if (dropExclude()) done.push(`took the node_modules line back out of ${EXCLUDE}`)
+  console.log(done.length ? done.map((d) => `sync --clean: ${d}`).join('\n') : `sync --clean: nothing to clean for ${NAME}`)
+  process.exit(0)
+}
+
+/**
+ * `--pr` refuses before touching anything when a previous run is still in the way. A worktree or a
+ * local branch is a red run nobody has cleaned; the branch on origin is today's sync already pushed,
+ * with its pull request open. Checked before the fetch, so a refusal writes nothing at all.
+ */
+if (mode === 'pr') {
+  if (existsSync(WORKTREE)) die(`${WORKTREE} already exists. If a red --pr left it, node scripts/sync.mjs --clean ${PROJECT} removes it`)
+  if (tryGit(PROJECT, 'rev-parse', '--verify', '--quiet', `refs/heads/${BRANCH}`) !== null) die(`${NAME} already has a local branch ${BRANCH}`)
+  const remote = tryGit(PROJECT, 'ls-remote', '--heads', 'origin', `refs/heads/${BRANCH}`)
+  if (remote === null) die(`could not reach ${NAME}'s origin to check for ${BRANCH}`)
+  if (remote.trim()) die(`${BRANCH} is already on ${NAME}'s origin — today's sync was pushed; merge or close its pull request first`)
+}
+
 /**
  * Both sides at `origin/main`, fetched first — the rule `fleet.mjs` states at its top. What has
  * shipped is `main` on GitHub. jig's checkout is usually on an unmerged branch, and every project
  * is somebody's parked session, so neither working tree is the answer. A failed fetch is reported
  * beside the header rather than stopping the run, as fleet does.
  */
-const NAME = basename(PROJECT)
 const fetchFailed = [JIG, PROJECT].filter((d) => tryGit(d, 'fetch', '--quiet', 'origin', 'main') === null)
 for (const [dir, name] of [[JIG, 'jig'], [PROJECT, NAME]]) {
   if (tryGit(dir, 'rev-parse', '--verify', '--quiet', `${REF}^{commit}`) === null) die(`${name} has no ${REF}`)
@@ -107,14 +200,19 @@ const projGen =
   generation(show(PROJECT, '.claude/jig-version') ?? die(`no .claude/jig-version on ${REF} — ${NAME} is not on jig`)) ??
   die(`${NAME}'s .claude/jig-version is not a whole number`)
 
-/** path → blob id, for every file at `origin/main`. Blob ids compare bytes without reading them. */
-function tree(dir) {
+/**
+ * path → blob id, for every file at `origin/main`. Blob ids compare bytes without reading them.
+ * `modes`, when given, collects path → mode, for the files `--pr` writes.
+ */
+function tree(dir, modes) {
   const files = new Map()
   for (const rec of git(dir, 'ls-tree', '-r', '-z', REF).split('\0')) {
     if (!rec) continue
     const tab = rec.indexOf('\t')
-    const [, type, oid] = rec.slice(0, tab).split(' ')
-    if (type === 'blob') files.set(rec.slice(tab + 1), oid)
+    const [mode, type, oid] = rec.slice(0, tab).split(' ')
+    if (type !== 'blob') continue
+    files.set(rec.slice(tab + 1), oid)
+    modes?.set(rec.slice(tab + 1), mode)
   }
   return files
 }
@@ -189,7 +287,8 @@ const LEVELS = ['none', '/clear', 'restart the session']
 
 const registry = show(JIG, '.claude/file-classes.yaml') ?? die(`jig's ${REF} has no .claude/file-classes.yaml`)
 const classOf = classifier(parseFileClasses(registry))
-const jigTree = tree(JIG)
+const jigModes = new Map()
+const jigTree = tree(JIG, jigModes)
 const projTree = tree(PROJECT)
 const once = history()
 const templates = [...jigTree.keys()].filter(isTemplate)
@@ -203,6 +302,8 @@ const edited = []
 const migration = []
 const referenced = []
 const unclassified = []
+/** project path → the jig path a Copy or New is read from. They differ only for a scaffold. */
+const source = new Map()
 
 /**
  * A delete the project still calls is held: removing `scripts/drift.mjs` from a repo whose
@@ -230,7 +331,11 @@ for (const rel of templates) {
     }
     const gen = landedAt(rel)
     if (gen > projGen) migration.push([path, `jig-version ${gen}`])
-    else (theirs === undefined ? add : copy).push([path])
+    else {
+      const into = theirs === undefined ? add : copy
+      into.push([path])
+      source.set(path, rel)
+    }
     continue
   }
   /**
@@ -305,35 +410,189 @@ for (const p of changing) {
 
 const short = (dir) => git(dir, 'rev-parse', '--short', REF).trim()
 const w = Math.max(3, NAME.length)
-console.log(`\nsync — ${NAME}, dry run: fetches, then writes nothing`)
+const HEADER = {
+  dry: 'dry run: fetches, then writes nothing',
+  pr: 'carries it in a worktree, and pushes only if the gates pass',
+}
+console.log(`\nsync — ${NAME}, ${HEADER[mode]}`)
 console.log(`${'jig'.padEnd(w)}  ${REF} ${short(JIG)}  jig-version ${jigGen}`)
 console.log(`${NAME.padEnd(w)}  ${REF} ${short(PROJECT)}  jig-version ${projGen}`)
 for (const d of fetchFailed) console.log(`${d === JIG ? 'jig' : NAME}: fetch failed, so this is ${REF} as of the last fetch`)
 console.log('')
 
-const print = (title, rows) => {
-  if (!rows.length) return
+/** One block as lines. The verdict blocks are printed and, under `--pr`, are the body's core. */
+const blockLines = (title, rows, { sort = true } = {}) => {
+  if (!rows.length) return []
   const pad = Math.max(...rows.map(([p]) => p.length))
-  console.log(`${title} (${rows.length}):`)
-  for (const [p, note] of rows.sort((a, b) => a[0].localeCompare(b[0]))) console.log(note ? `  ${p.padEnd(pad)}  ${note}` : `  ${p}`)
-  console.log('')
+  const ordered = sort ? [...rows].sort((a, b) => a[0].localeCompare(b[0])) : rows
+  return [`${title} (${rows.length}):`, ...ordered.map(([p, note]) => (note ? `  ${p.padEnd(pad)}  ${note}` : `  ${p}`)), '']
+}
+
+const report = [
+  ...blockLines("COPY — jig's current version replaces a copy nobody edited", copy),
+  ...blockLines('NEW — jig ships it and the project has none', add),
+  ...blockLines('DELETE — a copy nobody edited, of a file jig keeps to itself or retired', remove),
+  ...blockLines('HELD: edited locally — matches no version jig ever shipped at this path; a session decides', edited),
+  ...blockLines("HELD: migration — jig made this change at a newer jig-version than the project's", migration),
+  ...blockLines('HELD: referenced — a package.json script runs it, so deleting it would break that command', referenced),
+  ...blockLines('UNWIRED — gates verify never runs. Add each to verify, or decide it does not apply here', unwired),
+  ...blockLines('UNCLASSIFIED in jig — no file-class entry, so never synced. Fix in jig: .claude/file-classes.yaml', unclassified),
+]
+if (changing.length) {
+  const top = changing.filter((p) => at.get(p) === level)
+  report.push(`Restart after merge: ${LEVELS[level]}${level > 0 ? ` — ${top.join(', ')}` : ''}`)
+  if (changing.some((p) => p.startsWith('.claude/skills/'))) {
+    report.push('  A conversation that already read an old skill keeps that text until /clear.')
+  }
+  report.push('')
 }
 
 if (!changing.length) console.log('nothing to sync.\n')
-print("COPY — jig's current version replaces a copy nobody edited", copy)
-print('NEW — jig ships it and the project has none', add)
-print('DELETE — a copy nobody edited, of a file jig keeps to itself or retired', remove)
-print('HELD: edited locally — matches no version jig ever shipped at this path; a session decides', edited)
-print("HELD: migration — jig made this change at a newer jig-version than the project's", migration)
-print('HELD: referenced — a package.json script runs it, so deleting it would break that command', referenced)
-print('UNWIRED — gates verify never runs. Add each to verify, or decide it does not apply here', unwired)
-print('UNCLASSIFIED in jig — no file-class entry, so never synced. Fix in jig: .claude/file-classes.yaml', unclassified)
+if (report.length) console.log(report.join('\n'))
+if (mode === 'dry' || !changing.length) process.exit(0)
 
-if (changing.length) {
-  const top = changing.filter((p) => at.get(p) === level)
-  console.log(`Restart after merge: ${LEVELS[level]}${level > 0 ? ` — ${top.join(', ')}` : ''}`)
-  if (changing.some((p) => p.startsWith('.claude/skills/'))) {
-    console.log('  A conversation that already read an old skill keeps that text until /clear.')
+// ——— `--pr` from here. Checklist steps 2, 3, 4, 7 and 8 in `.claude/CLAUDE-context.md`, as code. ———
+
+const jigSha = git(JIG, 'rev-parse', REF).trim()
+
+step('making the worktree', () => sh(PROJECT, 'worktree', 'add', '--quiet', '--no-track', '-b', BRANCH, WORKTREE, REF))
+console.log(`worktree  ${WORKTREE}, on ${BRANCH} from ${NAME} ${REF} ${short(PROJECT)}`)
+
+/**
+ * Copy and New are written from jig's `origin/main`, never its working tree, which is usually an
+ * unmerged branch. A new file takes jig's executable bit; a copy keeps the project's mode, because
+ * the verdict compared bytes and a mode change would be a change the dry run never reported.
+ */
+step('applying the verdicts', () => {
+  for (const [path] of [...copy, ...add]) {
+    const rel = source.get(path)
+    const bytes = execFileSync('git', ['-C', JIG, 'show', `${REF}:${rel}`], { maxBuffer: 1 << 30, stdio: ['ignore', 'pipe', 'pipe'] })
+    const dest = join(WORKTREE, path)
+    mkdirSync(dirname(dest), { recursive: true })
+    writeFileSync(dest, bytes)
+    if (!projTree.has(path) && jigModes.get(rel) === '100755') chmodSync(dest, 0o755)
   }
-  console.log('')
+  if (remove.length) sh(WORKTREE, 'rm', '--quiet', '--', ...remove.map(([p]) => p))
+})
+
+/**
+ * The gates need the project's dependencies, and a fresh worktree has none. A hard link, never a
+ * symlink: Next's Turbopack refuses a `node_modules` that points outside the tree. A virtualenv or a
+ * build output is not made here; a gate that needs one goes red and the run is handed off.
+ */
+const realModules = join(PROJECT, 'node_modules')
+if (existsSync(realModules)) {
+  addExclude()
+  step('hard-linking node_modules', () => execFileSync('cp', ['-al', realModules, join(WORKTREE, 'node_modules')], { stdio: ['ignore', 'pipe', 'pipe'] }))
+  console.log(`node_modules  hard-linked from ${NAME}'s checkout; /node_modules added to ${EXCLUDE}`)
 }
+
+/**
+ * Staged by name, never `git add -A`, so nothing but what the verdicts wrote reaches the commit —
+ * `node_modules` included, even in a project whose ignore files would let it through.
+ */
+step('committing', () => {
+  const written = [...copy, ...add].map(([p]) => p)
+  if (written.length) sh(WORKTREE, 'add', '--', ...written)
+  const counts = `${copy.length} copied, ${add.length} added, ${remove.length} deleted`
+  sh(WORKTREE, 'commit', '--quiet', '-m', `jig sync: jig origin/main ${jigSha.slice(0, 7)}`, '-m', `Carried by scripts/sync.mjs --pr from jig origin/main ${jigSha}: ${counts}.`)
+  console.log(`commit    ${sh(WORKTREE, 'rev-parse', '--short', 'HEAD').trim()} — ${counts}`)
+})
+
+/**
+ * `verify`, then each unwired gate run directly, the way jig runs its own. Every gate runs even
+ * after one fails, so a handoff names all of them at once. A project with no `verify` is red:
+ * nothing there can prove the sync, and a pull request that says it passed would be untrue.
+ */
+const gateName = (path) => `check:${basename(path, '.mjs').slice('check-'.length)}`
+const results = []
+const runGate = (label, cmd, args, extra = {}) => {
+  console.log(`running   ${label}`)
+  const r = spawnSync(cmd, args, { cwd: WORKTREE, encoding: 'utf8', maxBuffer: 1 << 30 })
+  const ok = r.status === 0
+  results.push({ label, ok, status: ok ? 'passed' : 'failed', output: `${r.stdout ?? ''}${r.stderr ?? ''}${r.error ? String(r.error) : ''}`, ...extra })
+}
+if (typeof projScripts.verify === 'string') runGate('npm run verify', 'npm', ['run', 'verify'])
+else {
+  results.push({
+    label: 'npm run verify',
+    ok: false,
+    status: 'no verify script',
+    output: `${NAME}'s package.json has no verify script, so nothing can prove the sync here.`,
+  })
+}
+for (const [name, why] of unwired) {
+  const arriving = name.startsWith('scripts/')
+  const path = arriving ? name : [...gates].find((g) => projScripts[name].includes(g))
+  const wire = arriving
+    ? `add \`"${gateName(path)}": "node ${path}"\` to \`scripts\`, and append \` && npm run ${gateName(path)}\` to \`verify\``
+    : `append \` && npm run ${name}\` to \`verify\``
+  runGate(`node ${path}`, process.execPath, [path], { why, wire })
+}
+console.log('')
+console.log(blockLines('GATES — run in the worktree; any failure stops the push', results.map((g) => [g.label, g.status]), { sort: false }).join('\n'))
+
+const cleanUp = () => {
+  step('removing the worktree', () => sh(PROJECT, 'worktree', 'remove', '--force', WORKTREE))
+  step(`deleting the local ${BRANCH}`, () => sh(PROJECT, 'branch', '--quiet', '-D', BRANCH))
+  dropExclude()
+  console.log(`cleaned up: the worktree, the local branch and the exclude line are gone; ${BRANCH} lives on ${NAME}'s origin`)
+}
+
+/**
+ * Red: hand off. The worktree, its commit and the exclude line stay, so a session can do checklist
+ * step 5 — decide whether the failure is the project's content, a template defect to fix in jig
+ * first, or the setup.
+ */
+const red = results.filter((g) => !g.ok)
+if (red.length) {
+  console.log('RED — no push and no pull request. The worktree stays, with its commit, for checklist step 5:')
+  console.log(`  ${WORKTREE}  (${BRANCH})\n`)
+  for (const g of red) console.log(`——— ${g.label}: ${g.status} ———\n${g.output.trimEnd()}\n`)
+  console.log(`When it is settled: node scripts/sync.mjs --clean ${PROJECT}`)
+  process.exit(1)
+}
+
+const push = spawnSync('git', ['-C', WORKTREE, 'push', '--quiet', '-u', 'origin', BRANCH], { encoding: 'utf8' })
+if (push.status !== 0) {
+  console.log(`The gates passed, but the push failed, so nothing was opened:\n${`${push.stderr ?? ''}${push.error ?? ''}`.trim()}`)
+  console.log(`The worktree stays at ${WORKTREE}. node scripts/sync.mjs --clean ${PROJECT} removes it.`)
+  process.exit(1)
+}
+console.log(`pushed    ${BRANCH} to ${NAME}'s origin`)
+
+const fence = (lines) => ['```text', ...lines, '```']
+const body = [
+  `Synced from jig \`origin/main\` ${jigSha} (jig-version ${jigGen}) by \`scripts/sync.mjs --pr\`. Every file below was decided by a lookup in jig's history (DEC-J012), and every held file is exactly as it was here.`,
+  '',
+  ...fence(report.join('\n').trimEnd().split('\n')),
+  '',
+  '## Gates',
+  '',
+  'Run in a worktree off `origin/main` with this commit applied, before anything was pushed. A failing gate stops the sync there.',
+  '',
+  ...results.map((g) => `- \`${g.label}\` — ${g.status}${g.why ? `. Unwired: ${g.why}. To wire it in, ${g.wire}.` : ''}`),
+  '',
+  ...(unwired.length ? ["Whether an unwired gate applies here is this project's call. The sync never edits `package.json`.", ''] : []),
+].join('\n')
+const bodyFile = join(mkdtempSync(join(tmpdir(), 'jig-sync-')), 'body.md')
+writeFileSync(bodyFile, body)
+
+/**
+ * `gh` runs in the worktree, which has the project's remotes, so it opens the pull request on the
+ * project's repository. The base is always `main`, never `production`, which is a deploy pointer.
+ */
+const title = `jig sync ${BRANCH.slice('jig-sync/'.length)}: jig ${jigSha.slice(0, 7)}`
+const gh = spawnSync('gh', ['pr', 'create', '--base', 'main', '--head', BRANCH, '--title', title, '--body-file', bodyFile], {
+  cwd: WORKTREE,
+  encoding: 'utf8',
+})
+cleanUp()
+if (gh.status !== 0) {
+  console.log(`\ngh pr create failed:\n${`${gh.stderr ?? ''}${gh.error ?? ''}`.trim()}`)
+  console.log(`${BRANCH} is pushed, so the pull request is all that is missing. Open it with:`)
+  console.log(`  cd ${PROJECT} && gh pr create --base main --head ${BRANCH} --title ${JSON.stringify(title)} --body-file ${bodyFile}`)
+  process.exit(1)
+}
+rmSync(dirname(bodyFile), { recursive: true, force: true })
+console.log(`opened    ${gh.stdout.trim()}`)

@@ -1,4 +1,6 @@
-// sync.mjs, dry run: what a jig sync would carry into one project, file by file. Issue #71.
+// sync.mjs: what a jig sync would carry into one project, file by file (issue #71), and `--pr`,
+// which carries it in a worktree and opens the pull request only when the project's gates pass
+// (issue #72).
 //
 // The rule under every verdict: jig may replace or remove a project's file only when the project's
 // bytes match a version jig once shipped at that path. That is a question about jig's git HISTORY,
@@ -8,9 +10,9 @@
 
 import { describe, expect, it } from 'vitest'
 import { execFileSync, spawnSync } from 'node:child_process'
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { basename, delimiter, dirname, join } from 'node:path'
 
 const SYNC = join(process.cwd(), 'scripts', 'sync.mjs')
 
@@ -93,7 +95,8 @@ const JIG = {
   '.claude/settings.json': '{}\n',
   '.claude/CLAUDE-context.md': "jig's own context\n",
   '.claude/output-styles/one-piece.md': 'style v1\n',
-  'scripts/check-docs.mjs': 'docs gate v1\n',
+  // A comment, so it is a module that runs and passes: `--pr` executes the project's gates.
+  'scripts/check-docs.mjs': '// docs gate v1\n',
   'scripts/check-docs.test.mjs': 'docs gate tests v1\n',
   'scripts/drift.mjs': 'drift v1\n',
   'docs/CHEATSHEET.md': 'sheet v1\n',
@@ -110,7 +113,7 @@ const PROJECT = {
   '.claude/agents/architect.md': "architect, rewritten for this project's rules\n",
   '.claude/settings.json': '{ "this": "machine" }\n',
   '.claude/CLAUDE-context.md': 'the project context\n',
-  'scripts/check-docs.mjs': 'docs gate v1\n',
+  'scripts/check-docs.mjs': '// docs gate v1\n',
   'docs/CHEATSHEET.md': 'sheet v1\n',
   'docs/SPEC.md': 'the project spec\n',
   'package.json': pkg({ 'check:docs': 'node scripts/check-docs.mjs', verify: 'npm run check:docs' }),
@@ -464,5 +467,371 @@ describe('sync — the dry run', { timeout: 30_000 }, () => {
       expect(r.status).toBe(2)
       expect(r.stderr).toMatch(/usage/)
     })
+  })
+})
+
+/**
+ * A stand-in for `gh`, first on PATH. It records each call's arguments, one per line under a
+ * separator, and keeps a copy of the body file, which the script deletes once the pull request is
+ * open. `FAKE_GH_FAIL` makes it fail the way an unauthenticated `gh` does.
+ */
+const fakeGh = () => {
+  const dir = mkdtempSync(join(tmpdir(), 'sync-gh-'))
+  const script = `#!/bin/sh
+echo "--call--" >> "$FAKE_GH_DIR/calls"
+prev=
+for a in "$@"; do
+  printf '%s\\n' "$a" >> "$FAKE_GH_DIR/calls"
+  if [ "$prev" = "--body-file" ]; then cp "$a" "$FAKE_GH_DIR/body"; fi
+  prev=$a
+done
+if [ -n "$FAKE_GH_FAIL" ]; then echo "gh: not logged in" >&2; exit 1; fi
+echo "https://github.com/example/alpha/pull/1"
+`
+  writeFileSync(join(dir, 'gh'), script, { mode: 0o755 })
+  return dir
+}
+const ghCalls = (dir) => {
+  const file = join(dir, 'calls')
+  if (!existsSync(file)) return []
+  return readFileSync(file, 'utf8')
+    .split('--call--\n')
+    .filter(Boolean)
+    .map((c) => c.split('\n').slice(0, -1))
+}
+const flag = (call, name) => call[call.indexOf(name) + 1]
+
+const readOr = (file, fallback) => (existsSync(file) ? readFileSync(file, 'utf8') : fallback)
+const today = () => new Date().toISOString().slice(0, 10)
+/** `../<repo>-jig-sync`, beside the project — the path checklist step 2 names. */
+const wtOf = (proj) => {
+  const real = realpathSync(proj)
+  return join(dirname(real), `${basename(real)}-jig-sync`)
+}
+const excludeOf = (proj) => join(proj, '.git', 'info', 'exclude')
+const MODULE = 'node_modules/dep/index.js'
+
+/** The project's GitHub, read directly: what `--pr` pushed, and the blob at a path on it. */
+const bareGit = (b, ...args) => git(b.remotes, '--git-dir', join(b.remotes, 'alpha.git'), ...args)
+const pushed = (b) => bareGit(b, 'for-each-ref', '--format=%(refname:short)', 'refs/heads/jig-sync/').split('\n').filter(Boolean)
+const bareBlob = (b, rev) => {
+  try {
+    return bareGit(b, 'rev-parse', '--verify', '--quiet', rev)
+  } catch {
+    return null
+  }
+}
+
+/** A gate that fails, printing what a real one would. */
+const GATE_RED = (msg) => `console.error(${JSON.stringify(msg)})\nprocess.exit(1)\n`
+
+/**
+ * jig and a project, as `setup`, plus what a real checkout has that origin/main does not: a
+ * `node_modules` (gitignored, as every Node project has it, unless `gitignore` is false) and a `gh`.
+ */
+const setupPr = ({ project = {}, gitignore = true } = {}) => {
+  const s = setup({ project: { ...(gitignore ? { '.gitignore': 'node_modules/\n' } : {}), ...project } })
+  write(s.proj, { [MODULE]: 'module.exports = 1\n' })
+  return { ...s, gh: fakeGh() }
+}
+const run = (s, flags, env = {}) => {
+  const r = spawnSync(process.execPath, [SYNC, '--jig', s.jig, ...flags, s.proj], {
+    env: { ...ENV, PATH: `${s.gh}${delimiter}${process.env.PATH}`, FAKE_GH_DIR: s.gh, ...env },
+    encoding: 'utf8',
+  })
+  return { out: r.stdout + r.stderr, code: r.status }
+}
+const pr = (s) => run(s, ['--pr'])
+const SKILL = '.claude/skills/kill-this/SKILL.md'
+
+describe('sync --pr', { timeout: 60_000 }, () => {
+  // AC 1
+  it('pushes every copy, addition and deletion, and opens one pull request against main', () => {
+    const s = setupPr({ project: { 'scripts/check-docs.test.mjs': 'docs gate tests v1\n' } })
+    commit(s.jig, { [SKILL]: 'kill v2\n', 'scripts/check-denied.mjs': '// denied gate v1\n' })
+    // jig's checkout is usually an unmerged branch: what crosses is origin/main, never this.
+    git(s.jig, 'checkout', '-q', '-b', 'task/unmerged')
+    commit(s.jig, { [SKILL]: 'kill v3, not merged\n' }, { push: false })
+    write(s.jig, { 'scripts/check-denied.mjs': '// uncommitted edit\n' })
+    const { out, code } = pr(s)
+    expect(code, out).toBe(0)
+    expect(verdictsOf(out, SKILL)).toEqual(['COPY'])
+    expect(verdictsOf(out, 'scripts/check-denied.mjs')).toEqual(['NEW'])
+    expect(verdictsOf(out, 'scripts/check-docs.test.mjs')).toEqual(['DELETE'])
+    expect(pushed(s.b)).toEqual([`jig-sync/${today()}`])
+    const [branch] = pushed(s.b)
+    for (const p of [SKILL, 'scripts/check-denied.mjs']) {
+      expect(bareBlob(s.b, `${branch}:${p}`)).toBe(git(s.jig, 'rev-parse', `origin/main:${p}`))
+    }
+    expect(bareBlob(s.b, `${branch}:scripts/check-docs.test.mjs`)).toBeNull()
+    const calls = ghCalls(s.gh)
+    expect(calls).toHaveLength(1)
+    expect(calls[0].slice(0, 2)).toEqual(['pr', 'create'])
+    expect(flag(calls[0], '--base')).toBe('main')
+    expect(flag(calls[0], '--head')).toBe(branch)
+  })
+
+  // AC 2
+  it('leaves every held file exactly as the project has it', () => {
+    const s = setupPr({
+      project: {
+        [SKILL]: 'kill v1, plus a local rule\n',
+        'scripts/drift.mjs': 'drift v1\n',
+        'package.json': pkg({ drift: 'node scripts/drift.mjs ../jig', 'check:docs': 'node scripts/check-docs.mjs', verify: 'npm run check:docs' }),
+      },
+    })
+    commit(s.jig, { [SKILL]: 'kill v2\n', 'docs/CHEATSHEET.md': 'sheet v2\n' })
+    commit(s.jig, { 'jig-version': '7\n' })
+    commit(s.jig, { '.claude/agents/pm.md': 'pm v2, needs the v7 layout\n' })
+    const { out, code } = pr(s)
+    expect(code, out).toBe(0)
+    // The verdicts this test is about, asserted first so a fixture that stopped producing them
+    // cannot pass it with nothing held.
+    const held = { [SKILL]: 'HELD: edited locally', '.claude/agents/pm.md': 'HELD: migration', 'scripts/drift.mjs': 'HELD: referenced' }
+    for (const [p, verdict] of Object.entries(held)) expect(verdictsOf(out, p)).toEqual([verdict])
+    expect(verdictsOf(out, 'docs/CHEATSHEET.md')).toEqual(['COPY'])
+    const [branch] = pushed(s.b)
+    for (const p of Object.keys(held)) expect(bareBlob(s.b, `${branch}:${p}`)).toBe(git(s.proj, 'rev-parse', `origin/main:${p}`))
+  })
+
+  // AC 3
+  it("writes a body with the restart line, each verdict group, each unwired gate and how to wire it, and jig's SHA", () => {
+    const s = setupPr({
+      project: {
+        [SKILL]: 'kill v1, plus a local rule\n',
+        'scripts/check-docs.test.mjs': 'docs gate tests v1\n',
+        'package.json': pkg({ 'check:docs': 'node scripts/check-docs.mjs', verify: 'exit 0' }),
+      },
+    })
+    commit(s.jig, { 'CLAUDE.md': 'shell v2\n', 'scripts/check-denied.mjs': '// denied gate v1\n' })
+    const { out, code } = pr(s)
+    expect(code, out).toBe(0)
+    const body = readFileSync(join(s.gh, 'body'), 'utf8')
+    expect(body).toContain('Restart after merge: /clear — CLAUDE.md')
+    expect(body).toContain("COPY — jig's current version replaces a copy nobody edited (1):\n  CLAUDE.md\n")
+    expect(body).toContain('NEW — jig ships it and the project has none (1):\n  scripts/check-denied.mjs\n')
+    expect(body).toMatch(/DELETE — .* \(1\):\n {2}scripts\/check-docs\.test\.mjs {2}jig-only\n/)
+    expect(body).toMatch(/HELD: edited locally — .* \(1\):\n {2}\.claude\/skills\/kill-this\/SKILL\.md\n/)
+    expect(body).not.toContain('HELD: migration')
+    expect(body).toContain('- `npm run verify` — passed')
+    expect(body).toContain(
+      '- `node scripts/check-docs.mjs` — passed. Unwired: defined, and verify never calls it. To wire it in, append ` && npm run check:docs` to `verify`.',
+    )
+    expect(body).toContain(
+      '- `node scripts/check-denied.mjs` — passed. Unwired: arriving, and no package.json script runs it. To wire it in, add `"check:denied": "node scripts/check-denied.mjs"` to `scripts`, and append ` && npm run check:denied` to `verify`.',
+    )
+    expect(body).toContain(git(s.jig, 'rev-parse', 'origin/main'))
+  })
+
+  // AC 4
+  it('stops on a failing verify: no push, no pull request, and the worktree stays', () => {
+    const s = setupPr()
+    commit(s.jig, { 'scripts/check-docs.mjs': GATE_RED('check-docs: docs/SPEC.md cites docs/gone.md') })
+    const { out, code } = pr(s)
+    expect(code, out).toBe(1)
+    expect(block(out, 'GATES')).toContainEqual(['npm run verify', 'failed'])
+    expect(out).toContain('check-docs: docs/SPEC.md cites docs/gone.md')
+    expect(out).toContain(wtOf(s.proj))
+    expect(existsSync(join(wtOf(s.proj), 'package.json'))).toBe(true)
+    expect(pushed(s.b)).toEqual([])
+    expect(ghCalls(s.gh)).toEqual([])
+  })
+
+  // AC 5
+  it('stops on a failing unwired gate, naming it', () => {
+    const s = setupPr()
+    commit(s.jig, { [SKILL]: 'kill v2\n', 'scripts/check-denied.mjs': GATE_RED('check-denied: allow list holds git push --force') })
+    const { out, code } = pr(s)
+    expect(code, out).toBe(1)
+    expect(block(out, 'GATES')).toContainEqual(['npm run verify', 'passed'])
+    expect(block(out, 'GATES')).toContainEqual(['node scripts/check-denied.mjs', 'failed'])
+    expect(out).toContain('check-denied: allow list holds git push --force')
+    expect(existsSync(wtOf(s.proj))).toBe(true)
+    expect(pushed(s.b)).toEqual([])
+    expect(ghCalls(s.gh)).toEqual([])
+  })
+
+  // AC 6
+  it('treats a project with no verify script as red, and says why', () => {
+    const s = setupPr({ project: { 'package.json': pkg({ 'check:docs': 'node scripts/check-docs.mjs' }) } })
+    commit(s.jig, { [SKILL]: 'kill v2\n' })
+    const { out, code } = pr(s)
+    expect(code, out).toBe(1)
+    expect(block(out, 'GATES')).toContainEqual(['npm run verify', 'no verify script'])
+    expect(out).toMatch(/no verify script, so nothing can prove the sync here/)
+    expect(pushed(s.b)).toEqual([])
+    expect(ghCalls(s.gh)).toEqual([])
+  })
+
+  // AC 7
+  for (const [verdict, gate, exit] of [
+    ['green', '// docs gate v2\n', 0],
+    ['red', GATE_RED('docs gate v2 fails here'), 1],
+  ]) {
+    it(`leaves the real checkout as it was after a ${verdict} run`, () => {
+      const s = setupPr()
+      commit(s.jig, { 'scripts/check-docs.mjs': gate })
+      // A sibling is somebody's parked session: a task branch, an edit in progress, an untracked file.
+      git(s.proj, 'checkout', '-q', '-b', 'task/parked')
+      write(s.proj, { [SKILL]: 'half-finished\n', 'notes.txt': 'untracked\n' })
+      const state = () => ({
+        head: git(s.proj, 'rev-parse', 'HEAD'),
+        branch: git(s.proj, 'branch', '--show-current'),
+        status: git(s.proj, 'status', '--porcelain', '--untracked-files=all'),
+        edit: readFileSync(join(s.proj, SKILL), 'utf8'),
+        modules: readFileSync(join(s.proj, MODULE), 'utf8'),
+      })
+      const before = state()
+      const { out, code } = pr(s)
+      expect(code, out).toBe(exit)
+      expect(state()).toEqual(before)
+    })
+  }
+
+  // AC 8
+  it('hard-links node_modules into the worktree and keeps it out of the commit, with no .gitignore to help', () => {
+    const s = setupPr({ gitignore: false })
+    commit(s.jig, { 'scripts/check-docs.mjs': GATE_RED('red, so the worktree stays to look at') })
+    const { out, code } = pr(s)
+    expect(code, out).toBe(1)
+    const wt = wtOf(s.proj)
+    // lstat, not stat: stat follows a symlink to the real file and reports its inode, so a tree of
+    // per-file symlinks (`cp -as`) passed this test until it was run against one.
+    expect(lstatSync(join(wt, 'node_modules')).isSymbolicLink()).toBe(false)
+    expect(lstatSync(join(wt, MODULE)).ino).toBe(lstatSync(join(s.proj, MODULE)).ino)
+    expect(git(wt, 'ls-tree', '-r', '--name-only', 'HEAD')).not.toMatch(/node_modules/)
+    // The exclude line is what stops a session's later `git add -A` in the worktree sweeping it in.
+    expect(readOr(excludeOf(s.proj), '')).toMatch(/^\/node_modules$/m)
+    expect(git(wt, 'status', '--porcelain', '--untracked-files=all')).toBe('')
+  })
+
+  // AC 9
+  it('cleans up after a green run, and the real node_modules is intact', () => {
+    const s = setupPr()
+    commit(s.jig, { [SKILL]: 'kill v2\n' })
+    const exclude = readOr(excludeOf(s.proj), null)
+    const { out, code } = pr(s)
+    expect(code, out).toBe(0)
+    expect(existsSync(wtOf(s.proj))).toBe(false)
+    expect(git(s.proj, 'worktree', 'list', '--porcelain')).not.toContain('jig-sync')
+    expect(git(s.proj, 'branch', '--list', 'jig-sync/*')).toBe('')
+    expect(readOr(excludeOf(s.proj), null)).toBe(exclude)
+    expect(readFileSync(join(s.proj, MODULE), 'utf8')).toBe('module.exports = 1\n')
+  })
+
+  // AC 10
+  it('does nothing when there is nothing to sync', () => {
+    const s = setupPr()
+    const { out, code } = pr(s)
+    expect(code, out).toBe(0)
+    expect(out).toMatch(/^nothing to sync\.$/m)
+    expect(existsSync(wtOf(s.proj))).toBe(false)
+    expect(git(s.proj, 'branch', '--list', 'jig-sync/*')).toBe('')
+    expect(ghCalls(s.gh)).toEqual([])
+  })
+
+  it('keeps the pushed branch and says how to open the pull request when gh fails', () => {
+    // gh unauthenticated, or scoped away from the project: the push has landed, so the branch is
+    // the work, and the command to finish it is the one thing the operator needs.
+    const s = setupPr()
+    commit(s.jig, { [SKILL]: 'kill v2\n' })
+    const { out, code } = run(s, ['--pr'], { FAKE_GH_FAIL: '1' })
+    expect(code, out).toBe(1)
+    expect(pushed(s.b)).toEqual([`jig-sync/${today()}`])
+    expect(out).toContain('gh: not logged in')
+    const retry = out.match(/gh pr create --base main --head jig-sync\/\S+ .*--body-file (\S+)/)
+    expect(retry, out).not.toBeNull()
+    expect(readFileSync(retry[1], 'utf8')).toContain('Restart after merge: none')
+  })
+
+  // AC 11
+  describe('refuses before writing anything', () => {
+    const untouched = (s) => ({
+      branches: git(s.proj, 'for-each-ref', '--format=%(refname) %(objectname)', 'refs/heads'),
+      worktrees: git(s.proj, 'worktree', 'list', '--porcelain'),
+      exclude: readOr(excludeOf(s.proj), null),
+      remote: pushed(s.b),
+    })
+    /**
+     * The wording is asserted as well as the name: with the local-branch check removed, `git
+     * worktree add -b` refuses on its own, also exits 2 and also names the branch, and the test
+     * passed against it — a refusal that came after the fetch and the dry run instead of before.
+     */
+    const refuses = (s, name, says) => {
+      commit(s.jig, { [SKILL]: 'kill v2\n' })
+      const before = untouched(s)
+      const { out, code } = pr(s)
+      expect(code, out).toBe(2)
+      expect(out).toContain(name)
+      expect(out).toContain(says)
+      expect(untouched(s)).toEqual(before)
+      expect(ghCalls(s.gh)).toEqual([])
+    }
+
+    it('when the worktree path exists', () => {
+      const s = setupPr()
+      mkdirSync(wtOf(s.proj))
+      refuses(s, wtOf(s.proj), 'already exists')
+    })
+
+    it('when the branch exists locally', () => {
+      const s = setupPr()
+      git(s.proj, 'branch', `jig-sync/${today()}`)
+      refuses(s, `jig-sync/${today()}`, 'already has a local branch')
+    })
+
+    it("when the branch exists on the project's origin", () => {
+      const s = setupPr()
+      git(s.proj, 'push', '-q', 'origin', `HEAD:refs/heads/jig-sync/${today()}`)
+      refuses(s, `jig-sync/${today()}`, "already on alpha's origin")
+    })
+  })
+
+  // AC 12
+  it('--clean after a red run puts the project back as it was', () => {
+    const s = setupPr()
+    commit(s.jig, { 'scripts/check-docs.mjs': GATE_RED('red, to leave something to clean') })
+    const state = () => ({
+      branches: git(s.proj, 'for-each-ref', '--format=%(refname) %(objectname)', 'refs/heads'),
+      worktrees: git(s.proj, 'worktree', 'list', '--porcelain'),
+      exclude: readOr(excludeOf(s.proj), null),
+      worktreePath: existsSync(wtOf(s.proj)),
+      status: git(s.proj, 'status', '--porcelain', '--untracked-files=all'),
+    })
+    const before = state()
+    expect(pr(s).code).toBe(1)
+    expect(state()).not.toEqual(before)
+    const { out, code } = run(s, ['--clean'])
+    expect(code, out).toBe(0)
+    expect(state()).toEqual(before)
+    expect(readFileSync(join(s.proj, MODULE), 'utf8')).toBe('module.exports = 1\n')
+  })
+
+  it('--clean with nothing left behind says so', () => {
+    const s = setupPr()
+    const { out, code } = run(s, ['--clean'])
+    expect(code, out).toBe(0)
+    expect(out).toMatch(/nothing to clean/)
+  })
+
+  // AC 13
+  it("never modifies the project's package.json, green or red", () => {
+    const pkgJson = pkg({ 'check:docs': 'node scripts/check-docs.mjs', verify: 'exit 0' })
+    // Green, with two unwired gates: the case most tempted to wire them in.
+    const green = setupPr({ project: { 'package.json': pkgJson } })
+    commit(green.jig, { 'scripts/check-denied.mjs': '// denied gate v1\n' })
+    const g = pr(green)
+    expect(g.code, g.out).toBe(0)
+    expect(block(g.out, 'UNWIRED')).toHaveLength(2)
+    expect(bareBlob(green.b, `${pushed(green.b)[0]}:package.json`)).toBe(git(green.proj, 'rev-parse', 'origin/main:package.json'))
+    expect(readFileSync(join(green.proj, 'package.json'), 'utf8')).toBe(pkgJson)
+    // Red: the worktree left behind holds the project's package.json too, committed and on disk.
+    const red = setupPr({ project: { 'package.json': pkgJson } })
+    commit(red.jig, { 'scripts/check-denied.mjs': GATE_RED('denied gate fails') })
+    const r = pr(red)
+    expect(r.code, r.out).toBe(1)
+    const wt = wtOf(red.proj)
+    expect(git(wt, 'rev-parse', 'HEAD:package.json')).toBe(git(red.proj, 'rev-parse', 'origin/main:package.json'))
+    expect(readFileSync(join(wt, 'package.json'), 'utf8')).toBe(pkgJson)
   })
 })
