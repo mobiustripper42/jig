@@ -152,25 +152,41 @@ const BRANCH = `jig-sync/${new Date().toISOString().slice(0, 10)}`
  * `.gitignore` already does, and every Node project's does. The marker names the worktree, so the
  * removal takes out exactly the lines this script added and nothing a person wrote.
  *
- * Unanchored, so one line covers every package's `node_modules` at any depth (issue #80). Removal
- * takes the marker and whatever single line follows it, which also clears the anchored
- * `/node_modules` a red run under the previous version left behind.
+ * Unanchored, so one line covers every package's `node_modules` at any depth (issue #80).
+ *
+ * A block is the marker line plus the one line after it, whatever that line says, and every block
+ * for this worktree is replaced on add and removed on drop. Matching the exact block instead was
+ * the bug @code-review reproduced: a red run under the previous version left an anchored
+ * `/node_modules` block, the next `--pr` appended its own after it, cleanup took the first marker
+ * it found, and the new block stayed in the shared file for good.
  */
 const EXCLUDE = join(commonDir(PROJECT), 'info', 'exclude')
-const EXCLUDE_MARK = `# jig sync: node_modules is hard-linked into ${WORKTREE}. scripts/sync.mjs removes these two lines.\n`
-const EXCLUDE_BLOCK = `${EXCLUDE_MARK}node_modules/\n`
+const EXCLUDE_MARK = `# jig sync: node_modules is hard-linked into ${WORKTREE}. scripts/sync.mjs removes these two lines.`
+const EXCLUDE_BLOCK = `${EXCLUDE_MARK}\nnode_modules/\n`
+/** `text` with every block for this worktree taken out, including a marker left as the last line. */
+function withoutBlocks(text) {
+  let out = text
+  for (let at = out.indexOf(EXCLUDE_MARK); at >= 0; at = out.indexOf(EXCLUDE_MARK, at)) {
+    if (at > 0 && out[at - 1] !== '\n') {
+      at += EXCLUDE_MARK.length // the marker text inside some other line: not a block
+      continue
+    }
+    const markEnd = out.indexOf('\n', at)
+    const blockEnd = markEnd < 0 ? out.length : out.indexOf('\n', markEnd + 1)
+    out = out.slice(0, at) + (blockEnd < 0 ? '' : out.slice(blockEnd + (markEnd < 0 ? 0 : 1)))
+  }
+  return out
+}
 function addExclude() {
   mkdirSync(dirname(EXCLUDE), { recursive: true })
-  const text = existsSync(EXCLUDE) ? readFileSync(EXCLUDE, 'utf8') : ''
-  if (!text.includes(EXCLUDE_BLOCK)) writeFileSync(EXCLUDE, `${text}${text === '' || text.endsWith('\n') ? '' : '\n'}${EXCLUDE_BLOCK}`)
+  const text = withoutBlocks(existsSync(EXCLUDE) ? readFileSync(EXCLUDE, 'utf8') : '')
+  writeFileSync(EXCLUDE, `${text}${text === '' || text.endsWith('\n') ? '' : '\n'}${EXCLUDE_BLOCK}`)
 }
 function dropExclude() {
   if (!existsSync(EXCLUDE)) return false
   const text = readFileSync(EXCLUDE, 'utf8')
-  const at = text.indexOf(EXCLUDE_MARK)
-  if (at < 0) return false
-  const lineEnd = text.indexOf('\n', at + EXCLUDE_MARK.length)
-  const rest = text.slice(0, at) + (lineEnd < 0 ? '' : text.slice(lineEnd + 1))
+  const rest = withoutBlocks(text)
+  if (rest === text) return false
   if (rest === '') unlinkSync(EXCLUDE)
   else writeFileSync(EXCLUDE, rest)
   return true
@@ -532,7 +548,7 @@ const packages = [...projTree.keys()]
   .filter((p) => p === 'package.json' || p.endsWith('/package.json'))
   .map((p) => (p === 'package.json' ? 'node_modules' : `${dirname(p)}/node_modules`))
   .filter((m) => existsSync(join(PROJECT, m)))
-  .sort((a, b) => a.split('/').length - b.split('/').length || a.localeCompare(b))
+  .sort((a, b) => a.split('/').length - b.split('/').length || a.localeCompare(b)) // root first, for the printed line
 if (packages.length) {
   addExclude()
   for (const m of packages) {

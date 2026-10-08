@@ -986,6 +986,28 @@ describe('sync --pr links every node_modules the checkout has', { timeout: 60_00
     for (const m of [MODULE, MOBILE_MODULE]) expect(existsSync(join(red.proj, m)), m).toBe(true)
   })
 
+  it('a green run over a leftover old-format block leaves no block at all', () => {
+    // Found by @code-review. A red run under the previous version, its worktree then removed by
+    // hand rather than by --clean, leaves the old block behind. The next --pr appended its own block
+    // after it, cleanup took the first marker it found — the old one — and the new block stayed in
+    // the shared exclude file for good.
+    const s = setupPackages()
+    commit(s.jig, { [SKILL]: 'kill v2\n' })
+    const before = readOr(excludeOf(s.proj), '')
+    writeFileSync(excludeOf(s.proj), `${before}# jig sync: node_modules is hard-linked into ${wtOf(s.proj)}. scripts/sync.mjs removes these two lines.\n/node_modules\n`)
+    const { out, code } = pr(s)
+    expect(code, out).toBe(0)
+    expect(readOr(excludeOf(s.proj), '')).toBe(before)
+  })
+
+  it('--clean removes a block whose marker is the last line, with no newline after it', () => {
+    const s = setupPr()
+    const before = readOr(excludeOf(s.proj), '')
+    writeFileSync(excludeOf(s.proj), `${before}# jig sync: node_modules is hard-linked into ${wtOf(s.proj)}. scripts/sync.mjs removes these two lines.`)
+    expect(run(s, ['--clean']).code).toBe(0)
+    expect(readOr(excludeOf(s.proj), '')).toBe(before)
+  })
+
   it('--clean removes a block in the old one-line format, as a red run before this change left it', () => {
     const s = setupPr()
     const before = readOr(excludeOf(s.proj), '')
