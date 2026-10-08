@@ -7,6 +7,9 @@
  *   node scripts/sync.mjs ../muster --clean   remove what a red `--pr` left behind
  *   node scripts/sync.mjs --jig <path> ...    a jig other than the one this script is in
  *
+ * `--pr` and `--clean` also write everything they print, and every gate's full output, to
+ * `<tmp>/jig-sync/<repo>-<UTC time>.log`; the last line printed is its path (issue #77).
+ *
  * Issue #71 is the dry run and issue #72 the write half. `--pr` pushes and opens a pull request, so
  * it is an environment-changing command (CLAUDE.md § Workflow Notes): the operator runs it, or a
  * session does after the operator says go for that project.
@@ -28,10 +31,11 @@
  */
 
 import { execFileSync, spawnSync } from 'node:child_process'
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, unlinkSync, writeFileSync } from 'node:fs'
+import { appendFileSync, chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, unlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { basename, dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { format } from 'node:util'
 import {
   TEMPLATE_ROOTS,
   classifier,
@@ -97,6 +101,33 @@ if (!commonDir(PROJECT)) die(`${PROJECT} is not a git repository`)
 if (commonDir(PROJECT) === commonDir(JIG)) die('that is jig itself — point this at a project')
 
 const NAME = basename(PROJECT)
+
+/**
+ * `--pr` and `--clean` keep a log: everything they print, plus the full output of every gate,
+ * which the terminal shows only for a gate that failed. The first real syncs reached the jig
+ * session as phone screenshots, and a green run printed nothing any gate said — so the "taken on
+ * trust" line of issue #75 was never seen (issue #77).
+ *
+ * Each line is written as it is printed, so a run that dies partway still leaves its log, and the
+ * last line on the terminal is always the path. Milliseconds in the name, so a red run is never
+ * overwritten by the run after it. The dry run keeps none: its header says it writes nothing.
+ */
+const terminal = console.log.bind(console)
+let toLog = () => {}
+if (mode !== 'dry') {
+  const LOG = join(tmpdir(), 'jig-sync', `${NAME}-${new Date().toISOString().replaceAll(':', '-')}.log`)
+  mkdirSync(dirname(LOG), { recursive: true })
+  writeFileSync(LOG, '')
+  toLog = (text) => appendFileSync(LOG, text)
+  for (const stream of ['log', 'error']) {
+    const write = console[stream].bind(console)
+    console[stream] = (...args) => {
+      write(...args)
+      toLog(`${format(...args)}\n`) // exactly what console.log wrote, its newline included
+    }
+  }
+  process.on('exit', () => console.log(`log  ${LOG}`))
+}
 
 /**
  * Where `--pr` works: a worktree beside the project, never the project's own checkout. Every
@@ -506,15 +537,21 @@ step('committing', () => {
  */
 const gateName = (path) => `check:${basename(path, '.mjs').slice('check-'.length)}`
 const results = []
+/** Every gate's output goes to the log as it finishes, passing or not; the terminal gets the red. */
+const record = (result) => {
+  results.push(result)
+  const body = result.output.trimEnd()
+  toLog(`——— ${result.label}: ${result.status} ———\n${body ? `${body}\n` : ''}\n`)
+}
 const runGate = (label, cmd, args, extra = {}) => {
   console.log(`running   ${label}`)
   const r = spawnSync(cmd, args, { cwd: WORKTREE, encoding: 'utf8', maxBuffer: 1 << 30 })
   const ok = r.status === 0
-  results.push({ label, ok, status: ok ? 'passed' : 'failed', output: `${r.stdout ?? ''}${r.stderr ?? ''}${r.error ? String(r.error) : ''}`, ...extra })
+  record({ label, ok, status: ok ? 'passed' : 'failed', output: `${r.stdout ?? ''}${r.stderr ?? ''}${r.error ? String(r.error) : ''}`, ...extra })
 }
 if (typeof projScripts.verify === 'string') runGate('npm run verify', 'npm', ['run', 'verify'])
 else {
-  results.push({
+  record({
     label: 'npm run verify',
     ok: false,
     status: 'no verify script',
@@ -548,7 +585,8 @@ const red = results.filter((g) => !g.ok)
 if (red.length) {
   console.log('RED — no push and no pull request. The worktree stays, with its commit, for checklist step 5:')
   console.log(`  ${WORKTREE}  (${BRANCH})\n`)
-  for (const g of red) console.log(`——— ${g.label}: ${g.status} ———\n${g.output.trimEnd()}\n`)
+  // To the terminal only: `record` already put each of these in the log.
+  for (const g of red) terminal(`——— ${g.label}: ${g.status} ———\n${g.output.trimEnd()}\n`)
   console.log(`When it is settled: node scripts/sync.mjs --clean ${PROJECT}`)
   process.exit(1)
 }

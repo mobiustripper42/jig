@@ -136,6 +136,52 @@ describe('the real corpus', () => {
   })
 })
 
+// Issue #77. `prose()` replaced each fence with ONE space, deleting its newlines, so every line
+// number after a fence came out short by the fence's height. sheepdog's sync worktree reported
+// `SQL` at :88 and `UP` at :121 — a table rule and a blank line — for words on 126 and 159. A gate
+// that points at the wrong line sends the reader to a line with nothing on it.
+describe('line numbers after a code fence', () => {
+  /** sheepdog's context file, in shape: fences at 35-53 and 63-83, findings at 126 and 159. */
+  const sheepdogShape = () => {
+    const lines = Array.from({ length: 160 }, () => 'ordinary prose')
+    lines[34] = '```'
+    for (let i = 35; i < 52; i++) lines[i] = 'ZQX inside a fence is code, never vocabulary'
+    lines[52] = '```'
+    lines[62] = '```bash'
+    for (let i = 63; i < 82; i++) lines[i] = 'npm run ZQX'
+    lines[82] = '```'
+    lines[125] = 'Nothing outside this directory writes QZV.'
+    lines[158] = 'The sweeper runs while the target is up.'
+    const file = join(mkdtempSync(join(tmpdir(), 'dictionary-lines-')), 'CONTEXT.md')
+    writeFileSync(file, `${lines.join('\n')}\n`)
+    return file
+  }
+
+  it('reports an unregistered acronym after two fences at its true line', () => {
+    const file = sheepdogShape()
+    const { failures } = check({ dict: 'scripts/fixtures/dictionary-alternate.yml', files: [file] })
+    expect(failures.filter((f) => f.includes('`QZV`'))).toEqual([expect.stringContaining(`${file}:126 — `)])
+  })
+
+  it('reports a forbidden alternate after two fences at its true line', () => {
+    const file = sheepdogShape()
+    const { failures } = check({ dict: 'scripts/fixtures/dictionary-alternate.yml', files: [file] })
+    expect(failures.filter((f) => f.includes('`sweeper`'))).toEqual([expect.stringContaining(`${file}:159 — `)])
+  })
+
+  it('still never flags a word inside a fence', () => {
+    const { failures } = check({ dict: 'scripts/fixtures/dictionary-alternate.yml', files: [sheepdogShape()] })
+    expect(failures.join(' ')).not.toMatch(/ZQX/)
+  })
+
+  it('keeps every line, and never runs the words either side of a one-line fence together', () => {
+    // Blanking a fence to its newlines alone would turn "SM```x```S" into "SMS" — a word the
+    // document never wrote, now flagged as unregistered vocabulary.
+    expect(prose('a\n```\nZQX\n```\nb').split('\n')).toHaveLength(5)
+    expect(prose('SM```x```S')).not.toMatch(/SMS/)
+  })
+})
+
 // ── Review regressions ───────────────────────────────────────────────────────
 //
 // Five findings, all reproduced by the reviewer before they were fixed, and three of them were
