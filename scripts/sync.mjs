@@ -451,7 +451,7 @@ if (!changing.length) console.log('nothing to sync.\n')
 if (report.length) console.log(report.join('\n'))
 if (mode === 'dry' || !changing.length) process.exit(0)
 
-// ——— `--pr` from here. Checklist steps 2, 3 and 7 in `.claude/CLAUDE-context.md`, as code. ———
+// ——— `--pr` from here. Checklist steps 2, 3, 4, 7 and 8 in `.claude/CLAUDE-context.md`, as code. ———
 
 const jigSha = git(JIG, 'rev-parse', REF).trim()
 
