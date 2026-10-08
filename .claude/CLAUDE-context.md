@@ -99,7 +99,7 @@ Where a competent default does the wrong thing in this repo.
 |---|---|
 | Anything a project installs | `.claude/agents/**`, `.claude/skills/**`, `CLAUDE.md` — one edit lands in every repo that copies it |
 | The permission policy | `.claude/settings.json` — this is the master every machine is checked against, and a wrong deny here is a wrong deny everywhere |
-| Anything that writes | `scripts/settings-policy.mjs` — the only script with a write path, aimed at the file carrying a machine's hooks |
+| Anything that writes | `scripts/settings-policy.mjs`, aimed at the file carrying a machine's hooks; `scripts/sync.mjs`, whose `--pr` writes, commits and pushes in another repo beside somebody's parked session |
 
 Money and migrations do not apply: no money, no database.
 
