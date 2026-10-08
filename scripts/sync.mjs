@@ -7,8 +7,9 @@
  *   node scripts/sync.mjs ../muster --clean   remove what a red `--pr` left behind
  *   node scripts/sync.mjs --jig <path> ...    a jig other than the one this script is in
  *
- * `--pr` and `--clean` also write everything they print, and every gate's full output, to
- * `<tmp>/jig-sync/<repo>-<UTC time>.log`; the last line printed is its path (issue #77).
+ * `--pr` and `--clean` also write everything they print, and every gate's full output, to a log in
+ * a private directory per run, `<tmp>/jig-sync-<repo>-XXXXXX/`; the last line printed is its path
+ * (issue #77).
  *
  * Issue #71 is the dry run and issue #72 the write half. `--pr` pushes and opens a pull request, so
  * it is an environment-changing command (CLAUDE.md § Workflow Notes): the operator runs it, or a
@@ -109,14 +110,19 @@ const NAME = basename(PROJECT)
  * trust" line of issue #75 was never seen (issue #77).
  *
  * Each line is written as it is printed, so a run that dies partway still leaves its log, and the
- * last line on the terminal is always the path. Milliseconds in the name, so a red run is never
- * overwritten by the run after it. The dry run keeps none: its header says it writes nothing.
+ * last line on the terminal is always the path. The dry run keeps none: its header says it writes
+ * nothing.
+ *
+ * Every run gets its own directory from `mkdtempSync` — private, and named by nobody in advance —
+ * which also means a run never overwrites the log of the run before it. The first version wrote to
+ * a fixed `/tmp/jig-sync/`, and the log is reopened by path for every line: another account could
+ * create that directory first and swap the log for a symlink, so the run appended to, or on
+ * creation emptied, any file the operator can write (found by /security-review).
  */
 const terminal = console.log.bind(console)
 let toLog = () => {}
 if (mode !== 'dry') {
-  const LOG = join(tmpdir(), 'jig-sync', `${NAME}-${new Date().toISOString().replaceAll(':', '-')}.log`)
-  mkdirSync(dirname(LOG), { recursive: true })
+  const LOG = join(mkdtempSync(join(tmpdir(), `jig-sync-${NAME}-`)), `${NAME}-${new Date().toISOString().replaceAll(':', '-')}.log`)
   writeFileSync(LOG, '')
   toLog = (text) => appendFileSync(LOG, text)
   for (const stream of ['log', 'error']) {

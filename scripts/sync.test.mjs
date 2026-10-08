@@ -10,7 +10,7 @@
 
 import { describe, expect, it } from 'vitest'
 import { execFileSync, spawnSync } from 'node:child_process'
-import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { basename, delimiter, dirname, join } from 'node:path'
 
@@ -840,11 +840,28 @@ describe('sync --pr', { timeout: 60_000 }, () => {
 // Issue #77. The first real syncs reached the jig session as phone screenshots, and a green run
 // printed nothing any gate said — so the "taken on trust" line issue #75 added was never seen.
 describe('sync --pr and --clean write a log', { timeout: 60_000 }, () => {
-  const logs = (s) => {
-    const dir = join(s.tmp, 'jig-sync')
-    return existsSync(dir) ? readdirSync(dir).sort().map((f) => join(dir, f)) : []
-  }
+  /** Every log under the stand-in temp directory: one private `jig-sync-<repo>-*` folder per run. */
+  const logs = (s) =>
+    readdirSync(s.tmp)
+      .filter((d) => d.startsWith('jig-sync-'))
+      .flatMap((d) => readdirSync(join(s.tmp, d)).map((f) => join(s.tmp, d, f)))
+      .sort()
   const lastLine = (stdout) => stdout.trimEnd().split('\n').at(-1)
+
+  it('keeps each log in a private directory nobody else can name in advance', () => {
+    // Found by /security-review. A fixed `/tmp/jig-sync` let another account on the machine create
+    // the directory first, then swap the log for a symlink: the run reopened the log by path on
+    // every line, so it appended to — or, on creation, emptied — a file of the attacker's choosing.
+    const s = setupPr()
+    mkdirSync(join(s.tmp, 'jig-sync'), { mode: 0o777 }) // what the attacker would plant
+    const { stdout } = run(s, ['--clean'])
+    const [log] = logs(s)
+    expect(lastLine(stdout)).toBe(`log  ${log}`)
+    expect(dirname(log)).not.toBe(join(s.tmp, 'jig-sync'))
+    expect(basename(dirname(log))).toMatch(/^jig-sync-alpha-\w{6}$/)
+    expect(statSync(dirname(log)).mode & 0o077).toBe(0)
+    expect(readdirSync(join(s.tmp, 'jig-sync'))).toEqual([])
+  })
 
   it('logs every line a green run printed, plus the gate output the terminal never shows, and ends on its path', () => {
     const s = setupPr()

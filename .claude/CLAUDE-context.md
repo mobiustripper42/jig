@@ -55,7 +55,7 @@ npm run fleet                                # every repo beside jig: its origin
 npm run sync -- ../<project>                 # what a sync would carry, file by file; writes nothing
 npm run sync -- ../<project> --pr            # carry it in a worktree; push and open the PR only if the gates pass
 npm run sync -- ../<project> --clean         # remove what a red --pr left behind
-                                             # --pr and --clean log to <tmp>/jig-sync/ (os.tmpdir(), so TMPDIR moves it); the last line printed is the path
+                                             # --pr and --clean log to a private <tmp>/jig-sync-<repo>-XXXXXX/ per run; the last line printed is the path
 node scripts/settings-policy.mjs             # is this machine's permission policy current
 node scripts/settings-policy.mjs --all ../<project>
 ```
