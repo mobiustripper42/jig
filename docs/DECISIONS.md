@@ -43,6 +43,7 @@ that never reached the spec is a red build rather than prose nobody cross-read.
 - DEC-J007 — The output style lives in jig and is read through the machine
 - DEC-J011 — @pm is logic class; the three reviewers stay context
 - DEC-J012 — A script carries untouched jig files into a project; a person still merges
+- DEC-J013 — The path gates take a gitignored citation on trust, and say so
 
 ### Decision record & dictionary discipline
 - DEC-J004 — Records predating schema v1 are frozen by a generated baseline
