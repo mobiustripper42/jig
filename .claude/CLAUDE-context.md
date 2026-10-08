@@ -98,7 +98,7 @@ Where a competent default does the wrong thing in this repo.
 
 | Trigger | Paths |
 |---|---|
-| Anything a project installs | `.claude/agents/**`, `.claude/skills/**`, `CLAUDE.md` — one edit lands in every repo that copies it |
+| Anything a project installs | `.claude/agents/**`, and every path `.claude/file-classes.yaml` classes `logic` or `hybrid`: the skills, `CLAUDE.md`, the gate and generator scripts, the shipped docs — one edit lands in every repo that copies it. A pointer to the registry, not a list: the list named three paths and missed the gates, so pull request #76 tripped this row only by judgment |
 | The permission policy | `.claude/settings.json` — this is the master every machine is checked against, and a wrong deny here is a wrong deny everywhere |
 | Anything that writes | `scripts/settings-policy.mjs`, aimed at the file carrying a machine's hooks; `scripts/sync.mjs`, whose `--pr` writes, commits and pushes in another repo beside somebody's parked session |
 
