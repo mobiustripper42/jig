@@ -63,8 +63,22 @@ const FIXTURE_FILES = [
   "gateway/app.py",
   "public/index.html",
 ];
-// soundings' rule, verbatim from its `gateway/.gitignore`, and centerline's from its root one.
-const GITIGNORES = { "gateway/.gitignore": ".venv/\n", ".gitignore": "/public/maplibre/\n" };
+// soundings' rule, verbatim from its `gateway/.gitignore`, and centerline's from its root one —
+// plus a negation, which `check-ignore --verbose` reports as a match although it un-ignores.
+const GITIGNORES = { "gateway/.gitignore": ".venv/\n", ".gitignore": "/public/maplibre/\npublic/*.map\n!public/keep.map\n" };
+
+/** `git init` and commit everything: only a COMMITTED `.gitignore` counts, so the rules must be. */
+const gitInitCommit = (cwd) => {
+  const g = (...a) =>
+    execFileSync(
+      "git",
+      ["-c", "user.name=fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false", "-c", "core.hooksPath=/dev/null", ...a],
+      { cwd, stdio: "ignore" },
+    );
+  g("init", "-q");
+  g("add", "-A");
+  g("commit", "-q", "-m", "fixture");
+};
 
 // Deliberately ABSENT from the fixture, and each absence is load-bearing:
 //   dev/                        — so `dev/claude/...` reads as another repo's path, not a claim
@@ -125,7 +139,7 @@ beforeAll(async () => {
     ].join("\n"),
   );
   for (const [rel, text] of Object.entries(GITIGNORES)) writeFileSync(join(fixture, rel), text);
-  execFileSync("git", ["init", "-q"], { cwd: fixture });
+  gitInitCommit(fixture);
   cwdBefore = process.cwd();
   process.chdir(fixture);
   // Imported AFTER the chdir on purpose — see the header note.
@@ -309,6 +323,26 @@ describe("gitignored citations", () => {
     }
   });
 
+  it("does not trust a rule that lives only in .git/info/exclude, which every worktree of the clone shares", () => {
+    // Found by @code-review. `info/exclude` is per-clone, not per-worktree, so a line the operator
+    // added in their own checkout would pass a dead citation inside the very worktree `sync.mjs
+    // --pr` makes — while the same citation fails on every other clone.
+    writeFileSync(join(fixture, ".git/info/exclude"), "gateway/local-only.txt\n", { flag: "a" });
+    expect(spawnSync("git", ["check-ignore", "-q", "gateway/local-only.txt"]).status).toBe(0);
+    expect(check([{ path: "f.md", text: "`gateway/local-only.txt`" }])[0]).toMatch(/does not exist/);
+  });
+
+  it("does not trust an uncommitted .gitignore, which a fresh worktree would not have", () => {
+    writeFileSync(join(fixture, "components/.gitignore"), "generated/\n");
+    expect(spawnSync("git", ["check-ignore", "-q", "components/generated/"]).status).toBe(0);
+    expect(check([{ path: "f.md", text: "`components/generated/`" }])[0]).toMatch(/does not exist/);
+  });
+
+  it("does not trust a path a negation un-ignores, though --verbose reports the negation as the match", () => {
+    expect(check([{ path: "f.md", text: "`public/other.map`" }])).toEqual([]);
+    expect(check([{ path: "f.md", text: "`public/keep.map`" }])[0]).toMatch(/public\/keep\.map.*does not exist/);
+  });
+
   it("judges by the repository's ignore rules, not this machine's global excludes file", () => {
     // A gate's verdict on a project's docs must not depend on whose laptop runs it. Otherwise one
     // machine's personal `excludesFile` would quietly pass a citation that is red everywhere else.
@@ -321,7 +355,16 @@ describe("gitignored citations", () => {
         expect(spawnSync("git", ["check-ignore", "-q", "gateway/personal.txt"]).status).toBe(0);
         expect(check([{ path: "f.md", text: "`gateway/personal.txt`" }])[0]).toMatch(/does not exist/);
       });
+      // Still refused when the excludes file is one the repository tracks: being committed is not
+      // enough, it has to be a `.gitignore`, which every clone reads without any machine config.
+      writeFileSync(join(home, "gitconfig"), `[core]\n\texcludesFile = ${join(fixture, "notes.txt")}\n`);
+      writeFileSync(join(fixture, "notes.txt"), "gateway/via-tracked-excludes.txt\n");
+      withEnv({ GIT_CONFIG_GLOBAL: join(home, "gitconfig") }, () => {
+        expect(spawnSync("git", ["check-ignore", "-q", "gateway/via-tracked-excludes.txt"]).status).toBe(0);
+        expect(check([{ path: "f.md", text: "`gateway/via-tracked-excludes.txt`" }])[0]).toMatch(/does not exist/);
+      });
     } finally {
+      writeFileSync(join(fixture, "notes.txt"), "");
       rmSync(home, { recursive: true, force: true });
     }
   });
@@ -349,7 +392,7 @@ describe("gitignored citations", () => {
       mkdirSync(dirname(join(repo, rel)), { recursive: true });
       writeFileSync(join(repo, rel), text);
     }
-    execFileSync("git", ["init", "-q"], { cwd: repo });
+    gitInitCommit(repo);
     const gate = () => spawnSync(process.execPath, [join(cwdBefore, "scripts", "check-context.mjs")], { cwd: repo, encoding: "utf8" });
     try {
       const trusting = gate();

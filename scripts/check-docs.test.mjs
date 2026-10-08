@@ -264,7 +264,16 @@ describe("checkPaths", () => {
     // check-docs loads the decision index, which will not start without its config.
     mkdirSync(join(repo, "docs/decisions"));
     copyFileSync("docs/decisions/_config.json", join(repo, "docs/decisions/_config.json"));
-    execFileSync("git", ["init", "-q"], { cwd: repo });
+    // Committed, because only a committed `.gitignore` counts.
+    const g = (...a) =>
+      execFileSync(
+        "git",
+        ["-c", "user.name=fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false", "-c", "core.hooksPath=/dev/null", ...a],
+        { cwd: repo, stdio: "ignore" },
+      );
+    g("init", "-q");
+    g("add", "-A");
+    g("commit", "-q", "-m", "fixture");
     try {
       const r = spawnSync(process.execPath, [join(process.cwd(), "scripts", "check-docs.mjs")], { cwd: repo, encoding: "utf8" });
       expect(r.status, r.stderr).toBe(0);

@@ -30,6 +30,7 @@
 
 import { execFileSync } from 'node:child_process'
 import { existsSync, globSync, readFileSync, readdirSync, statSync } from 'node:fs'
+import { basename, isAbsolute } from 'node:path'
 
 /** Every `.md` under a directory, recursively. Absent directory yields nothing. */
 const walkMd = (d) =>
@@ -173,6 +174,10 @@ export function resolves(raw) {
 /**
  * Cited paths the disk lacks and git ignores: believed, not checked, and named on each gate's ✓
  * line so a stale one can be seen. Shared by both gates through this module (issue #75).
+ *
+ * Never cleared, because each gate is one process making one run: `check:context` and
+ * `check:docs` are separate `node` invocations. A caller that ran `check()` twice in one process
+ * would see the first run's entries on the second run's line.
  */
 export const trusted = new Set()
 export const trustNote = () => (trusted.size ? `; taken on trust as gitignored: ${[...trusted].sort().join(', ')}` : '')
@@ -187,21 +192,43 @@ export const trustNote = () => (trusted.size ? `; taken on trust as gitignored: 
  * a directory-only pattern — soundings' `.venv/` — never matches `gateway/.venv` as written, only
  * `gateway/.venv/`. One ask would have missed the case that motivated this.
  *
- * `core.excludesFile` is switched off so the verdict is the repository's: a personal global ignore
- * file would otherwise pass a citation on one laptop that is red on every other. An argument array
- * and never a shell, for the reason `resolves()` gives above. Outside a repository, or with no
- * git, every ask fails and the path is dead, as it always was.
+ * Only a COMMITTED `.gitignore` counts, so the verdict is the repository's and the same in every
+ * clone. `check-ignore` also reads three things that are not: a machine's global excludes file, an
+ * uncommitted `.gitignore`, and `.git/info/exclude` — which every worktree of a clone shares, so a
+ * line an operator added in their own checkout would pass a dead citation inside the worktree
+ * `sync.mjs --pr` makes (found by @code-review). `--verbose` names the file that decided, and
+ * anything but a tracked `.gitignore` is refused. It also reports a negation (`!keep.log`) as the
+ * match for a path that negation UN-ignores, so a `!` pattern is refused too.
+ *
+ * Argument arrays and never a shell, for the reason `resolves()` gives above. Outside a
+ * repository, or with no git, every ask fails and the path is dead, as it always was.
  */
 function gitIgnores(path) {
   for (const ask of path.endsWith('/') ? [path] : [path, `${path}/`]) {
+    let out
     try {
-      execFileSync('git', ['-c', 'core.excludesFile=/dev/null', 'check-ignore', '-q', '--', ask], { stdio: 'ignore' })
-      return true
+      out = execFileSync('git', ['check-ignore', '--verbose', '-z', '--stdin'], {
+        input: `${ask}\0`,
+        encoding: 'utf8',
+        stdio: ['pipe', 'pipe', 'ignore'],
+      })
     } catch {
-      // Exit 1 is "not ignored", 128 is "not a repository", ENOENT is "no git". All three: dead.
+      continue // exit 1: no pattern matched; 128: not a repository; ENOENT: no git
     }
+    const [source, , pattern] = out.split('\0') // <source> NUL <line> NUL <pattern> NUL <path> NUL
+    if (pattern && !pattern.startsWith('!') && committedIgnoreFile(source)) return true
   }
   return false
+}
+
+const committedIgnoreFile = (source) => {
+  if (basename(source) !== '.gitignore' || isAbsolute(source)) return false
+  try {
+    execFileSync('git', ['ls-files', '--error-unmatch', '--', source], { stdio: 'ignore' })
+    return true
+  } catch {
+    return false
+  }
 }
 
 /**

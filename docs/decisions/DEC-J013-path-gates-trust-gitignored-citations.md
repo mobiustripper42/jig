@@ -5,7 +5,7 @@ title: "The path gates take a gitignored citation on trust, and say so"
 topic: "Template storage & distribution"
 status: "active"
 date: "2026-10-08"
-ruling: "A cited path missing on disk resolves when the repository's own ignore rules ignore it. Each gate names those paths on its ✓ line, because nothing verified them."
+ruling: "A cited path missing on disk resolves when a committed `.gitignore` ignores it. Each gate names those paths on its ✓ line, because nothing verified them."
 claims:
   - kind: "script"
     target: "scripts/check-context.mjs"
@@ -25,8 +25,11 @@ someone has to remember. Rewording the docs to stop citing them throws away a po
 
 The cost is real: an ignored path cannot be verified, so a stale one gets through. If soundings
 moved its venv, `.venv/` would still match the old citation. That is why the ✓ line lists every
-path taken on trust instead of passing them silently. Only the repository's rules count. A
-machine's global excludes file is switched off, so the verdict does not depend on whose laptop
-runs it.
+path taken on trust instead of passing them silently.
+
+Only a committed `.gitignore` counts, so the verdict is the same in every clone. A machine's
+global excludes file, an uncommitted `.gitignore` and `.git/info/exclude` are refused. The last
+is shared by every worktree of a clone, so a line an operator added locally would otherwise pass
+a dead citation inside the sync's own worktree.
 
 See also DEC-J012.
