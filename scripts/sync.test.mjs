@@ -10,7 +10,7 @@
 
 import { describe, expect, it } from 'vitest'
 import { execFileSync, spawnSync } from 'node:child_process'
-import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { basename, delimiter, dirname, join } from 'node:path'
 
@@ -528,18 +528,19 @@ const GATE_RED = (msg) => `console.error(${JSON.stringify(msg)})\nprocess.exit(1
 /**
  * jig and a project, as `setup`, plus what a real checkout has that origin/main does not: a
  * `node_modules` (gitignored, as every Node project has it, unless `gitignore` is false) and a `gh`.
+ * `tmp` stands in for the system temp directory, so a run's log never lands in the real `/tmp`.
  */
 const setupPr = ({ project = {}, gitignore = true } = {}) => {
   const s = setup({ project: { ...(gitignore ? { '.gitignore': 'node_modules/\n' } : {}), ...project } })
   write(s.proj, { [MODULE]: 'module.exports = 1\n' })
-  return { ...s, gh: fakeGh() }
+  return { ...s, gh: fakeGh(), tmp: mkdtempSync(join(tmpdir(), 'sync-tmp-')) }
 }
 const run = (s, flags, env = {}) => {
   const r = spawnSync(process.execPath, [SYNC, '--jig', s.jig, ...flags, s.proj], {
-    env: { ...ENV, PATH: `${s.gh}${delimiter}${process.env.PATH}`, FAKE_GH_DIR: s.gh, ...env },
+    env: { ...ENV, PATH: `${s.gh}${delimiter}${process.env.PATH}`, FAKE_GH_DIR: s.gh, TMPDIR: s.tmp, ...env },
     encoding: 'utf8',
   })
-  return { out: r.stdout + r.stderr, code: r.status }
+  return { out: r.stdout + r.stderr, code: r.status, stdout: r.stdout }
 }
 const pr = (s) => run(s, ['--pr'])
 const SKILL = '.claude/skills/kill-this/SKILL.md'
@@ -833,5 +834,95 @@ describe('sync --pr', { timeout: 60_000 }, () => {
     const wt = wtOf(red.proj)
     expect(git(wt, 'rev-parse', 'HEAD:package.json')).toBe(git(red.proj, 'rev-parse', 'origin/main:package.json'))
     expect(readFileSync(join(wt, 'package.json'), 'utf8')).toBe(pkgJson)
+  })
+})
+
+// Issue #77. The first real syncs reached the jig session as phone screenshots, and a green run
+// printed nothing any gate said — so the "taken on trust" line issue #75 added was never seen.
+describe('sync --pr and --clean write a log', { timeout: 60_000 }, () => {
+  /** Every log under the stand-in temp directory: one private `jig-sync-<repo>-*` folder per run. */
+  const logs = (s) =>
+    readdirSync(s.tmp)
+      .filter((d) => d.startsWith('jig-sync-'))
+      .flatMap((d) => readdirSync(join(s.tmp, d)).map((f) => join(s.tmp, d, f)))
+      .sort()
+  const lastLine = (stdout) => stdout.trimEnd().split('\n').at(-1)
+
+  it('keeps each log in a private directory nobody else can name in advance', () => {
+    // Found by /security-review. A fixed `/tmp/jig-sync` let another account on the machine create
+    // the directory first, then swap the log for a symlink: the run reopened the log by path on
+    // every line, so it appended to — or, on creation, emptied — a file of the attacker's choosing.
+    const s = setupPr()
+    mkdirSync(join(s.tmp, 'jig-sync'), { mode: 0o777 }) // what the attacker would plant
+    const { stdout } = run(s, ['--clean'])
+    const [log] = logs(s)
+    expect(lastLine(stdout)).toBe(`log  ${log}`)
+    expect(dirname(log)).not.toBe(join(s.tmp, 'jig-sync'))
+    expect(basename(dirname(log))).toMatch(/^jig-sync-alpha-\w{6}$/)
+    expect(statSync(dirname(log)).mode & 0o077).toBe(0)
+    expect(readdirSync(join(s.tmp, 'jig-sync'))).toEqual([])
+  })
+
+  it('logs every line a green run printed, plus the gate output the terminal never shows, and ends on its path', () => {
+    const s = setupPr()
+    commit(s.jig, { 'scripts/check-docs.mjs': 'console.log("check-docs: 3 docs read, 0 problems")\n' })
+    const { stdout, code } = pr(s)
+    expect(code, stdout).toBe(0)
+    const [log, ...more] = logs(s)
+    expect(more).toEqual([])
+    expect(lastLine(stdout)).toBe(`log  ${log}`)
+    const text = readFileSync(log, 'utf8')
+    for (const line of stdout.split('\n').filter(Boolean)) expect(text).toContain(line)
+    expect(stdout).not.toContain('check-docs: 3 docs read, 0 problems')
+    expect(text).toContain('check-docs: 3 docs read, 0 problems')
+  })
+
+  it('logs a failing gate, and a red run ends on the path too', () => {
+    const s = setupPr()
+    commit(s.jig, { 'scripts/check-docs.mjs': GATE_RED('check-docs: docs/SPEC.md cites docs/gone.md') })
+    const { stdout, code } = pr(s)
+    expect(code, stdout).toBe(1)
+    const [log] = logs(s)
+    expect(lastLine(stdout)).toBe(`log  ${log}`)
+    expect(readFileSync(log, 'utf8')).toContain('check-docs: docs/SPEC.md cites docs/gone.md')
+  })
+
+  it('logs a refusal, which ends on the path as well', () => {
+    const s = setupPr()
+    commit(s.jig, { [SKILL]: 'kill v2\n' })
+    mkdirSync(wtOf(s.proj))
+    const { stdout, code } = pr(s)
+    expect(code).toBe(2)
+    const [log] = logs(s)
+    expect(lastLine(stdout)).toBe(`log  ${log}`)
+    expect(readFileSync(log, 'utf8')).toContain(`${wtOf(s.proj)} already exists`)
+  })
+
+  it('gives each run its own file, so one run never overwrites the log of the run before it', () => {
+    // Two refusals, the quickest runs there are: the closer together two runs land, the likelier
+    // a coarse timestamp gives them one name.
+    const s = setupPr()
+    mkdirSync(wtOf(s.proj))
+    pr(s)
+    pr(s)
+    expect(logs(s)).toHaveLength(2)
+  })
+
+  it('logs --clean', () => {
+    const s = setupPr()
+    const { stdout, code } = run(s, ['--clean'])
+    expect(code).toBe(0)
+    const [log] = logs(s)
+    expect(lastLine(stdout)).toBe(`log  ${log}`)
+    expect(readFileSync(log, 'utf8')).toMatch(/nothing to clean/)
+  })
+
+  it('writes no log on a dry run, whose header says it writes nothing', () => {
+    const s = setupPr()
+    commit(s.jig, { [SKILL]: 'kill v2\n' })
+    const { stdout, code } = run(s, [])
+    expect(code).toBe(0)
+    expect(stdout).toMatch(/dry run: fetches, then writes nothing/)
+    expect(logs(s)).toEqual([])
   })
 })
