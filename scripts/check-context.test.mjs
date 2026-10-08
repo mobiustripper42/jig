@@ -67,7 +67,7 @@ const FIXTURE_FILES = [
 // plus a negation, which `check-ignore --verbose` reports as a match although it un-ignores.
 const GITIGNORES = { "gateway/.gitignore": ".venv/\n", ".gitignore": "/public/maplibre/\npublic/*.map\n!public/keep.map\n" };
 
-/** `git init` and commit everything: only a COMMITTED `.gitignore` counts, so the rules must be. */
+/** `git init` and commit everything: only a TRACKED `.gitignore` counts, so the rules must be. */
 const gitInitCommit = (cwd) => {
   const g = (...a) =>
     execFileSync(
@@ -332,7 +332,7 @@ describe("gitignored citations", () => {
     expect(check([{ path: "f.md", text: "`gateway/local-only.txt`" }])[0]).toMatch(/does not exist/);
   });
 
-  it("does not trust an uncommitted .gitignore, which a fresh worktree would not have", () => {
+  it("does not trust an untracked .gitignore, which a fresh worktree would not have", () => {
     writeFileSync(join(fixture, "components/.gitignore"), "generated/\n");
     expect(spawnSync("git", ["check-ignore", "-q", "components/generated/"]).status).toBe(0);
     expect(check([{ path: "f.md", text: "`components/generated/`" }])[0]).toMatch(/does not exist/);
@@ -341,6 +341,13 @@ describe("gitignored citations", () => {
   it("does not trust a path a negation un-ignores, though --verbose reports the negation as the match", () => {
     expect(check([{ path: "f.md", text: "`public/other.map`" }])).toEqual([]);
     expect(check([{ path: "f.md", text: "`public/keep.map`" }])[0]).toMatch(/public\/keep\.map.*does not exist/);
+  });
+
+  it("does not trust a span carrying a NUL, which git would read as two paths", () => {
+    // Found by /security-review. `PATHISH` stops at whitespace and NUL is not whitespace, so a span
+    // `gateway/dead<NUL>gateway/.venv` reached `check-ignore --stdin` as two paths, and the one
+    // record that came back — the ignored half's — was read as the verdict on the whole span.
+    expect(check([{ path: "f.md", text: "`gateway/dead\0gateway/.venv`" }])[0]).toMatch(/does not exist/);
   });
 
   it("judges by the repository's ignore rules, not this machine's global excludes file", () => {

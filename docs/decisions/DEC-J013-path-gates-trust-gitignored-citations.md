@@ -5,7 +5,7 @@ title: "The path gates take a gitignored citation on trust, and say so"
 topic: "Template storage & distribution"
 status: "active"
 date: "2026-10-08"
-ruling: "A cited path missing on disk resolves when a committed `.gitignore` ignores it. Each gate names those paths on its ✓ line, because nothing verified them."
+ruling: "A cited path missing on disk resolves when a tracked `.gitignore` ignores it. Each gate names those paths on its ✓ line, because nothing verified them."
 claims:
   - kind: "script"
     target: "scripts/check-context.mjs"
@@ -27,8 +27,9 @@ The cost is real: an ignored path cannot be verified, so a stale one gets throug
 moved its venv, `.venv/` would still match the old citation. That is why the ✓ line lists every
 path taken on trust instead of passing them silently.
 
-Only a committed `.gitignore` counts, so the verdict is the same in every clone. A machine's
-global excludes file, an uncommitted `.gitignore` and `.git/info/exclude` are refused. The last
+Only a tracked `.gitignore` counts, so a fresh worktree and a working checkout agree unless the
+file has an uncommitted edit. A machine's global excludes file, an untracked `.gitignore` and
+`.git/info/exclude` are refused. The last
 is shared by every worktree of a clone, so a line an operator added locally would otherwise pass
 a dead citation inside the sync's own worktree.
 

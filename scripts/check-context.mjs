@@ -192,9 +192,10 @@ export const trustNote = () => (trusted.size ? `; taken on trust as gitignored: 
  * a directory-only pattern — soundings' `.venv/` — never matches `gateway/.venv` as written, only
  * `gateway/.venv/`. One ask would have missed the case that motivated this.
  *
- * Only a COMMITTED `.gitignore` counts, so the verdict is the repository's and the same in every
- * clone. `check-ignore` also reads three things that are not: a machine's global excludes file, an
- * uncommitted `.gitignore`, and `.git/info/exclude` — which every worktree of a clone shares, so a
+ * Only a TRACKED `.gitignore` counts, so the verdict is the repository's: a fresh worktree and a
+ * working checkout agree, unless that checkout has an uncommitted edit to the file. `check-ignore`
+ * also reads three things that are not: a machine's global excludes file, an untracked
+ * `.gitignore`, and `.git/info/exclude` — which every worktree of a clone shares, so a
  * line an operator added in their own checkout would pass a dead citation inside the worktree
  * `sync.mjs --pr` makes (found by @code-review). `--verbose` names the file that decided, and
  * anything but a tracked `.gitignore` is refused. It also reports a negation (`!keep.log`) as the
@@ -204,6 +205,9 @@ export const trustNote = () => (trusted.size ? `; taken on trust as gitignored: 
  * repository, or with no git, every ask fails and the path is dead, as it always was.
  */
 function gitIgnores(path) {
+  // A NUL is the record separator on `--stdin -z`, so a span carrying one would be asked as two
+  // paths and answered for whichever half git ignores (found by /security-review).
+  if (path.includes('\0')) return false
   for (const ask of path.endsWith('/') ? [path] : [path, `${path}/`]) {
     let out
     try {
