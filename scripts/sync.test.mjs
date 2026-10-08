@@ -881,7 +881,9 @@ describe('sync --pr and --clean write a log', { timeout: 60_000 }, () => {
     expect(readFileSync(log, 'utf8')).toContain(`${wtOf(s.proj)} already exists`)
   })
 
-  it('gives each run its own file, so a red run is not overwritten by the next', () => {
+  it('gives each run its own file, so one run never overwrites the log of the run before it', () => {
+    // Two refusals, the quickest runs there are: the closer together two runs land, the likelier
+    // a coarse timestamp gives them one name.
     const s = setupPr()
     mkdirSync(wtOf(s.proj))
     pr(s)
