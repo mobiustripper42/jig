@@ -148,12 +148,17 @@ const BRANCH = `jig-sync/${new Date().toISOString().slice(0, 10)}`
 /**
  * The exclude line that keeps the hard-linked `node_modules` out of a commit. Git keeps
  * `info/exclude` in the repository's common directory, shared by every worktree, so while it is
- * there the real checkout ignores `/node_modules` too — which changes nothing in a project whose
+ * there the real checkout ignores `node_modules/` too — which changes nothing in a project whose
  * `.gitignore` already does, and every Node project's does. The marker names the worktree, so the
  * removal takes out exactly the lines this script added and nothing a person wrote.
+ *
+ * Unanchored, so one line covers every package's `node_modules` at any depth (issue #80). Removal
+ * takes the marker and whatever single line follows it, which also clears the anchored
+ * `/node_modules` a red run under the previous version left behind.
  */
 const EXCLUDE = join(commonDir(PROJECT), 'info', 'exclude')
-const EXCLUDE_BLOCK = `# jig sync: node_modules is hard-linked into ${WORKTREE}. scripts/sync.mjs removes these two lines.\n/node_modules\n`
+const EXCLUDE_MARK = `# jig sync: node_modules is hard-linked into ${WORKTREE}. scripts/sync.mjs removes these two lines.\n`
+const EXCLUDE_BLOCK = `${EXCLUDE_MARK}node_modules/\n`
 function addExclude() {
   mkdirSync(dirname(EXCLUDE), { recursive: true })
   const text = existsSync(EXCLUDE) ? readFileSync(EXCLUDE, 'utf8') : ''
@@ -162,8 +167,10 @@ function addExclude() {
 function dropExclude() {
   if (!existsSync(EXCLUDE)) return false
   const text = readFileSync(EXCLUDE, 'utf8')
-  if (!text.includes(EXCLUDE_BLOCK)) return false
-  const rest = text.replace(EXCLUDE_BLOCK, '')
+  const at = text.indexOf(EXCLUDE_MARK)
+  if (at < 0) return false
+  const lineEnd = text.indexOf('\n', at + EXCLUDE_MARK.length)
+  const rest = text.slice(0, at) + (lineEnd < 0 ? '' : text.slice(lineEnd + 1))
   if (rest === '') unlinkSync(EXCLUDE)
   else writeFileSync(EXCLUDE, rest)
   return true
@@ -516,12 +523,22 @@ step('applying the verdicts', () => {
  * The gates need the project's dependencies, and a fresh worktree has none. A hard link, never a
  * symlink: Next's Turbopack refuses a `node_modules` that points outside the tree. A virtualenv or a
  * build output is not made here; a gate that needs one goes red and the run is handed off.
+ *
+ * Every package's, not only the root's: beside each `package.json` on `origin/main`, wherever the
+ * real checkout has a `node_modules`. centerline's `mobile/` package went red twice on
+ * `expo/tsconfig.base` not found while its checkout held the directory all along (issue #80).
  */
-const realModules = join(PROJECT, 'node_modules')
-if (existsSync(realModules)) {
+const packages = [...projTree.keys()]
+  .filter((p) => p === 'package.json' || p.endsWith('/package.json'))
+  .map((p) => (p === 'package.json' ? 'node_modules' : `${dirname(p)}/node_modules`))
+  .filter((m) => existsSync(join(PROJECT, m)))
+  .sort((a, b) => a.split('/').length - b.split('/').length || a.localeCompare(b))
+if (packages.length) {
   addExclude()
-  step('hard-linking node_modules', () => execFileSync('cp', ['-al', realModules, join(WORKTREE, 'node_modules')], { stdio: ['ignore', 'pipe', 'pipe'] }))
-  console.log(`node_modules  hard-linked from ${NAME}'s checkout; /node_modules added to ${EXCLUDE}`)
+  for (const m of packages) {
+    step(`hard-linking ${m}`, () => execFileSync('cp', ['-al', join(PROJECT, m), join(WORKTREE, m)], { stdio: ['ignore', 'pipe', 'pipe'] }))
+  }
+  console.log(`node_modules  hard-linked from ${NAME}'s checkout: ${packages.join(', ')}; node_modules/ added to ${EXCLUDE}`)
 }
 
 /**

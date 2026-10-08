@@ -702,7 +702,8 @@ describe('sync --pr', { timeout: 60_000 }, () => {
     expect(lstatSync(join(wt, MODULE)).ino).toBe(lstatSync(join(s.proj, MODULE)).ino)
     expect(git(wt, 'ls-tree', '-r', '--name-only', 'HEAD')).not.toMatch(/node_modules/)
     // The exclude line is what stops a session's later `git add -A` in the worktree sweeping it in.
-    expect(readOr(excludeOf(s.proj), '')).toMatch(/^\/node_modules$/m)
+    // Unanchored since issue #80, so it covers a package's `node_modules` at any depth.
+    expect(readOr(excludeOf(s.proj), '')).toMatch(/^node_modules\/$/m)
     expect(git(wt, 'status', '--porcelain', '--untracked-files=all')).toBe('')
   })
 
@@ -924,5 +925,74 @@ describe('sync --pr and --clean write a log', { timeout: 60_000 }, () => {
     expect(code).toBe(0)
     expect(stdout).toMatch(/dry run: fetches, then writes nothing/)
     expect(logs(s)).toEqual([])
+  })
+})
+
+// Issue #80. centerline has a second package, `mobile/`, with its own `node_modules`. Linking only
+// the root's sent two syncs red on `expo/tsconfig.base` not found, a setup failure the script
+// could have prevented: the real checkout had the directory the whole time.
+describe('sync --pr links every node_modules the checkout has', { timeout: 60_000 }, () => {
+  const MOBILE_MODULE = 'mobile/node_modules/dep/index.js'
+  /** A second package that `verify` needs, and a third whose checkout has no `node_modules`. */
+  const setupPackages = ({ verify = 'node mobile/check.mjs', gitignore = true } = {}) => {
+    const s = setupPr({
+      gitignore,
+      project: {
+        'mobile/package.json': '{ "name": "mobile" }\n',
+        'mobile/check.mjs': "import { readFileSync } from 'node:fs'\nreadFileSync('mobile/node_modules/dep/index.js')\n",
+        'tools/package.json': '{ "name": "tools" }\n',
+        'package.json': pkg({ 'check:docs': 'node scripts/check-docs.mjs', verify }),
+      },
+    })
+    write(s.proj, { [MOBILE_MODULE]: 'module.exports = 2\n' })
+    return s
+  }
+
+  it('links a second package\'s node_modules, so a verify that needs it goes green', () => {
+    const s = setupPackages()
+    commit(s.jig, { [SKILL]: 'kill v2\n' })
+    const { out, code } = pr(s)
+    expect(code, out).toBe(0)
+    expect(out).toMatch(/hard-linked from alpha's checkout: node_modules, mobile\/node_modules/)
+  })
+
+  it('shares inodes, skips a package with none, and keeps every link out of the commit with no .gitignore to help', () => {
+    // Red on purpose, so the worktree stays to look at.
+    const s = setupPackages({ verify: 'node mobile/check.mjs && node scripts/check-docs.mjs', gitignore: false })
+    commit(s.jig, { 'scripts/check-docs.mjs': GATE_RED('red, so the worktree stays') })
+    const { out, code } = pr(s)
+    expect(code, out).toBe(1) // a gate, not a failed step: the package with no node_modules was skipped
+    const wt = wtOf(s.proj)
+    expect(lstatSync(join(wt, MOBILE_MODULE)).ino).toBe(lstatSync(join(s.proj, MOBILE_MODULE)).ino)
+    expect(existsSync(join(wt, 'tools/node_modules'))).toBe(false)
+    expect(git(wt, 'ls-tree', '-r', '--name-only', 'HEAD')).not.toMatch(/node_modules/)
+    expect(git(wt, 'status', '--porcelain', '--untracked-files=all')).toBe('')
+  })
+
+  it('leaves the exclude file and both real node_modules as they were, after a green run and after --clean', () => {
+    const green = setupPackages()
+    commit(green.jig, { [SKILL]: 'kill v2\n' })
+    const before = readOr(excludeOf(green.proj), null)
+    expect(pr(green).code).toBe(0)
+    expect(readOr(excludeOf(green.proj), null)).toBe(before)
+    for (const m of [MODULE, MOBILE_MODULE]) expect(existsSync(join(green.proj, m)), m).toBe(true)
+
+    const red = setupPackages({ verify: 'exit 1' })
+    commit(red.jig, { [SKILL]: 'kill v2\n' })
+    const redBefore = readOr(excludeOf(red.proj), null)
+    expect(pr(red).code).toBe(1)
+    expect(run(red, ['--clean']).code).toBe(0)
+    expect(readOr(excludeOf(red.proj), null)).toBe(redBefore)
+    for (const m of [MODULE, MOBILE_MODULE]) expect(existsSync(join(red.proj, m)), m).toBe(true)
+  })
+
+  it('--clean removes a block in the old one-line format, as a red run before this change left it', () => {
+    const s = setupPr()
+    const before = readOr(excludeOf(s.proj), '')
+    const old = `# jig sync: node_modules is hard-linked into ${wtOf(s.proj)}. scripts/sync.mjs removes these two lines.\n/node_modules\n`
+    writeFileSync(excludeOf(s.proj), `${before}${old}`)
+    const { out, code } = run(s, ['--clean'])
+    expect(code, out).toBe(0)
+    expect(readOr(excludeOf(s.proj), '')).toBe(before)
   })
 })
