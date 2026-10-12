@@ -71,10 +71,11 @@ Do Step 3.5's trigger check **first**: it is a property of the diff and needs no
 
 **Why `/security-review` runs inside its own agent.** Its closing instruction is that the final reply contains the markdown report and nothing else. Run in this turn, that instruction ended `/kill-this` there: from 2026-10-05 to 2026-10-09 every centerline run stopped after it and waited for the operator to type "please continue", and a sentence in this file telling the model to carry on past it changed nothing. Muster appeared not to stop only because its `@code-review` was still running in the background, and that agent's notification started the next turn. Inside an agent, the instruction governs the agent's reply, which is exactly where the report should go.
 
-**Then end the turn.** Ending it is correct here, not a stall: each agent's report arrives as a notification that starts a new turn. On each one:
+**Then end the turn.** Ending it is correct here, not a stall: each agent's report arrives as a notification that starts a new turn. You started one agent, or two on a trigger hit; that count is how you know which notification is the last. On each one:
 
 - **Another review is still out:** record this one's findings and end the turn again, with no reply to the operator.
 - **It is the last one:** carry on with Step 3.6 and Step 4 in that turn, without asking. Never ask the operator to continue; the wait is part of the ritual they already invoked.
+- **The operator speaks while a review is still out:** there is no timeout, so a hung agent is noticed by a person, not by this skill. Say which review has not reported, and offer to go on without it; if they agree, its Step 3.6 row is `✗ — never reported`.
 
 When addressing review findings before opening the PR: Read every file before editing it (parallel writes fail silently without a prior Read).
 
