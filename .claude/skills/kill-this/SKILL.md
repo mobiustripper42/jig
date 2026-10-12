@@ -62,9 +62,20 @@ If there is nothing to commit, surface that and stop here — no PR for no code.
 
 Capture `SUBJECT=$(git log -1 --format=%s)` for the PR title.
 
-## Step 3 — Code review
+## Step 3 — Code review, in the background
 
-Run `@code-review` against `git diff HEAD~1`. Capture the findings — needed for the PR body and the task block.
+Do Step 3.5's trigger check **first**: it is a property of the diff and needs no review to answer. Then start every review this PR gets **in one message, each as a background agent** (`run_in_background: true`):
+
+- `@code-review` against `git diff HEAD~1`, always.
+- On a trigger hit, a `general-purpose` agent whose whole task is: *invoke `/security-review` with the Skill tool on this branch and return its report verbatim.*
+
+**Why `/security-review` runs inside its own agent.** Its closing instruction is that the final reply contains the markdown report and nothing else. Run in this turn, that instruction ended `/kill-this` there: from 2026-10-05 to 2026-10-09 every centerline run stopped after it and waited for the operator to type "please continue", and a sentence in this file telling the model to carry on past it changed nothing. Muster appeared not to stop only because its `@code-review` was still running in the background, and that agent's notification started the next turn. Inside an agent, the instruction governs the agent's reply, which is exactly where the report should go.
+
+**Then end the turn.** Ending it is correct here, not a stall: each agent's report arrives as a notification that starts a new turn. You started one agent, or two on a trigger hit; that count is how you know which notification is the last. On each one:
+
+- **Another review is still out:** record this one's findings and end the turn again, with no reply to the operator.
+- **It is the last one:** carry on with Step 3.6 and Step 4 in that turn, without asking. Never ask the operator to continue; the wait is part of the ritual they already invoked.
+- **The operator speaks while a review is still out:** there is no timeout, so a hung agent is noticed by a person, not by this skill. Say which review has not reported, and offer to go on without it; if they agree, its Step 3.6 row is `✗ — never reported`.
 
 When addressing review findings before opening the PR: Read every file before editing it (parallel writes fail silently without a prior Read).
 
@@ -86,10 +97,9 @@ Get the project's trigger table from `.claude/CLAUDE-context.md` under `## Blast
 
 **If one or more hit, run the free local pass first, then surface the paid one.** A trigger that only ever produces a suggestion to spend money produces nothing on the days you decide not to spend it — and those are exactly the PRs it fired on.
 
-1. **Run `/security-review`** against the branch. It is local, unbilled, and aimed at this class: authorization boundaries, injection, secret handling, unsafe defaults, failure modes that fail open. This is not a duplicate of Step 3 — `@code-review` hunts the project's conventions and invariants; this hunts the ways a hostile or malformed input gets through. Fold its findings into the PR body under their own heading, so the reviewer can see which pass produced what. Its closing "final reply must contain the markdown report and nothing else" ends that pass, not this skill: take the report and carry on with item 2 below, then Step 3.6 and Step 4, in the same turn.
+1. **Run `/security-review`** against the branch, in its own background agent beside `@code-review` (Step 3 says how and why). It is local, unbilled, and aimed at this class: authorization boundaries, injection, secret handling, unsafe defaults, failure modes that fail open. This is not a duplicate of `@code-review`, which hunts the project's conventions and invariants; this hunts the ways a hostile or malformed input gets through. Fold its findings into the PR body under their own heading, so the reviewer can see which pass produced what.
 
-
-2. **Then print exactly this and continue** — never block, never run the billed tool:
+2. **When the reviews are back, print exactly this and continue** — never block, never run the billed tool:
 
 ```
 ⚠ This PR touches: <triggers>.
