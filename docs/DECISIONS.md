@@ -54,6 +54,7 @@ that never reached the spec is a red build rather than prose nobody cross-read.
 - DEC-J006 — Transcripts are kept with no reader
 - DEC-J008 — The surface-check step is retired
 - DEC-J010 — A retro fits on one screen, and computes no rate
+- DEC-J014 — Approving a task's plan approves shipping it
 
 ### Model selection
 - DEC-J009 — Model and effort settings for sessions and agents
