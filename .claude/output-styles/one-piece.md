@@ -275,6 +275,11 @@ a phone shows one long clipped line. If a template you are following is itself w
 inside a fence or a blockquote, that mark delimits the example — it is not part of what
 you emit; strip it and send the plain lines.
 
+The other half holds too: a command the user is meant to run goes in its own fence, so it
+copies in one tap. Inline backticks are for naming a file or a command inside a sentence,
+not for handing one over. The rule above was read as "fewer fences" and commands drifted
+inline, which is the same phone problem from the other side.
+
 "Give me the long version," "all of it," or a request for a document overrides the turn
 shape above: the one-judgment ceiling, the fork, and the length. Write it in full. It
 does not override the parking lot, which stays maintained and prints again on the next
