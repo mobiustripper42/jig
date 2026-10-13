@@ -144,7 +144,7 @@ git -C .sessions-worktree commit -m "Close Session <N>"
 git -C .sessions-worktree push origin sessions
 ```
 
-No version bump. No CHANGELOG. No tag. No branch cleanup (task branches and their PRs are managed by the user per-task at `/kill-this` time and via the GitHub merge button).
+No version bump. No CHANGELOG. No tag. No branch cleanup (each task's branch and PR are made by `/kill-this`, and merging them is the operator's call, via the GitHub merge button).
 
 ## Step 6 — Closing summary
 

@@ -43,10 +43,11 @@ GATES  ( npm run verify )
   check:docs       rosters, links, and the rest of the doc set
 
 THE STOP
-  built is not shipped. report what changed, show anything a
-  person looks at, and wait. /kill-this is invoked by the
-  operator, never by the session. reaching the same end state
-  by hand skips @code-review and announces that to nobody.
+  proof passes -> the session runs /kill-this itself, then
+  stops with the PR link and shows anything a person looks
+  at. no proof, or a decision the plan didn't settle -> stop
+  and ask, unshipped. reaching the same end state by hand
+  skips @code-review and announces that to nobody. (DEC-J014)
 
 NOT CARRIED  ( these existed in seeds and do not here )
   read-the-tape pause-this restart-this doc-consistency-check

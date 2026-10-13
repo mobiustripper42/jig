@@ -4,7 +4,7 @@ description: Per-task PR + session file update. Build check, commit code, push t
 tools: Read, Edit, Write, Bash, Glob, Grep, Agent
 ---
 
-You are shipping one task. `/kill-this` runs **per task**, not per session — there may be N invocations between `/its-alive` and `/its-dead`. Each one opens its own PR and appends one `## Task <N>` block to the session file (which lives on the orphan `sessions` branch via `.sessions-worktree/`).
+You are shipping one task. The session invokes `/kill-this` itself once the task's proof passes, and the operator can invoke it too (DEC-J014). It runs **per task**, not per session — there may be N invocations between `/its-alive` and `/its-dead`. Each one opens its own PR and appends one `## Task <N>` block to the session file (which lives on the orphan `sessions` branch via `.sessions-worktree/`).
 
 ## Step 0 — Locate the session file, capture the branch
 
