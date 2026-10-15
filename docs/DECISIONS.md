@@ -55,9 +55,11 @@ that never reached the spec is a red build rather than prose nobody cross-read.
 - DEC-J008 — The surface-check step is retired
 - DEC-J010 — A retro fits on one screen, and computes no rate
 - DEC-J014 — Approving a task's plan approves shipping it
+- DEC-J015 — 3+ point tasks build through /build-task: tests and code by separate agents
 
 ### Model selection
 - DEC-J009 — Model and effort settings for sessions and agents
+- DEC-J016 — Cheapest model and effort that does the job at full quality
 
 _**This file is GENERATED** by `npm run gen:decisions` —
 edit `docs/decisions/DEC-*.md`, not this file. `npm run check:decisions` fails on a stale index, a

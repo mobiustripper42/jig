@@ -122,6 +122,10 @@ file-classes:
   # rate while @pm went on telling itself to track hours per point, and nothing
   # compared the two.
   - ".claude/agents/pm.md": logic
+  # @test-writer and @implementer, for the same reason: each reads the project's substance from
+  # the issue spec and `.claude/CLAUDE-context.md` at run time and holds none of it.
+  - ".claude/agents/test-writer.md": logic
+  - ".claude/agents/implementer.md": logic
 
   # The shell (DEC-S019/DEC-S049). Byte-identical everywhere; everything specific
   # to a project lives in the paired `.claude/CLAUDE-context.md`, which is the
