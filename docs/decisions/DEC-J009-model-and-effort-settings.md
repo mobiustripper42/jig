@@ -3,7 +3,7 @@ schema: 1
 id: DEC-J009
 title: "Model and effort settings for sessions and agents"
 topic: "Model selection"
-status: "active"
+status: "superseded"
 date: "2026-09-25"
 ruling: "Sessions run opus; agents run sonnet, @architect opus. Aliases, never versions. Effort defaults to medium; agents pin high."
 claims:
@@ -19,6 +19,7 @@ claims:
   - kind: "file"
     target: ".claude/agents/architect.md"
     note: "model opus, effort high"
+superseded_by: DEC-J016
 revisit_if: "An alias moves to a model that does its job worse, or the plan starts billing by model rather than effort."
 ---
 

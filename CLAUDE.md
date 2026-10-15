@@ -22,7 +22,7 @@ Project-specific docs are listed in `.claude/CLAUDE-context.md` under `## Additi
 
 ## Micro Workflow (every task, no exceptions)
 
-1. **Spec it** — **after a `/clear`, a fresh context starts by reading the open session file's Next Steps** (found the way `/kill-this` finds it; at session start `/its-alive`'s briefing has already done this, from the previous session): it holds the next task, the standing rules, the parking lot and what the last task left for this one. Restore its parking lot as this conversation's; obey the standing rules from the file. Then: poker estimate + acceptance criteria. A task with a screen is not specced until it names the job in one line, the existing screen and components it reuses, and what's on the screen in order with its actual wording — approved before code. Reuse is the default; anything new is named and argued for. Rules and data alone ("admin can book") are not a spec. Pin what "done" looks like before writing code: enumerate the concrete set from source and confirm it. Live words override prior docs. **Get the whole spec down before any code is written** — the model does its best work on a complete brief in one turn, not one assembled across a dozen exchanges.
+1. **Spec it** — **after a `/clear`, a fresh context starts by reading the open session file's Next Steps** (found the way `/kill-this` finds it; at session start `/its-alive`'s briefing has already done this, from the previous session): it holds the next task, the standing rules, the parking lot and what the last task left for this one. Restore its parking lot as this conversation's; obey the standing rules from the file. Then: poker estimate + acceptance criteria. A task with a screen is not specced until it names the job in one line, the existing screen and components it reuses, and what's on the screen in order with its actual wording — approved before code. Reuse is the default; anything new is named and argued for. Rules and data alone ("admin can book") are not a spec. Pin what "done" looks like before writing code: enumerate the concrete set from source and confirm it. Live words override prior docs. **Get the whole spec down before any code is written** — the model does its best work on a complete brief in one turn, not one assembled across a dozen exchanges. **A task of 3+ points that changes behaviour is specced in its issue body, from `.claude/skills/build-task/task-spec.md`**, and built with `/build-task`, which the operator runs to approve the spec. It replaces the plan, prove, build and run-the-proof steps below and ends in `/kill-this`.
 2. **Plan it** — summarize what you're going to do. Wait for explicit approval.
 3. **Cut the branch** — `git checkout -b task/X.Y-short-description`.
 4. **Prove it first** — when behaviour changes, the check comes before the change: write it, run it, watch it fail *for the reason you expect*. That failure is what proves the check bites; one written afterwards has never been observed failing, so it may assert nothing. The check must exercise the thing in its own title — a test named for one thing that calls another turns an unverified claim into an apparently-verified one. **What counts as a check: the `Proof` slot in `.claude/CLAUDE-context.md` § Workflow Mechanisms.**
@@ -70,6 +70,7 @@ Two things the gate cannot check, which is why they are here:
 | Skill | When | What |
 |-------|------|------|
 | `/its-alive` | Session start | Open the per-session file, read context, recommend a task |
+| `/build-task` | 3+ point task, spec in the issue | `@test-writer` readback and failing tests, `@implementer` to green, the Lead verifies, then `/kill-this`. Running it approves the spec |
 | `/kill-this` | **Per task** | Build check, commit, open a pull request, append `## Task <N>`. Run once per task |
 | `/save-this` | Between tasks, before `/clear` | Write the next task, open PRs, standing rules, parking lot and carry-over into the session file's Next Steps |
 | `/its-dead` | Session end (once) | Stamp `ended:`, tally points, close the session file |
@@ -90,13 +91,15 @@ Two things the gate cannot check, which is why they are here:
 | @code-review | Sonnet | After every commit (wired into `/kill-this`) | Catch issues early |
 | @pm | Sonnet | Session start/end via skills | Progress, risks |
 | @ui-reviewer | Sonnet | After interface work, phase boundaries | Design quality |
+| @test-writer | Opus | `/build-task` | Readback, then failing tests from the issue spec |
+| @implementer | Sonnet | `/build-task` | Makes the tests pass; may not edit them |
 
 ## Model Selection
 
-**Opus runs sessions; Sonnet runs agents.** Write the aliases, `opus` and `sonnet`, never a version. An alias follows each new release on its own; a version number in a file loaded every session is stale the day the next one ships, which is how this section came to name a retired default (DEC-J009).
+**Choose the cheapest model and effort that does the job at full quality** (DEC-J016). Quality comes first; each step up in model or effort draws the plan's usage down faster, so a step up needs a reason. Write the aliases, `opus` and `sonnet`, never a version — a version number in a file loaded every session is stale the day the next one ships.
 
-- **Effort is `medium` by default**, set by `effortLevel` in the settings master. `xhigh` for an 8-point task. `max` occasionally, when correctness has to beat cost.
-- **Agents pin model and effort in frontmatter.** `@architect` is `opus`, the other three are `sonnet`, and all four run at `effort: high` so they do not drop with the session default. A new agent starts at `sonnet` and `high`.
+- **Sessions run `opus`; effort is `medium` by default**, set by `effortLevel` in the settings master. `xhigh` for an 8-point task. `max` rarely, and for spec and analysis, not for writing code.
+- **Agents pin model and effort in frontmatter, fixed per agent.** `@architect` and `@test-writer` are `opus`, the other four `sonnet`, and all six run at `effort: high` so they do not drop with the session default. A new agent starts at `sonnet` and `high`.
 
 ## Pull Request Workflow
 
