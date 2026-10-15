@@ -20,8 +20,9 @@ revisit_if: "The receipts show readback or implementer rounds that cost more tha
 
 The session that specs a task also wrote its tests and its code, so nothing kept the code from
 quietly weakening a test to get green, and every build filled the Lead's context. The split is by
-job, not by domain: the agent that defines correct is not the one that has to meet it, and a
-checksum on the test files proves the second never touched them.
+job, not by domain: the agent that defines correct is not the one that has to meet it, and the
+tests are committed before the implementer starts, so a change to any file the first agent wrote
+shows up as a diff and can be undone.
 
 The issue body is the spec because neither agent sees the conversation. A readback runs before
 any test is written; an assumption the code settles is written in as a `[code]` line and the run

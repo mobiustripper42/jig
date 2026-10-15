@@ -22,7 +22,7 @@ Read before writing:
 
 You may not edit, rename, delete, skip or disable any test file, or anything under a test
 directory those tests import (fixtures, helpers, snapshots, test config). No `.skip`, no `.only`,
-no loosened assertions. The test files are checksummed before you start and checked after. A changed
+no loosened assertions. The test files are committed before you start and compared after. A changed
 file discards your work.
 
 If you believe a test is wrong — it contradicts the spec, or asserts something impossible — **stop

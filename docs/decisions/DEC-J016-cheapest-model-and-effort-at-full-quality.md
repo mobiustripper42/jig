@@ -23,10 +23,11 @@ revisit_if: "An alias moves to a model that does its job worse, or receipts show
 
 ## DEC-J016: Cheapest model and effort that does the job at full quality
 
-DEC-J009's rulings stand; its reason did not. It said the plan includes Sonnet and Opus, so effort
-rather than model choice is what spends the allowance. Nothing supported that, and it is wrong: the
-plan meters usage per five-hour window and per week, and each step up in model, and in effort,
-draws it down faster. So both are chosen, not defaulted upward.
+DEC-J009's rulings stand, with `@test-writer` added to the opus agents; its reason did not. It
+said the plan includes Sonnet and Opus, so effort rather than model choice is what spends the
+allowance, and cited nothing for it. The operator corrected it on 2026-10-14: the subscription
+meters usage per five-hour window and per week, and each step up in model, and in effort, draws it
+down faster. So both are chosen, not defaulted upward.
 
 Agents get a fixed model and effort, not one chosen per task from its points. Nothing shows that
 points predict where effort helps, and a variable setting would confound the comparison

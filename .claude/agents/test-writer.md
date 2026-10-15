@@ -56,7 +56,7 @@ Return:
 ## Tests — issue #<N>
 
 ### Files
-- <path>
+- <path> — every file you created or edited: tests, fixtures, helpers, snapshots, test config
 
 ### Coverage
 | AC | Tests |
