@@ -93,9 +93,9 @@ Get the project's trigger table from `.claude/CLAUDE-context.md` under `## Blast
 
 **The test, when a path isn't listed:** *does a number this code produces end up on someone's paycheck or invoice?* If yes, it's the money path — whether or not a payment provider is anywhere near it. The first two rows exist separately because defining "money" by **where money moves** misses where it is **computed**: a time-clock table can land with no payment file in the diff, and a wrong timestamp, a mis-bucketed pay period, or a double-counted punch is a wrong payment that no provider-shaped trigger would ever catch.
 
-**If one or more hit, run `/security-review`.** A trigger that only produces a suggestion produces nothing on the days the suggestion is declined — and those are exactly the PRs it fired on.
+**If one or more hit, run `/security-review`.** It runs, it is not offered: an offer is declined on exactly the PRs the trigger fired on.
 
-1. **Run `/security-review`** against the branch, in its own background agent beside `@code-review` (Step 3 says how and why). It is local, unbilled, and aimed at this class: authorization boundaries, injection, secret handling, unsafe defaults, failure modes that fail open. This is not a duplicate of `@code-review`, which hunts the project's conventions and invariants; this hunts the ways a hostile or malformed input gets through. Fold its findings into the PR body under their own heading, so the reviewer can see which pass produced what.
+1. **Run `/security-review`** against the branch, in its own background agent beside `@code-review` (Step 3 says how and why). It is local and aimed at this class: authorization boundaries, injection, secret handling, unsafe defaults, failure modes that fail open. This is not a duplicate of `@code-review`, which hunts the project's conventions and invariants; this hunts the ways a hostile or malformed input gets through. Fold its findings into the PR body under their own heading, so the reviewer can see which pass produced what.
 
 2. **When the reviews are back, print exactly this and continue** — never block:
 
