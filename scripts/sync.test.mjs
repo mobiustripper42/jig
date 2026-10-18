@@ -592,6 +592,8 @@ describe('sync — permissions (issue #91)', { timeout: 60_000 }, () => {
     expect(got.permissions).toEqual(MASTER.permissions)
     expect(got.this).toBe('machine')
     expect(got).not.toHaveProperty('theme')
+    // Staged by name: the commit is the settings file alone, and settings-policy's `.bak` is not in it.
+    expect(bareGit(s.b, 'diff-tree', '--no-commit-id', '--name-only', '-r', branch)).toBe('.claude/settings.json')
   })
 
   it('AC4: an unreadable project file is held and left exactly as it is', () => {

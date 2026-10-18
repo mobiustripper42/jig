@@ -334,7 +334,6 @@ function landedAt(path) {
  * - `CLAUDE.md` and `docs/**`: /clear. The shell loads at the start of a context.
  * - Output styles: a new session. The style is "read once at launch" (CLAUDE.md § Communication),
  *   so deleting a project's stray copy takes effect at the next session start and not before.
- *
  * - `.claude/settings.json`: a new session. Only its `permissions` key crosses (issue #91), and
  *   permissions are read once, at launch.
  */
@@ -606,7 +605,10 @@ step('applying the verdicts', () => {
  * The permissions are written by `settings-policy.mjs --write`, the one writer that already merges
  * `permissions` and keeps every other key. Its `--jig` is a throwaway copy of jig's `origin/main`
  * master, because the script reads the master from a checkout's working tree and an unmerged jig
- * branch must never cross. Its `.bak` lands in the worktree untracked, and is never staged.
+ * branch must never cross. Its `.bak` lands in the worktree untracked, and is never staged. What it
+ * prints goes to the run's log (issue #77): what it wrote, which keys it kept, and its re-read.
+ * It re-serialises the whole file, so a project formatted another way gets a wider diff than the
+ * key alone — correct, and the pull request shows it.
  */
 if (permissions.length) {
   step('writing the permissions', () => {
@@ -615,9 +617,12 @@ if (permissions.length) {
       mkdirSync(join(master, '.claude'))
       writeFileSync(join(master, 'jig-version'), show(JIG, 'jig-version'))
       writeFileSync(join(master, SETTINGS), masterSettings)
-      execFileSync(process.execPath, [join(HERE, 'settings-policy.mjs'), '--jig', master, '--write', join(WORKTREE, SETTINGS)], {
+      const said = execFileSync(process.execPath, [join(HERE, 'settings-policy.mjs'), '--jig', master, '--write', join(WORKTREE, SETTINGS)], {
+        encoding: 'utf8',
         stdio: ['ignore', 'pipe', 'pipe'],
       })
+      toLog(`——— settings-policy.mjs --write ———\n${said.trimEnd()}\n\n`)
+      console.log(`permissions  written into ${SETTINGS} by settings-policy.mjs --write`)
     } finally {
       rmSync(master, { recursive: true, force: true })
     }

@@ -4,7 +4,9 @@
  * and repair it without destroying everything else in the file.
  *
  * DEC-S023 makes jig's `.claude/settings.json` the master permission policy and distributes it
- * BY HAND, per machine and per repo. Nothing tracked what had actually been distributed. The
+ * BY HAND, per machine and per repo. Nothing tracked what had actually been distributed. (Per repo,
+ * `sync.mjs` now carries it, by running `--write` in its worktree — issue #91. Per machine, still
+ * by hand.) The
  * measured state on 2026-08-22: four generations live across seventeen checkouts, seven of them
  * on a policy with no secret denies at all, four with no file.
  *

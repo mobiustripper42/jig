@@ -7,7 +7,9 @@
 #   logic    → copy wholesale; jig is canonical, and a difference is staleness
 #   context  → never copy; the project owns its version and differing is correct
 #   hybrid   → copy the shell only; the paired `-context.md` file is project-owned
-#   presence → must exist; contents are never compared and never copied
+#   presence → must exist; the contents are the project's and are never compared or copied as a
+#              file. The one key-level exception is `.claude/settings.json`'s `permissions`,
+#              which `sync.mjs` carries (issue #91)
 #   jig-only → lives here and a project never holds a copy; absence is not drift.
 #              Two shapes share it: jig's own tooling that no project runs (`scripts/**`),
 #              and the one file every session reads from here through the machine
