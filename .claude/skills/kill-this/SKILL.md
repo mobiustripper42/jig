@@ -1,7 +1,6 @@
 ---
 name: kill-this
 description: Per-task PR + session file update. Build check, commit code, push the task branch, run code review, open a PR, and append a `## Task <N>` block to the running session file on the orphan `sessions` branch. May run multiple times in one Claude window — one per task. Pair with `/its-dead` once at the end of the window. Time math + version bump moved to `/retro`.
-tools: Read, Edit, Write, Bash, Glob, Grep, Agent
 ---
 
 You are shipping one task. The session invokes `/kill-this` itself once the task's proof passes, and the operator can invoke it too (DEC-J014). It runs **per task**, not per session — there may be N invocations between `/its-alive` and `/its-dead`. Each one opens its own PR and appends one `## Task <N>` block to the session file (which lives on the orphan `sessions` branch via `.sessions-worktree/`).

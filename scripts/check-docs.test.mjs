@@ -27,6 +27,7 @@ import {
   checkPaths,
   checkRosterDocsExist,
   checkRosters,
+  checkSkillKeys,
 } from "./check-docs.mjs";
 
 const doc = (text, path = "fixture.md") => [{ path, text }];
@@ -207,6 +208,29 @@ describe("checkRosters", () => {
 
   it("ignores plugin skills and built-ins, which have no .claude/skills/ entry by design", () => {
     expect(checkRosters(roster("`/kill-this` `/review` `/simplify` @pm"), WORLD)).toEqual([]);
+  });
+});
+
+describe("checkSkillKeys", () => {
+  const skill = (front, path = ".claude/skills/x/SKILL.md") => [{ path, text: `---\n${front}\n---\n\n# x\n\ntools: in the body is prose\n` }];
+
+  it("accepts a skill whose frontmatter carries only real keys", () => {
+    expect(checkSkillKeys(skill("name: x\ndescription: does x"))).toEqual([]);
+  });
+
+  it("catches a `tools:` key, which a skill does not read", () => {
+    const failures = checkSkillKeys(skill("name: x\ndescription: does x\ntools: Read, Bash"));
+    expect(failures).toHaveLength(1);
+    expect(failures[0]).toMatch(/^\.claude\/skills\/x\/SKILL\.md:4 — /);
+    expect(failures[0]).toMatch(/`tools:`/);
+  });
+
+  it("ignores `tools:` in the body, outside the frontmatter", () => {
+    expect(checkSkillKeys(skill("name: x"))).toEqual([]);
+  });
+
+  it("accepts `allowed-tools:`, the key a skill does read", () => {
+    expect(checkSkillKeys(skill("name: x\nallowed-tools: Read"))).toEqual([]);
   });
 });
 

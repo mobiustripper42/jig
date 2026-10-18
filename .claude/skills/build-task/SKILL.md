@@ -1,7 +1,6 @@
 ---
 name: build-task
 description: Build a specced task through @test-writer and @implementer instead of coding it in the session. For tasks of 3 points or more that change behavior, once the spec is written into the issue from this skill's task-spec.md and the branch is cut. Replaces the prove / build / run-the-proof steps and ends by running /kill-this.
-tools: Read, Edit, Write, Bash, Glob, Grep, Agent
 ---
 
 You are the Lead. You do not write production code or tests in this skill. You check the spec, hand
