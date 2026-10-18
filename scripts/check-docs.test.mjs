@@ -232,6 +232,22 @@ describe("checkSkillKeys", () => {
   it("accepts `allowed-tools:`, the key a skill does read", () => {
     expect(checkSkillKeys(skill("name: x\nallowed-tools: Read"))).toEqual([]);
   });
+
+  it("catches the key in a CRLF or BOM-prefixed file, as a Windows checkout writes it", () => {
+    const [{ path, text }] = skill("name: x\ntools: Read");
+    expect(checkSkillKeys([{ path, text: text.replace(/\n/g, "\r\n") }])).toHaveLength(1);
+    expect(checkSkillKeys([{ path, text: `﻿${text}` }])).toHaveLength(1);
+  });
+
+  it("catches the spellings YAML reads as the same key", () => {
+    expect(checkSkillKeys(skill("name: x\ntools : Read"))).toHaveLength(1);
+    expect(checkSkillKeys(skill('name: x\n"tools": Read'))).toHaveLength(1);
+  });
+
+  it("skips a file with no frontmatter, and reads an unclosed block to the end", () => {
+    expect(checkSkillKeys([{ path: "p", text: "# x\ntools: Read\n" }])).toEqual([]);
+    expect(checkSkillKeys([{ path: "p", text: "---\nname: x\ntools: Read\n" }])).toHaveLength(1);
+  });
 });
 
 describe("checkPaths", () => {

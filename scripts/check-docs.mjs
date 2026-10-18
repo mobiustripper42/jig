@@ -396,10 +396,11 @@ export function checkRosterDocsExist(rosters = ROSTERS, docs = DOCS) {
 export function checkSkillKeys(skills) {
   const failures = []
   for (const { path, text } of skills) {
-    const lines = text.split('\n')
+    // A Windows checkout writes CRLF and some editors a BOM; split on either, or the gate cannot fire there.
+    const lines = text.replace(/^﻿/, '').split(/\r?\n/)
     if (lines[0] !== '---') continue
     for (let i = 1; i < lines.length && lines[i] !== '---'; i++) {
-      if (/^tools:/.test(lines[i])) failures.push(`${at(path, i)} — \`tools:\` is an agent key; a skill ignores it. Delete the line`)
+      if (/^["']?tools["']?\s*:/.test(lines[i])) failures.push(`${at(path, i)} — \`tools:\` is an agent key; a skill ignores it. Delete the line`)
     }
   }
   return failures
