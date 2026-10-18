@@ -79,9 +79,7 @@ Do Step 3.5's trigger check **first**: it is a property of the diff and needs no
 
 When addressing review findings before opening the PR: Read every file before editing it (parallel writes fail silently without a prior Read).
 
-### Step 3.5 — High-blast-radius check (does this PR want `/code-review ultra`?)
-
-`@code-review` hunts the project's known invariants. `/code-review ultra` is a different tool — it launches multiple agents to audit the branch independently from different angles and filters by confidence. It is **user-triggered and billed; Claude cannot launch it.** Do not attempt to run it via Bash or otherwise.
+### Step 3.5 — High-blast-radius check (does this PR want `/security-review`?)
 
 Get the project's trigger table from `.claude/CLAUDE-context.md` under `## Blast-Radius Triggers` **with the Read tool** — never a `sed`/`grep` one-liner. Then match the table against the branch diff (`git diff $(git merge-base HEAD main)...HEAD --name-only`). If that section is absent, fall back to the four generic triggers below.
 
@@ -95,19 +93,18 @@ Get the project's trigger table from `.claude/CLAUDE-context.md` under `## Blast
 
 **The test, when a path isn't listed:** *does a number this code produces end up on someone's paycheck or invoice?* If yes, it's the money path — whether or not a payment provider is anywhere near it. The first two rows exist separately because defining "money" by **where money moves** misses where it is **computed**: a time-clock table can land with no payment file in the diff, and a wrong timestamp, a mis-bucketed pay period, or a double-counted punch is a wrong payment that no provider-shaped trigger would ever catch.
 
-**If one or more hit, run the free local pass first, then surface the paid one.** A trigger that only ever produces a suggestion to spend money produces nothing on the days you decide not to spend it — and those are exactly the PRs it fired on.
+**If one or more hit, run `/security-review`.** A trigger that only produces a suggestion produces nothing on the days the suggestion is declined — and those are exactly the PRs it fired on.
 
 1. **Run `/security-review`** against the branch, in its own background agent beside `@code-review` (Step 3 says how and why). It is local, unbilled, and aimed at this class: authorization boundaries, injection, secret handling, unsafe defaults, failure modes that fail open. This is not a duplicate of `@code-review`, which hunts the project's conventions and invariants; this hunts the ways a hostile or malformed input gets through. Fold its findings into the PR body under their own heading, so the reviewer can see which pass produced what.
 
-2. **When the reviews are back, print exactly this and continue** — never block, never run the billed tool:
+2. **When the reviews are back, print exactly this and continue** — never block:
 
 ```
 ⚠ This PR touches: <triggers>.
-  Ran /security-review (local, free) — findings above.
-  `/code-review ultra` is the deeper multi-agent pass: yours to run, I can't.
+  Ran /security-review — findings above.
 ```
 
-**Where each one earns its cost:** `/security-review` reads the diff once, carefully. `/code-review ultra` fans out across several independent agents and filters by confidence, which is what catches the finding a single careful read talks itself out of. Run the local pass always on a trigger; save the billed one for a genuinely novel money or auth path, where being wrong is expensive and one reviewer's confidence is not enough.
+No further review pass is suggested here (DEC-J017).
 
 If none hit, run nothing extra. Docs, jig, agent/skill files, dev tooling, and single-surface UI never trigger it — their blast radius stops at the dev environment.
 
@@ -120,10 +117,9 @@ Review passes:
   ✓ @code-review       — <N> findings: <one-line verdict>
   ✓ /security-review   — <N> findings: <one-line verdict>      ← only when a trigger hit
   ⊘ /security-review   — not run (no blast-radius trigger)     ← otherwise
-  ⊘ /code-review ultra — never automatic; yours to invoke
 ```
 
-**Why this is its own step.** With three possible passes, "no news" is ambiguous in the one direction that matters: a review that silently didn't run looks exactly like a review that ran clean. That ambiguity was already reported on the two-pass version — a `⚠ consider ultra` line appeared and the operator could not tell from the output whether `@code-review` had run at all. Adding a third pass makes it worse unless the receipt is unconditional.
+**Why this is its own step.** With more than one possible pass, "no news" is ambiguous in the one direction that matters: a review that silently didn't run looks exactly like a review that ran clean. That ambiguity was reported once already — a trigger warning appeared and the operator could not tell from the output whether `@code-review` had run at all. The receipt is unconditional so absence never has to be inferred.
 
 **A pass that errored is `✗`, not a missing line.** If `@code-review` fails to return, or `/security-review` can't run, say so on its row and continue to the PR — but never let a failed pass render as a quiet absence. The whole point of the receipt is that absence is never something the reader has to infer.
 
