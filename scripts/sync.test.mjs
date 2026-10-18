@@ -545,6 +545,82 @@ const run = (s, flags, env = {}) => {
 const pr = (s) => run(s, ['--pr'])
 const SKILL = '.claude/skills/kill-this/SKILL.md'
 
+/**
+ * Issue #91: the one key of `.claude/settings.json` a sync carries. The rest of the file is the
+ * project's, so every fixture gives the project a key of its own and jig a key that must not cross.
+ */
+describe('sync — permissions (issue #91)', { timeout: 60_000 }, () => {
+  const settings = (o) => `${JSON.stringify(o, null, 2)}\n`
+  const MASTER = { permissions: { allow: ['Read'], deny: ['Bash(rm -rf *)', 'Bash(git -C * push -f)'], defaultMode: 'default' }, theme: 'dark' }
+  const STALE = { this: 'machine', permissions: { allow: ['Read'], deny: ['Bash(rm -rf *)'], defaultMode: 'default' } }
+  const stale = () => {
+    const s = setupPr({ project: { '.claude/settings.json': settings(STALE) } })
+    commit(s.jig, { '.claude/settings.json': settings(MASTER) })
+    return s
+  }
+
+  it('AC1: the dry run reports stale permissions as a change that needs a session restart', () => {
+    const { jig, proj } = stale()
+    const { out, code } = sync(jig, proj)
+    expect(code, out).toBe(0)
+    const rows = block(out, 'PERMISSIONS')
+    expect(rows.map((r) => r[0])).toEqual(['.claude/settings.json'])
+    expect(rows[0][1]).toMatch(/missing 1 deny/)
+    expect(out).not.toMatch(/^nothing to sync\.$/m)
+    expect(out).toMatch(/^Restart after merge: restart the session — .*\.claude\/settings\.json/m)
+  })
+
+  it('AC2: order and duplicates are not a difference', () => {
+    const s = setupPr({ project: { '.claude/settings.json': settings(STALE) } })
+    const same = { ...STALE, permissions: { ...STALE.permissions, deny: [...MASTER.permissions.deny].reverse().concat('Bash(rm -rf *)') } }
+    commit(s.proj, { '.claude/settings.json': settings(same) })
+    commit(s.jig, { '.claude/settings.json': settings(MASTER) })
+    const { out } = sync(s.jig, s.proj)
+    expect(block(out, 'PERMISSIONS')).toEqual([])
+    expect(out).toMatch(/^nothing to sync\.$/m)
+  })
+
+  it("AC3: --pr writes jig origin/main's permissions and keeps the project's other keys", () => {
+    const s = stale()
+    // An unmerged jig branch with a different master must not be what crosses.
+    git(s.jig, 'checkout', '-q', '-b', 'task/unmerged')
+    commit(s.jig, { '.claude/settings.json': settings({ permissions: { allow: ['Everything'] } }) }, { push: false })
+    const { out, code } = pr(s)
+    expect(code, out).toBe(0)
+    const [branch] = pushed(s.b)
+    const got = JSON.parse(bareGit(s.b, 'show', `${branch}:.claude/settings.json`))
+    expect(got.permissions).toEqual(MASTER.permissions)
+    expect(got.this).toBe('machine')
+    expect(got).not.toHaveProperty('theme')
+  })
+
+  it('AC4: an unreadable project file is held and left exactly as it is', () => {
+    const s = setupPr({ project: { '.claude/settings.json': '{ not json\n' } })
+    commit(s.jig, { '.claude/settings.json': settings(MASTER), [SKILL]: 'kill v2\n' })
+    const { out, code } = pr(s)
+    expect(code, out).toBe(0)
+    expect(paths(out, 'HELD: unreadable')).toEqual(['.claude/settings.json'])
+    expect(block(out, 'PERMISSIONS')).toEqual([])
+    const [branch] = pushed(s.b)
+    expect(bareBlob(s.b, `${branch}:.claude/settings.json`)).toBe(git(s.proj, 'rev-parse', 'origin/main:.claude/settings.json'))
+  })
+
+  it('AC4: no project file, or no permissions in jig, reports and writes nothing', () => {
+    const noFile = setupPr()
+    commit(noFile.proj, { '.claude/settings.json': null })
+    commit(noFile.jig, { '.claude/settings.json': settings(MASTER) })
+    const a = sync(noFile.jig, noFile.proj).out
+    expect(a).not.toMatch(/settings\.json/)
+    expect(a).toMatch(/^nothing to sync\.$/m)
+
+    const noMaster = setupPr({ project: { '.claude/settings.json': settings(STALE) } })
+    commit(noMaster.jig, { '.claude/settings.json': settings({ theme: 'dark' }) })
+    const b = sync(noMaster.jig, noMaster.proj).out
+    expect(b).not.toMatch(/settings\.json/)
+    expect(b).toMatch(/^nothing to sync\.$/m)
+  })
+})
+
 describe('sync --pr', { timeout: 60_000 }, () => {
   // AC 1
   it('pushes every copy, addition and deletion, and opens one pull request against main', () => {

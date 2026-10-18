@@ -88,13 +88,14 @@ file-classes:
   - "scripts/gen-*.mjs": logic
   - "scripts/**": jig-only
 
-  # The permission policy (DEC-S023). Neither `logic` nor `context`: its CONTENTS
-  # are distributed by hand per machine and a project may legitimately carry a
-  # different revision, so comparing them would be noise and would imply jig's
-  # copy wins — an opinion the differ must never hold. Its PRESENCE is not a
-  # matter of opinion: a project without this file has no repo-level policy at
-  # all, and on phone/web sessions it is the only policy that reaches the
-  # container, so its absence is silent and total.
+  # The permission policy (DEC-S023). Neither `logic` nor `context`: the FILE is
+  # the project's — any key a project adds is its own — so drift never compares
+  # it as a whole. Its `permissions` key is the exception: jig's master is
+  # canonical by settings-policy.mjs's strict rule, and `sync.mjs` carries that
+  # one key (issue #91). Its PRESENCE is not a matter of opinion: a project
+  # without this file has no repo-level policy at all, and on phone/web sessions
+  # it is the only policy that reaches the container, so its absence is silent
+  # and total.
   - ".claude/settings.json": presence
 
   # Project-owned reviewers (DEC-S035). These reason about the project's
