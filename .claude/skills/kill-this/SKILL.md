@@ -81,7 +81,7 @@ When addressing review findings before opening the PR: Read every file before ed
 
 ### Step 3.5 — High-blast-radius check (does this PR want `/security-review`?)
 
-Get the project's trigger table from `.claude/CLAUDE-context.md` under `## Blast-Radius Triggers` **with the Read tool** — never a `sed`/`grep` one-liner. Then match the table against the branch diff (`git diff $(git merge-base HEAD main)...HEAD --name-only`). If that section is absent, fall back to the four generic triggers below.
+Get the project's trigger table from `.claude/CLAUDE-context.md` under `## Blast-Radius Triggers` **with the Read tool** — never a `sed`/`grep` one-liner. Then match the table against the branch diff (`git diff $(git merge-base HEAD main)...HEAD --name-only`). If that section is absent, fall back to the five generic triggers below.
 
 | Trigger | What to match |
 |---|---|

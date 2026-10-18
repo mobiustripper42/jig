@@ -94,7 +94,7 @@ Starts empty. Add one line the first time an incident produces one.
 
 Read by `/kill-this` Step 3.5. When a branch diff hits one of these, the skill runs `/security-review` locally. **Name paths, not categories** — "the money path" is unmatchable against a diff; `src/billing/**` is.
 
-If this section is absent the skill falls back to four generic triggers, which are better than nothing and worse than a real list — a generic trigger can't know that this project's payroll export is the dangerous file.
+If this section is absent the skill falls back to five generic triggers, which are better than nothing and worse than a real list — a generic trigger can't know that this project's payroll export is the dangerous file.
 
 | Trigger | Paths |
 |---|---|
