@@ -20,6 +20,8 @@
  * so taking jig's current version loses nothing. No match means somebody did, and the file is held
  * for a session to decide. That is the whole judgment this script makes, and it is a lookup in
  * jig's git history rather than an opinion — which is the line between this and what seeds retired.
+ * The one key-level exception is `permissions` in `.claude/settings.json`, which jig's master owns
+ * outright (issue #91); the rest of that file is never touched.
  *
  * Seeds automated the crossing three times and retired all three (DEC-S038, DEC-S040, in seeds).
  * Its sync classified hunks, merged them, and gated whole repos on a version number, and every fix
@@ -332,8 +334,8 @@ function landedAt(path) {
  * - `CLAUDE.md` and `docs/**`: /clear. The shell loads at the start of a context.
  * - Output styles: a new session. The style is "read once at launch" (CLAUDE.md § Communication),
  *   so deleting a project's stray copy takes effect at the next session start and not before.
- *
- * `.claude/settings.json` is `presence`, so a sync never carries it.
+ * - `.claude/settings.json`: a new session. Only its `permissions` key crosses (issue #91), and
+ *   permissions are read once, at launch.
  */
 const RESTART = [
   [/^\.claude\/skills\//, 0],
@@ -342,6 +344,7 @@ const RESTART = [
   [/^CLAUDE\.md$/, 1],
   [/^docs\//, 1],
   [/^\.claude\/output-styles\//, 2],
+  [/^\.claude\/settings\.json$/, 2],
 ]
 const LEVELS = ['none', '/clear', 'restart the session']
 
@@ -410,7 +413,8 @@ for (const rel of templates) {
     else removal(rel, 'jig-only')
   }
   // `context` and `presence` are never candidates: the project owns the first, and the second's
-  // contents are distributed by hand per machine.
+  // contents are the project's. The one exception, `permissions` in `.claude/settings.json`, is
+  // carried by key below, never as a file.
 }
 
 /**
@@ -446,6 +450,66 @@ for (const [rel, theirs] of projTree) {
 }
 
 /**
+ * The one key of `.claude/settings.json` a sync carries: `permissions` (issue #91). The file is
+ * `presence` and the project's — every other key stays as the project has it — but its permission
+ * policy is jig's master by `settings-policy.mjs`'s own strict rule (`:22-27`), so it is a lookup in
+ * the DEC-J012 sense. Before this, a deny added in jig reached a project only by a hand-run
+ * `settings-policy.mjs --write`, and centerline and muster sat five `git -C` denies behind.
+ *
+ * Silent when there is nothing to carry: no master `permissions`, or no project file (an absent
+ * `presence` file is an install, not a sync). An unparseable project file is held, never rewritten.
+ */
+const SETTINGS = '.claude/settings.json'
+/** Order- and duplicate-insensitive, as `settings-policy.mjs` compares: a reordered list is no change. */
+const canon = (v) =>
+  Array.isArray(v)
+    ? [...new Set(v)].sort()
+    : v && typeof v === 'object'
+      ? Object.fromEntries(Object.keys(v).sort().map((k) => [k, canon(v[k])]))
+      : v
+const same = (a, b) => JSON.stringify(canon(a)) === JSON.stringify(canon(b))
+/** What differs, as counts — the dry run's one line. `settings-policy.mjs --repo` names each rule. */
+function permissionsNote(want, have) {
+  if (!have || typeof have !== 'object') return 'no "permissions" key'
+  const parts = []
+  for (const key of ['allow', 'deny']) {
+    const w = new Set(want[key] ?? [])
+    const h = new Set(have[key] ?? [])
+    const missing = [...w].filter((x) => !h.has(x)).length
+    const extra = [...h].filter((x) => !w.has(x)).length
+    if (missing) parts.push(`missing ${missing} ${key}`)
+    if (extra) parts.push(`extra ${extra} ${key}`)
+  }
+  const other = [...new Set([...Object.keys(want), ...Object.keys(have)])].filter((k) => k !== 'allow' && k !== 'deny' && !same(want[k], have[k]))
+  if (other.length) parts.push(`${other.join(', ')} differ${other.length === 1 ? 's' : ''}`)
+  return parts.join(', ')
+}
+const masterSettings = show(JIG, SETTINGS)
+let masterPerms = null
+if (masterSettings !== null) {
+  try {
+    masterPerms = JSON.parse(masterSettings)?.permissions ?? null
+  } catch (e) {
+    die(`jig's ${REF}:${SETTINGS} is not valid JSON — ${e.message}`)
+  }
+}
+const permissions = []
+const unreadable = []
+const theirSettings = masterPerms ? show(PROJECT, SETTINGS) : null
+if (theirSettings !== null) {
+  let doc
+  try {
+    doc = JSON.parse(theirSettings)
+  } catch (e) {
+    unreadable.push([SETTINGS, e.message])
+  }
+  if (doc !== undefined) {
+    if (!doc || typeof doc !== 'object' || Array.isArray(doc)) unreadable.push([SETTINGS, 'not a JSON object'])
+    else if (!same(doc.permissions, masterPerms)) permissions.push([SETTINGS, permissionsNote(masterPerms, doc.permissions)])
+  }
+}
+
+/**
  * Gates nothing runs: the project's NOT RUN set, as drift reports it, plus any gate arriving under
  * NEW with no `package.json` script to run it. The second is the one that bit — `check-denied`
  * reached muster with a sync and sat switched off for three days. Listed, never wired: whether a
@@ -459,7 +523,7 @@ const unwired = [
     .map(([p]) => [p, 'arriving, and no package.json script runs it']),
 ]
 
-const changing = [...copy, ...add, ...remove].map(([p]) => p)
+const changing = [...copy, ...add, ...remove, ...permissions].map(([p]) => p)
 let level = -1
 const at = new Map()
 for (const p of changing) {
@@ -492,6 +556,8 @@ const report = [
   ...blockLines("COPY — jig's current version replaces a copy nobody edited", copy),
   ...blockLines('NEW — jig ships it and the project has none', add),
   ...blockLines('DELETE — a copy nobody edited, of a file jig keeps to itself or retired', remove),
+  ...blockLines("PERMISSIONS — jig's master replaces the project's committed permissions; every other key stays", permissions),
+  ...blockLines('HELD: unreadable — not a readable JSON object, so its permissions cannot be carried; a session decides', unreadable),
   ...blockLines('HELD: edited locally — matches no version jig ever shipped at this path; a session decides', edited),
   ...blockLines("HELD: migration — jig made this change at a newer jig-version than the project's", migration),
   ...blockLines('HELD: referenced — a package.json script runs it, so deleting it would break that command', referenced),
@@ -536,6 +602,34 @@ step('applying the verdicts', () => {
 })
 
 /**
+ * The permissions are written by `settings-policy.mjs --write`, the one writer that already merges
+ * `permissions` and keeps every other key. Its `--jig` is a throwaway copy of jig's `origin/main`
+ * master, because the script reads the master from a checkout's working tree and an unmerged jig
+ * branch must never cross. Its `.bak` lands in the worktree untracked, and is never staged. What it
+ * prints goes to the run's log (issue #77): what it wrote, which keys it kept, and its re-read.
+ * It re-serialises the whole file, so a project formatted another way gets a wider diff than the
+ * key alone — correct, and the pull request shows it.
+ */
+if (permissions.length) {
+  step('writing the permissions', () => {
+    const master = mkdtempSync(join(tmpdir(), 'jig-sync-master-'))
+    try {
+      mkdirSync(join(master, '.claude'))
+      writeFileSync(join(master, 'jig-version'), show(JIG, 'jig-version'))
+      writeFileSync(join(master, SETTINGS), masterSettings)
+      const said = execFileSync(process.execPath, [join(HERE, 'settings-policy.mjs'), '--jig', master, '--write', join(WORKTREE, SETTINGS)], {
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'pipe'],
+      })
+      toLog(`——— settings-policy.mjs --write ———\n${said.trimEnd()}\n\n`)
+      console.log(`permissions  written into ${SETTINGS} by settings-policy.mjs --write`)
+    } finally {
+      rmSync(master, { recursive: true, force: true })
+    }
+  })
+}
+
+/**
  * The gates need the project's dependencies, and a fresh worktree has none. A hard link, never a
  * symlink: Next's Turbopack refuses a `node_modules` that points outside the tree. A virtualenv or a
  * build output is not made here; a gate that needs one goes red and the run is handed off.
@@ -562,9 +656,9 @@ if (packages.length) {
  * `node_modules` included, even in a project whose ignore files would let it through.
  */
 step('committing', () => {
-  const written = [...copy, ...add].map(([p]) => p)
+  const written = [...copy, ...add, ...permissions].map(([p]) => p)
   if (written.length) sh(WORKTREE, 'add', '--', ...written)
-  const counts = `${copy.length} copied, ${add.length} added, ${remove.length} deleted`
+  const counts = `${copy.length} copied, ${add.length} added, ${remove.length} deleted${permissions.length ? ', permissions updated' : ''}`
   sh(WORKTREE, 'commit', '--quiet', '-m', `jig sync: jig origin/main ${jigSha.slice(0, 7)}`, '-m', `Carried by scripts/sync.mjs --pr from jig origin/main ${jigSha}: ${counts}.`)
   console.log(`commit    ${sh(WORKTREE, 'rev-parse', '--short', 'HEAD').trim()} — ${counts}`)
 })
