@@ -13,11 +13,12 @@
  * transcript and every subagent's, so a lead waiting on a background agent is still counted. It
  * includes the operator's time answering readback questions.
  *
- * It never fails a run: when the transcript cannot be found it says why, and exits 0.
+ * It never fails a run: when the transcript cannot be found, or nothing was logged since the
+ * start, it says why, and exits 0.
  *
- * Why it exists: the first trial of /build-task against the old loop could only be costed after
- * the fact, by hand. The second run wrote about twice the first's output tokens, almost all of it
- * in the subagents, and nothing in either receipt said so.
+ * Why it exists: most of a /build-task run's cost is in its subagents, which the session's own
+ * view of its usage does not show. Without this line in the receipt, what the workflow spends is
+ * known only to whoever goes back and counts by hand.
  */
 
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
@@ -57,7 +58,8 @@ export function tally(main, subagents, since) {
       const m = e.message
       if (e.type !== 'assistant' || !m?.usage) continue
       usage.set(m.id ?? e.uuid ?? usage.size, m.usage)
-      models.set(family(m.model), (models.get(family(m.model)) ?? 0) + 1)
+      // `<synthetic>` entries are the harness's own, with zero usage; they never name the model.
+      if (!String(m.model).startsWith('<')) models.set(family(m.model), (models.get(family(m.model)) ?? 0) + 1)
     }
     if (!usage.size) return
     const r = roles.get(role) ?? { role, models: new Map(), output: 0, input: 0, cacheRead: 0, cacheWrite: 0, runs: 0 }
@@ -78,7 +80,8 @@ export function tally(main, subagents, since) {
   let active = 0
   for (let i = 1; i < stamps.length; i++) if (stamps[i] - stamps[i - 1] < IDLE) active += stamps[i] - stamps[i - 1]
 
-  const list = [...roles.values()].map(({ models, ...r }) => ({ ...r, model: [...models].sort((a, b) => b[1] - a[1])[0][0] }))
+  // `runs` counts transcript files: a subagent resumed by message is one file, so one run.
+  const list = [...roles.values()].map(({ models, ...r }) => ({ ...r, model: [...models].sort((a, b) => b[1] - a[1])[0]?.[0] ?? '?' }))
   const total = { output: 0, input: 0, cacheRead: 0, cacheWrite: 0 }
   for (const r of list) for (const k of Object.keys(total)) total[k] += r[k]
   return { roles: list, total, activeMin: Math.round(active / 60e3) }
@@ -90,11 +93,12 @@ const short = (n) => (n >= 1e6 ? scaled(n / 1e6, 'M') : n >= 1e3 ? scaled(n / 1e
 
 /** The receipt's lines: a total, then one per role, lead first. */
 export function format(t) {
+  const width = Math.max(14, ...t.roles.map((r) => r.role.length + 2))
   return [
     `${short(t.total.output)} output tokens, ${t.activeMin} active min`,
     ...t.roles.map(
       (r) =>
-        `  ${r.role.padEnd(14)}${r.model.padEnd(9)}${short(r.output).padStart(5)} out   ${short(r.cacheRead).padStart(5)} cache read${r.runs > 1 ? `   (${r.runs} runs)` : ''}`,
+        `  ${r.role.padEnd(width)}${r.model.padEnd(9)}${short(r.output).padStart(5)} out   ${short(r.cacheRead).padStart(5)} cache read${r.runs > 1 ? `   (${r.runs} runs)` : ''}`,
     ),
   ]
 }
@@ -102,7 +106,7 @@ export function format(t) {
 /** The session's transcript and its subagents', by session id. Throws with a reason it can print. */
 export function load({ home = homedir(), cwd = process.cwd(), sessionId = process.env.CLAUDE_CODE_SESSION_ID } = {}) {
   if (!sessionId) throw new Error('no CLAUDE_CODE_SESSION_ID in this shell')
-  const projects = join(home, '.claude', 'projects')
+  const projects = join(process.env.CLAUDE_CONFIG_DIR ?? join(home, '.claude'), 'projects')
   let dir = join(projects, cwd.replaceAll('/', '-'))
   // The directory name is derived from the path; if the derivation ever differs, the id is still unique.
   if (!existsSync(join(dir, `${sessionId}.jsonl`)) && existsSync(projects)) {
@@ -138,7 +142,10 @@ if (process.argv[1]?.endsWith('cost.mjs')) {
   try {
     if (Number.isNaN(since)) throw new Error('pass --since <ISO time the run started>')
     const { main, subagents } = load({ cwd: arg('--cwd') ?? process.cwd() })
-    console.log(format(tally(main, subagents, since)).join('\n'))
+    const t = tally(main, subagents, since)
+    // A mistyped or future start would otherwise read as a run that cost nothing.
+    if (!t.roles.length) throw new Error(`nothing logged since ${arg('--since')}; check the start time`)
+    console.log(format(t).join('\n'))
   } catch (e) {
     console.log(`unavailable — ${e.message}`)
   }

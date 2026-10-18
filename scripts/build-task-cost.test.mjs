@@ -71,6 +71,18 @@ describe('format', () => {
     ])
   })
 
+  it('widens the role column for a long role name, and ignores synthetic entries when naming the model', () => {
+    const t = tally(
+      [reply(0, 'syn', 0, { model: '<synthetic>' }), reply(1, 'm', 1000)],
+      [{ type: 'general-purpose', entries: [reply(2, 's', 500, { model: 'claude-sonnet-5-5' }), reply(3, 'z', 0, { model: '<synthetic>' }), reply(3, 'z2', 0, { model: '<synthetic>' })] }],
+      T0,
+    )
+    expect(format(t).slice(1)).toEqual([
+      '  lead             opus      1.0k out       0 cache read',
+      '  general-purpose  sonnet     500 out       0 cache read',
+    ])
+  })
+
   it('keeps every number to five characters, so the columns line up', () => {
     const t = tally([reply(0, 'm', 633_300, { cacheRead: 633_300 })], [], T0)
     expect(format(t)[1]).toBe('  lead          opus      633k out    633k cache read')
@@ -95,6 +107,22 @@ describe('load and the command', () => {
     const { main, subagents } = load({ home, cwd, sessionId: 'sid' })
     expect(main).toHaveLength(2)
     expect(subagents.map((s) => s.type)).toEqual(['implementer'])
+  })
+
+  it('falls back to finding the session id in any project directory, when the derived name misses', () => {
+    const { home } = fixture()
+    const { main } = load({ home, cwd: '/somewhere/else', sessionId: 'sid' })
+    expect(main).toHaveLength(2)
+  })
+
+  it('says so, rather than printing a zero-cost run, when nothing was logged since the start', () => {
+    const { home, cwd } = fixture()
+    const r = spawnSync(process.execPath, [COST, '--since', at(60), '--cwd', cwd], {
+      env: { ...process.env, HOME: home, CLAUDE_CODE_SESSION_ID: 'sid' },
+      encoding: 'utf8',
+    })
+    expect(r.status).toBe(0)
+    expect(r.stdout.trim()).toBe(`unavailable — nothing logged since ${at(60)}; check the start time`)
   })
 
   it('prints the cost lines for a run', () => {

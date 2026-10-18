@@ -132,12 +132,15 @@ Print it every time, before the hand-back, and append it to the pull request bod
 <the rest of cost.mjs's lines, as printed>
 ```
 
-The cost comes from `node .claude/skills/build-task/cost.mjs --since <the time from Step 0>`,
-which reads this session's transcripts. It counts the tokens each role wrote and the active
-minutes, including the operator's time answering readback. When it cannot find the transcript it
-prints `unavailable — <why>`: that goes in the receipt as is, and the run carries on.
+For the cost, run this from the repo root after `/kill-this` has opened the pull request, with the
+time Step 0 printed:
 
-The receipt is also the data for the side-by-side trial: it is what this workflow spent, in a
-shape the old loop's session file can be compared against. The cost lines are what made the first
-trial comparable at all — tokens and time were only recovered afterwards, by hand. `settled` is the operator's audit of
+    node .claude/skills/build-task/cost.mjs --since <time> 2>/dev/null || echo "unavailable — cost.mjs did not run"
+
+It reads this session's transcripts and prints the output tokens each role wrote and the active
+minutes, which include short waits on the operator but not long ones. Whatever it prints goes in
+the receipt as is, `unavailable — <why>` included, and the run carries on.
+
+The receipt is also what this workflow spent, in a shape the old loop's session file can be
+compared against. `settled` is the operator's audit of
 the calls the Lead made without them — a judgment call filed as `[code]` shows up there.
