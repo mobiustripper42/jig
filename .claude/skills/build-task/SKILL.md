@@ -31,6 +31,10 @@ Abort with a one-line reason if any of these fail:
 
 The issue body is the spec. Agents are pointed at it by number. Never paraphrase it into a prompt.
 
+When the gate passes, run `date -u +%Y-%m-%dT%H:%M:%SZ` and keep the time it prints: it is where
+Step 6's cost starts counting. Shell variables do not survive between calls, so keep it in the
+conversation, not in a variable.
+
 ## Step 1 — Readback
 
 Spawn `@test-writer` with: the issue number, and the instruction **readback only — write nothing.**
@@ -124,8 +128,16 @@ Print it every time, before the hand-back, and append it to the pull request bod
   implementer   — <rounds> rounds
   test lock     — intact | violated (<file>)
   review routes — <n> to test-writer, <n> to implementer, <n> fixed by Lead
+  cost          — <first line of cost.mjs>
+<the rest of cost.mjs's lines, as printed>
 ```
 
+The cost comes from `node .claude/skills/build-task/cost.mjs --since <the time from Step 0>`,
+which reads this session's transcripts. It counts the tokens each role wrote and the active
+minutes, including the operator's time answering readback. When it cannot find the transcript it
+prints `unavailable — <why>`: that goes in the receipt as is, and the run carries on.
+
 The receipt is also the data for the side-by-side trial: it is what this workflow spent, in a
-shape the old loop's session file can be compared against. `settled` is the operator's audit of
+shape the old loop's session file can be compared against. The cost lines are what made the first
+trial comparable at all — tokens and time were only recovered afterwards, by hand. `settled` is the operator's audit of
 the calls the Lead made without them — a judgment call filed as `[code]` shows up there.
