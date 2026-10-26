@@ -331,6 +331,11 @@ describe('schema v1 validation', () => {
     expect(validateSchemaRecord(ok, 'Body.\n', 500)).toEqual([])
   })
 
+  it('accepts `draft`, the status of a decision nothing is built on yet', () => {
+    expect(errs({ status: 'draft' })).toBe('')
+    expect(errs({ status: 'proposed' })).toMatch(/status/)
+  })
+
   // jig's single divergence from muster's schema, tested rather than left to the JSON.
   // Nothing in schema v1 retires a record, which is how 78% of muster's reservations corpus
   // went dead while still being cited. Optional means the corpus rots; required means it does
@@ -365,7 +370,7 @@ describe('schema v1 validation', () => {
   })
 
   it('rejects a status outside the enum and a claim kind outside the enum', () => {
-    expect(errs({ status: 'draft' })).toMatch(/status/)
+    expect(errs({ status: 'pending' })).toMatch(/status/)
     expect(errs({ claims: [{ kind: 'vibes', target: 'a.ts' }] })).toMatch(/kind/)
   })
 
@@ -779,6 +784,28 @@ describe('supersession is a pair, or it is a dangling argument', () => {
       rec('DEC-300', { supersedes: ['DEC-200'] }),
     )
     expect(msgs(m)).toEqual([expect.stringMatching(/whose status is superseded/)])
+  })
+
+  /**
+   * A draft is rewritten in place; only a decision something is built on gets superseded. The case
+   * was a refund rule in Haul that the farm changed before any code implemented it (DEC-J020).
+   */
+  it('rejects superseding a draft, on the record that should have been an edit', () => {
+    const m = corpus(
+      rec('DEC-200', { supersedes: ['DEC-100'] }),
+      rec('DEC-100', { status: 'draft' }),
+    )
+    expect(msgs(m)).toEqual([expect.stringMatching(/DEC-100 is a draft — edit it in place/)])
+    expect(paths(m)).toEqual(['docs/decisions/DEC-200-x.md'])
+  })
+
+  it('accepts a draft as the live successor of a built decision', () => {
+    // The replacement for something built is usually not built yet itself.
+    const m = corpus(
+      rec('DEC-200', { status: 'draft', supersedes: ['DEC-100'] }),
+      rec('DEC-100', { status: 'superseded', superseded_by: 'DEC-200' }),
+    )
+    expect(msgs(m)).toEqual([])
   })
 })
 

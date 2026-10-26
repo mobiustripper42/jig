@@ -49,6 +49,7 @@ that never reached the spec is a red build rather than prose nobody cross-read.
 ### Decision record & dictionary discipline
 - DEC-J004 — Records predating schema v1 are frozen by a generated baseline
 - DEC-J005 — Amending a record in place is retired
+- DEC-J020 — A draft is rewritten in place; a built decision is superseded
 
 ### Session workflow & skills
 - DEC-J002 — A skill invocation approves the pushes inside its own ritual
