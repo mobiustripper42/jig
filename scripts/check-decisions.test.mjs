@@ -91,6 +91,32 @@ describe('parseFrontmatter', () => {
     expect(() => parseFrontmatter('---\nid: DEC-001\n')).toThrow(/unterminated/)
     expect(() => parseFrontmatter('---\n!! junk\n---\n\nbody\n')).toThrow(/unparseable/)
   })
+
+  /**
+   * `CLAUDE.md` shows `supersedes: [DEC-<id>]`. The parser opened the list on the key and dropped
+   * the value, so `gen:decisions` rewrote the record with no `supersedes` at all and the gate then
+   * blamed the successor for not listing its predecessor. Found writing DEC-J020.
+   */
+  const withLine = (line) => fm.replace(`topic: ${JSON.stringify(TOPIC)}`, `topic: ${JSON.stringify(TOPIC)}\n${line}`)
+
+  it('reads a flow-style `supersedes`, the form CLAUDE.md shows', () => {
+    expect(parseFrontmatter(withLine('supersedes: [DEC-005]')).meta.supersedes).toEqual(['DEC-005'])
+    expect(parseFrontmatter(withLine('supersedes: [DEC-005, DEC-006]')).meta.supersedes).toEqual(['DEC-005', 'DEC-006'])
+    expect(parseFrontmatter(withLine('supersedes: []')).meta.supersedes).toEqual([])
+  })
+
+  it('throws on any other value after a list key, rather than dropping it', () => {
+    expect(() => parseFrontmatter(withLine('claims: [file]'))).toThrow(/claims.*block/)
+    expect(() => parseFrontmatter(withLine('supersedes: DEC-005'))).toThrow(/supersedes.*block/)
+  })
+
+  it('writes a flow-style `supersedes` back in block form, keeping every id', () => {
+    const v1 = withLine('schema: 1\nstatus: "active"\ndate: "2026-10-26"\nruling: "r"\nsupersedes: [DEC-005, DEC-006]')
+    const { meta, body } = parseFrontmatter(v1)
+    const out = renderDecision({ ...meta, body })
+    expect(out).toContain('supersedes:\n  - DEC-005\n  - DEC-006\n')
+    expect(parseFrontmatter(out).meta.supersedes).toEqual(['DEC-005', 'DEC-006'])
+  })
 })
 
 describe('renderDecision', () => {
