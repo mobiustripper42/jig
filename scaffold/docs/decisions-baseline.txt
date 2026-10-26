@@ -1,0 +1,6 @@
+# Legacy decision records, frozen at adoption of the schema v1 gate.
+#
+# Empty on purpose: this project's corpus started under the schema, so nothing is frozen. The file
+# exists because the gate reads it. Never add a line by hand, and never run
+# `scripts/gen-decisions-baseline.mjs` here — a baseline exempts records from the schema, and
+# exempting records written after the rule existed defeats the rule.

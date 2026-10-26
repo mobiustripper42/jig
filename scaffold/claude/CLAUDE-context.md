@@ -63,7 +63,7 @@ Project-specific docs beyond the shell's `## Key Docs`. jig ships three that are
 |------|---------|
 | `docs/BRAND.md` | Brand and visual direction |
 | `docs/USER_STORIES.md` | What each role does |
-| `docs/DEV_REFERENCE.md` | Deploy + review reference — `<VersionTag />` wiring, CHANGELOG format, phone PR-review notes |
+| `docs/DEV_REFERENCE.md` | Deploy + review reference — `<VersionTag />` wiring, CHANGELOG format, phone pull-request review notes |
 
 ## Workflow Mechanisms
 
@@ -100,7 +100,7 @@ If this section is absent the skill falls back to five generic triggers, which a
 |---|---|
 | Money moving | `<paths>` |
 | Money computed | `<paths>` |
-| Auth / capability URL | `<paths>` |
+| Auth / capability link | `<paths>` |
 | Data-changing migration | `<migrations containing drop / alter … type / update / delete — an additive add column does not trigger>` |
 
 **The test when a path isn't listed:** *does a number this code produces end up on someone's paycheck or invoice?* If yes it's the money path, whether or not a payment provider is anywhere near the diff. Add it the first time you notice, not the second.
@@ -121,7 +121,7 @@ destructive one reaching production. Projects without a database: `N/A — no da
 
 ### Production write protection
 
-[How a destructive command is stopped from reaching production, and what it does NOT cover.]
+[How a destructive command is stopped from reaching production, and what it does *not* cover.]
 
 Two layers is the shape that has worked: a discipline (never point local tooling at production)
 and a mechanism that refuses the dangerous subcommands. State both, and state what the mechanism
