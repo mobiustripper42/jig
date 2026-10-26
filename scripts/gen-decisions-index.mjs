@@ -172,6 +172,14 @@ export function parseFrontmatter(text) {
          * and the writer turns it into block form. Anything else here is refused, never skipped.
          */
         const value = top[2].trim()
+        // An empty flow list is valid YAML for every list key, and parsed as empty before this
+        // branch existed; keep it that way.
+        if (value === '[]') {
+          meta[top[1]] = []
+          list = null
+          entry = null
+          continue
+        }
         if (value) {
           const flow = value.match(/^\[(.*)\]$/)
           if (top[1] !== 'supersedes' || !flow) {

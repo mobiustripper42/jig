@@ -105,6 +105,10 @@ describe('parseFrontmatter', () => {
     expect(parseFrontmatter(withLine('supersedes: []')).meta.supersedes).toEqual([])
   })
 
+  it('still reads an empty flow list on any list key, as it did before', () => {
+    expect(parseFrontmatter(withLine('amends_spec: []')).meta.amends_spec).toEqual([])
+  })
+
   it('throws on any other value after a list key, rather than dropping it', () => {
     expect(() => parseFrontmatter(withLine('claims: [file]'))).toThrow(/claims.*block/)
     expect(() => parseFrontmatter(withLine('supersedes: DEC-005'))).toThrow(/supersedes.*block/)
