@@ -1,7 +1,7 @@
 # [Project Name] — Project Plan
 
 **Start date:** [YYYY-MM-DD]
-**Target:** TBD — a date, if there is one
+**Target:** to be decided — a date, if there is one
 **Critical path:** [What must be true before this is useful to anyone]
 
 ---
@@ -17,24 +17,26 @@ Tests are baked into every task estimate — no separate testing tasks.
 
 ## Phase 0: Infrastructure
 
-Before any feature work: get the environment, the test harness and the docs to a state where every
-later session is faster and safer. No user-facing value ships in this phase.
+Before any feature work: get the test harness, the gate and the docs to a state where every later
+session is faster and safer. No user-facing value ships in this phase.
 
-**The rows below are questions, not a checklist.** Every project answers them differently — a
-webapp stands up a local database and a browser runner, firmware needs a bench node and a way to
-read packets off it, a library needs neither. Delete rows that do not apply and add the ones this
-stack needs. Points are yours to set.
+**Infrastructure is not chosen here.** Phase 0 chooses only the language and test runner the harness
+needs. The database, host, framework and every other layer arrive
+in their own time: the first phase whose feature needs one carries a task that chooses it, as a
+decision record, and fills its line in `docs/SPEC.md` `## Stack`. Until then the work runs against
+the thinnest thing that answers the question — an in-memory fake, a local file.
+
+**The rows below are questions, not a checklist.** Delete rows that do not apply and add the ones
+this project needs. Points are yours to set.
 
 | # | Task | Points | Notes |
 |---|------|--------|-------|
-| 0.1 | Local environment runs the thing | [N] | [what "runs" means here] |
-| 0.2 | Data layer, if there is one — schema under migrations, seed data for tests | [N] | Delete if no database |
-| 0.3 | Test harness installed and one real test passing | [N] | The `Proof` slot in `.claude/CLAUDE-context.md` names what a check is here |
-| 0.4 | The gate runs end to end and is green | [N] | One command. `/kill-this` runs it before every commit |
-| 0.5 | Security-shaped tests for whatever guards access | [N] | Delete if nothing guards access |
-| 0.6 | `@ui-reviewer` spec + `.claude/ui-context.md`, if there is a UI | [N] | Delete for a project with no surface |
-| 0.7 | Session skills present in `.claude/skills/` | 1 | Installed with the rest of jig |
-| 0.8 | `CLAUDE.md`, `.claude/CLAUDE-context.md`, `docs/SPEC.md`, `docs/decisions/` filled in | [N] | Before the first working session if possible |
+| 0.1 | Test harness installed and one real test passing | [N] | The `Proof` slot in `.claude/CLAUDE-context.md` names what a check is here |
+| 0.2 | The gate runs end to end and is green | [N] | One command. `/kill-this` runs it before every commit |
+| 0.3 | Security-shaped tests for whatever guards access | [N] | Delete if nothing guards access. Arrives with the layer it guards, which may be a later phase |
+| 0.4 | `@ui-reviewer` spec + `.claude/ui-context.md`, if there is a UI | [N] | Delete for a project with no surface. Arrives with the interface, which may be a later phase |
+| 0.5 | Session skills present in `.claude/skills/` | 1 | Installed with the rest of jig |
+| 0.6 | `CLAUDE.md`, `.claude/CLAUDE-context.md`, `docs/SPEC.md`, `docs/decisions/` filled in | [N] | Before the first working session if possible |
 
 **Phase 0 total: [sum] pts**
 

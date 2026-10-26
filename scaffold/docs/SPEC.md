@@ -4,16 +4,18 @@
 [One paragraph: what it is, who uses it, what it replaces or enables.]
 
 ## Philosophy
-[The guiding principle. How should users feel? What does the app stand for? What should it NOT be?]
+[The guiding principle. How should users feel? What does the app stand for? What should it *not* be?]
 
 ## Target
-- **Target:** TBD — a date, if there is one
+- **Target:** to be decided — a date, if there is one
 - **Critical path:** [What must be true before this is useful to anyone — e.g., "payments live"]
 
 ## Stack
 
-What this is built with and where it runs. One line per layer; delete the layers this project does
-not have rather than writing `none` beside half of them.
+What this is built with and where it runs. **Filled in as the work forces each choice, not up
+front.** A layer is chosen when the first phase that needs it starts, as a decision record, and its
+line goes here then. A layer nothing needs yet stays unwritten. One line per layer; delete the
+layers this project does not have rather than writing `none` beside half of them.
 
 - **[Layer]** — [choice, and the version if it matters]
 - **[Layer]** — [choice]
@@ -32,10 +34,10 @@ not have rather than writing `none` beside half of them.
 
 ## Phases
 
-Scope is described by phase, and only by phase. A label for a release ("V1", "MVP", "launch") invites every session to argue what belongs in it, and the answers end up scattered through the docs disagreeing with each other.
+Scope is described by phase, and only by phase. A label for a release (a version number, "minimum viable", "launch") invites every session to argue what belongs in it, and the answers end up scattered through the docs disagreeing with each other.
 
 ### Phase 0 — Infrastructure
-A local environment that runs the thing, a test harness with one real test passing, a green gate, and the docs filled in. See `docs/PROJECT_PLAN.md` Phase 0.
+A test harness with one real test passing, a green gate, and the docs filled in. No database, host or framework is chosen here: each arrives with the first phase whose feature needs it. See `docs/PROJECT_PLAN.md` Phase 0.
 
 ### Phase 1 — [Name]
 [High-level description of this phase's goal and the features it includes]
