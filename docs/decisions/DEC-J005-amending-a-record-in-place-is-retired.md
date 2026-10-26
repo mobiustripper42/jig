@@ -3,7 +3,7 @@ schema: 1
 id: DEC-J005
 title: "Amending a record in place is retired"
 topic: "Decision record & dictionary discipline"
-status: "active"
+status: "superseded"
 date: "2026-08-27"
 ruling: "A change of mind is a new record carrying `supersedes`, and the old one flips to `status: superseded`. Appending a dated `## Amendment` section to an existing record is retired."
 claims:
@@ -15,6 +15,7 @@ claims:
     note: "`status`, `supersedes`, `superseded_by` — the replacement, already enforced"
   - kind: "file"
     target: "CLAUDE.md"
+superseded_by: DEC-J020
 revisit_if: "A superseded chain gets long enough that nobody walks it, or the first link is routinely missed."
 ---
 
