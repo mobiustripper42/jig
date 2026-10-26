@@ -432,13 +432,13 @@ describe("a doc citing a record that has been archived", () => {
    *
    * Run against the real corpus rather than a fixture, because the defect is in how the DEFAULT
    * world is built. `check(docs, world)` takes an injected `world`, so every fixture-based test in
-   * this file passes an id set directly and cannot see this. `CLAUDE.md:61` citing `DEC-J005` is a
+   * this file passes an id set directly and cannot see this. `CLAUDE.md:31` citing `DEC-J014` is a
    * real pair on disk. Restored in `finally`, so a failure here cannot leave the record moved.
    */
   it("resolves, the same as it does for a record citing one", () => {
-    const src = "docs/decisions/DEC-J005-amending-a-record-in-place-is-retired.md";
+    const src = "docs/decisions/DEC-J014-approving-a-plan-approves-shipping-it.md";
     const dstDir = "docs/decisions/archive";
-    const dst = `${dstDir}/DEC-J005-amending-a-record-in-place-is-retired.md`;
+    const dst = `${dstDir}/DEC-J014-approving-a-plan-approves-shipping-it.md`;
     mkdirSync(dstDir, { recursive: true });
     // A clear message beats ENOENT if a previous run was killed between the move and the finally.
     if (!existsSync(src) && existsSync(dst)) {
@@ -449,8 +449,8 @@ describe("a doc citing a record that has been archived", () => {
       // `docs/DECISIONS.md` is deliberately NOT regenerated: this gate does not read the generated
       // index (that is `check-decisions`' job), so regenerating would mutate a tracked file and
       // assert nothing. Before the fix this filter returned exactly
-      // `CLAUDE.md:61 — cites DEC-J005, which has no decision file`.
-      expect(check().filter((f) => /DEC-J005/.test(f))).toEqual([]);
+      // `CLAUDE.md:31 — cites DEC-J014, which has no decision file`.
+      expect(check().filter((f) => /DEC-J014/.test(f))).toEqual([]);
     } finally {
       // Move the record back and leave the DIRECTORY alone. `archive/` is tracked — it holds a
       // `.gitkeep` so `CLAUDE.md` can cite it and `check:context` can resolve it — and an earlier

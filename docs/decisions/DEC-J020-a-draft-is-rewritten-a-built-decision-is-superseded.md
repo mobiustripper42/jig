@@ -24,8 +24,9 @@ revisit_if: "Records are found edited in place after code was built on them, or 
 
 DEC-J005 made every change of mind a new record. That is right once code depends on a decision,
 because the chain says what the code was built against. Over a decision nothing implements, it is
-noise. In Haul, the farm changed a refund rule (Haul's DEC-005) the day after it was written. The
-session superseded it, and the operator reversed that, because nothing had been built on it yet.
+noise. The case was a refund rule in Haul (`haul/docs/decisions/DEC-005-refunds-and-credit-are-manual.md`),
+changed by the farm before any code implemented it. A decision with no code to build on, such as a
+process rule, flips to `active` when a session or skill first acts on it.
 
 A rewrite replaces the ruling, body and `revisit_if`. It never appends: DEC-J005's real target
 was the dated `## Amendment` section, which grew records past the 2,000-byte cap, and that stays

@@ -787,9 +787,8 @@ describe('supersession is a pair, or it is a dangling argument', () => {
   })
 
   /**
-   * A draft is rewritten in place; only a decision something is built on gets superseded. Haul's
-   * DEC-005 is the case: a refund rule no code implemented was superseded the day the farm changed
-   * it, and the operator reversed that as a chain over a draft.
+   * A draft is rewritten in place; only a decision something is built on gets superseded. The case
+   * was a refund rule in Haul that the farm changed before any code implemented it (DEC-J020).
    */
   it('rejects superseding a draft, on the record that should have been an edit', () => {
     const m = corpus(
