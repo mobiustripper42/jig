@@ -12,8 +12,9 @@ Roles:
 
 ## Stack
 
-What this project is built with, and what it runs on. One line per layer; delete the rows that do
-not apply rather than writing `N/A` beside six of them.
+What this project is built with, and what it runs on. Filled in as the work forces each choice, not
+up front: a layer's line lands with the decision record that chose it (`docs/SPEC.md` `## Stack`).
+One line per layer; delete the rows that do not apply rather than writing `N/A` beside six of them.
 
 - **[Layer]** — [choice, and the version if it matters]
 - **[Layer]** — [choice]
