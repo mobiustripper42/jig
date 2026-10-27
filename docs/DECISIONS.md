@@ -60,6 +60,7 @@ that never reached the spec is a red build rather than prose nobody cross-read.
 - DEC-J015 — 3+ point tasks build through /build-task: tests and code by separate agents
 - DEC-J017 — /kill-this no longer suggests /code-review ultra
 - DEC-J018 — Skills carry no `tools:` key
+- DEC-J021 — Readback is one round by default
 
 ### Model selection
 - DEC-J009 — Model and effort settings for sessions and agents

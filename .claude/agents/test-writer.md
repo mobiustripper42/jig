@@ -39,6 +39,16 @@ Write nothing. Check the spec against the code and return:
 Empty lists are written as `None`. An Interfaces entry that is NOT FOUND and not marked new is
 always a question. Do not answer your own questions by guessing what is "probably meant."
 
+What to report:
+- **Only what could fail a test.** Report an assumption only if a reasonable builder could go the
+  other way and fail your test. One the spec already permits, where either choice would pass, is
+  not worth the operator's time.
+- **Not device checks.** Skip any acceptance criterion the spec marks for checking by hand or on a
+  device. The `Proof` slot cannot test it, so there is nothing here to read back.
+- **On a re-read, only the changed lines.** When the prompt names changed lines, report only items
+  about those lines. Never re-raise an assumption the issue already answers in a `[code]`,
+  `[Lead]` or `[you]` line.
+
 ## Mode: write
 
 1. Write tests for every acceptance criterion. Each test's name includes its AC id

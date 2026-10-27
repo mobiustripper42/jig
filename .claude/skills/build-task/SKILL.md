@@ -29,6 +29,7 @@ Abort with a one-line reason if any of these fail:
   present and non-empty, and `Open questions` is empty. "None" is an answer; blank is not.
 
 The issue body is the spec. Agents are pointed at it by number. Never paraphrase it into a prompt.
+The one exception is a second readback round, whose prompt names the lines that changed.
 
 When the gate passes, run `date -u +%Y-%m-%dT%H:%M:%SZ` and keep the time it prints: it is where
 Step 6's cost starts counting. Shell variables do not survive between calls, so keep it in the
@@ -42,17 +43,22 @@ It returns three sections: **Assumptions** (things it would have to decide that 
 not), **Questions**, and an **Interface check**. An Interfaces entry reported NOT FOUND and not
 marked new is a question. If there are no assumptions and no questions, go to Step 2.
 
-Sort each item:
+Sort each item, and write every one you accept into the section of the issue it belongs to
+(`gh issue edit <N> --body-file`). An answer that lives only in this conversation is invisible to
+both agents, and comes back as the same item next round.
 
-- **An assumption the code settles** — write the answer into the section it belongs to as a
-  `[code]` line with the path (`gh issue edit <N> --body-file`), and keep going. Keep the line,
-  word for word, for the receipt.
-- **An assumption that needs a judgment call, or a question** — stop. Put these in front of the
-  operator. Write each answer into the issue body as a `[you]` line, not just into the chat.
+- **The code settles it** — a `[code]` line with the path. Keep going.
+- **The Lead can settle it** — test design, or malformed input that defaults to what the existing
+  code already does. A `[Lead]` line. Keep going.
+- **The operator would notice it in use** — stop. Put these to the operator one at a time, each
+  with your recommendation. Write each answer as a `[you]` line.
 
-After any edit to the issue body, run Step 1 again on the updated spec. An answer that lives only
-in this conversation is invisible to both agents. **Three readback rounds that still return
-something new: stop and ask** — the task is not understood well enough to test yet.
+Keep every `[code]` and `[Lead]` line, word for word, for the receipt.
+
+**Rounds.** One round by default. Run a second only when round 1 changed what an acceptance
+criterion does, and name the changed lines in its prompt. **If round 2 changes behaviour again,
+stop and ask** — the spec needs rework, not a third read. An edit that only clarifies wording
+does not earn another round; `@test-writer` can still stop in Step 2 and return a question.
 
 ## Step 2 — Tests
 
@@ -122,7 +128,7 @@ Print it every time, before the hand-back, and append it to the pull request bod
 ```
 /build-task receipt — issue #<N>
   readback      — <rounds>, <questions asked>
-  settled       — none | each [code] line added during the run, word for word, one per line
+  settled       — none | each [code] and [Lead] line added during the run, word for word, one per line
   test-writer   — <tests> tests across <criteria> criteria
   implementer   — <rounds> rounds
   test lock     — intact | violated (<file>)
@@ -142,4 +148,5 @@ the receipt as is, `unavailable — <why>` included, and the run carries on.
 
 The receipt is also what this workflow spent, in a shape the old loop's session file can be
 compared against. `settled` is the operator's audit of
-the calls the Lead made without them — a judgment call filed as `[code]` shows up there.
+the calls made without them — every `[Lead]` line, and a judgment call filed as `[code]`, shows up
+there.
