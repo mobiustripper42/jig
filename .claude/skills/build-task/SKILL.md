@@ -49,27 +49,34 @@ both agents, and comes back as the same item next round.
 
 - **The code settles it** — a `[code]` line with the path. Keep going.
 - **The Lead can settle it** — test design, or malformed input that defaults to what the existing
-  code already does. A `[Lead]` line. Keep going.
+  code already does. A `[Lead]` line. Keep going. If you can cite the path that settles it, it is
+  `[code]`; if not, `[Lead]`.
 - **The operator would notice it in use** — stop. Put these to the operator one at a time, each
   with your recommendation. Write each answer as a `[you]` line.
 
 Keep every `[code]` and `[Lead]` line, word for word, for the receipt.
 
 **Rounds.** One round by default. Run a second only when round 1 changed what an acceptance
-criterion does, and name the changed lines in its prompt. **If round 2 changes behaviour again,
-stop and ask** — the spec needs rework, not a third read. An edit that only clarifies wording
-does not earn another round; `@test-writer` can still stop in Step 2 and return a question.
+criterion does — a criterion's text, or a `[code]`/`[Lead]` line that adds behaviour no criterion
+states — and name the changed lines in its prompt. **If round 2 changes behaviour again, stop and
+ask** — the spec needs rework, not a third read. An edit that only clarifies wording does not earn
+another round; `@test-writer` can still stop in Step 2 and return a question.
+
+**Coming back to the spec later counts against the same rule.** A question from Step 2, or a spec
+fix from Step 3, is sorted as above and written into the issue. It earns a readback round only if
+it changed behaviour, and that round is the second: if one has already run, stop and ask.
 
 ## Step 2 — Tests
 
 Spawn `@test-writer` with: the issue number, and the instruction **write the tests.**
 
-It returns either a question — the spec forced a guess; handle it as Step 1's judgment-call
-branch, then back to Step 1 — or the files it created or edited (tests, fixtures, helpers), a map
+It returns either a question — the spec forced a guess; sort it as in Step 1 and write the answer
+into the issue, then re-run readback only as Step 1's Rounds rule allows — or the files it created or edited (tests, fixtures, helpers), a map
 of acceptance criterion → test names, and the output of running them. Check, in order:
 
-1. **Coverage both ways.** Every acceptance criterion has at least one test. Every test names the
-   criterion it covers. A gap either way goes back to `@test-writer`.
+1. **Coverage both ways.** Every acceptance criterion has at least one test, except one marked
+   `(by hand)`, which is checked at the hand-back instead. Every test names the criterion it
+   covers. A gap either way goes back to `@test-writer`.
 2. **Fails for the right reason.** Run the `Proof command` yourself. Each test must fail on the
    behavior the spec names — a missing function, a wrong value — not on a typo, a bad import path,
    or broken setup. Wrong-reason failures go back to `@test-writer`.
@@ -88,7 +95,7 @@ It returns one of:
 
 - **Done** — a summary of what changed. Go to Step 4.
 - **Stop** — a test it believes is wrong, and why. Do not let it work around the test. Bring it to
-  the operator: either the spec was wrong (fix the issue body, back to Step 1) or the test was
+  the operator: either the spec was wrong (fix the issue body under Step 1's Rounds rule) or the test was
   (set the implementation aside with `git stash push --include-untracked` and `git stash drop`,
   uncommit the tests with `git reset --soft "$TESTS~1"` so they stay in the tree to be revised,
   then Step 2 with the instruction **write the tests** followed by the finding, word for word).
@@ -147,6 +154,5 @@ minutes, which include short waits on the operator but not long ones. Whatever i
 the receipt as is, `unavailable — <why>` included, and the run carries on.
 
 The receipt is also what this workflow spent, in a shape the old loop's session file can be
-compared against. `settled` is the operator's audit of
-the calls made without them — every `[Lead]` line, and a judgment call filed as `[code]`, shows up
-there.
+compared against. `settled` is the operator's audit of the calls made without them — every
+`[Lead]` line, and a judgment call filed as `[code]`, shows up there.
