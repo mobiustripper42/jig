@@ -1,5 +1,5 @@
 <!--
-The spec for a task headed for /build-task (3+ points). It is the issue body: write it with
+The spec for a task headed for /build-task (any task that changes behaviour). It is the issue body: write it with
 `gh issue edit <N> --body-file`, and write every change there, not only in the chat. The agents
 read the issue by number and never see the conversation.
 

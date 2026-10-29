@@ -3,7 +3,7 @@ schema: 1
 id: DEC-J015
 title: "3+ point tasks build through /build-task: tests and code by separate agents"
 topic: "Session workflow & skills"
-status: "active"
+status: "superseded"
 date: "2026-10-15"
 ruling: "A 3+ point behaviour task is specced in its issue from task-spec.md and built by /build-task: @test-writer writes failing tests, @implementer passes them without editing them, the Lead verifies and ships. Running it approves the spec."
 claims:
@@ -13,6 +13,7 @@ claims:
   - kind: "file"
     target: "CLAUDE.md"
     note: "Spec it routes 3+ point tasks to the template and the skill"
+superseded_by: DEC-J022
 revisit_if: "The receipts show readback or implementer rounds that cost more than the old loop's build, or tests passing on a change @code-review then finds broken."
 ---
 
