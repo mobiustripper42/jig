@@ -62,6 +62,7 @@ that never reached the spec is a red build rather than prose nobody cross-read.
 - DEC-J018 — Skills carry no `tools:` key
 - DEC-J021 — Readback is one round by default
 - DEC-J022 — Every behaviour task builds through /build-task
+- DEC-J023 — Readback flags existing code the spec would re-create
 
 ### Model selection
 - DEC-J009 — Model and effort settings for sessions and agents

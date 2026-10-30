@@ -40,7 +40,7 @@ Every line in the sections below carries its source:
 - **Files touched:** `path/to/file.ts`, …
 - **New or changed signatures:** `functionName(arg: Type): ReturnType`, route `POST /api/…`, …
 - **Data shapes:** table/column, type, or JSON shape the tests will assert on
-- **Reuses:** existing functions/components this must call rather than re-create
+- **Reuses:** existing functions, components, constants and rules this must call rather than re-create
 
 ## Screen
 <!-- Only if the task has a screen. Otherwise write "None". -->
