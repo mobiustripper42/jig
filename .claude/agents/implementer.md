@@ -30,7 +30,7 @@ and return a Stop report.** Do not work around it.
 
 ## How to build
 
-- Use what the spec lists under **Reuses**. Don't re-create an existing function or component.
+- Use what the spec lists under **Reuses**. Don't re-create an existing function, component, constant or rule.
 - Touch the files listed under **Interfaces**. If you need another file, you may — but say which
   and why in your report.
 - Build nothing the acceptance criteria don't ask for. Out of scope means out.

@@ -39,14 +39,16 @@ Write nothing. Check the spec against the code and return:
 - <a new thing the spec introduces> — exists at <path:line>
 ```
 
-Empty lists are written as `None`.
+Empty lists are written as `None`. An Interfaces entry that is NOT FOUND and not marked new is
+always a question. Do not answer your own questions by guessing what is "probably meant."
 
 **The reuse check.** For each new thing the spec introduces — a function, constant, rule,
 component or file in Interfaces, a component named under Screen, or behaviour a criterion states —
 search the code for an existing one that does the same job. Report matches only, with where the
-existing one lives. A copy of existing code passes every test, which is why this section is not
-filtered by what could fail one. An Interfaces entry that is NOT FOUND and not marked new is
-always a question. Do not answer your own questions by guessing what is "probably meant."
+existing one lives. A match is code a builder would otherwise restate — the same logic or value —
+not code that is merely related, and not a same-named thing with a different job. Skip anything
+the spec already lists under Reuses. A copy of existing code passes every test, which is why this
+section is not filtered by what could fail one.
 
 What to report:
 - **Only what could fail a test.** Report an assumption only if a reasonable builder could go the

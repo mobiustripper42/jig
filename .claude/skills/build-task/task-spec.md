@@ -6,7 +6,8 @@ not only in the chat. The agents read the issue by number and never see the conv
 A small task fills the same sections, briefly. A bug fix's AC1 is the reproduction, stated as the
 behaviour it should have; a section with nothing to say is "None".
 
-The Lead writes this from the spec conversation and reads the code to fill Interfaces. Walk the
+The Lead writes this from the spec conversation and reads the code to fill Interfaces and to find
+what it must reuse — readback's reuse check is the second look, not the first. Walk the
 operator through it in this order, and stop at the first part they say is wrong:
   1. Summary
   2. Job and acceptance criteria

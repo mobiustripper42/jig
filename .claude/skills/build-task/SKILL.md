@@ -55,17 +55,21 @@ both agents, and comes back as the same item next round.
 - **The operator would notice it in use** — stop. Put these to the operator one at a time, each
   with your recommendation. Write each answer as a `[you]` line.
 
-**A reuse match** goes into Reuses as a `[code]` line with the existing path, and the criterion
-that restated it is reworded to point at it. When reusing it would change behaviour — the
-existing rule differs from the spec's — it is the operator's call instead.
+**A reuse match** goes into Reuses as a `[code]` line with the existing path — a Screen match into
+Screen's "Existing screen and components reused". Then the spec stops asking for the copy: the
+criterion that restated it is reworded to point at it, its "New or changed signatures" entry is
+removed, and "Files touched" gains the existing file if reuse means exporting from it. When
+reusing it would change behaviour — the existing rule differs from the spec's — sort it as a
+`[you]` item above, with your recommendation. A match you reject is one `[Lead]` line saying why.
 
 Keep every `[code]` and `[Lead]` line, word for word, for the receipt.
 
 **Rounds.** One round by default. Run a second only when round 1 changed what an acceptance
 criterion does — a criterion's text, or a `[code]`/`[Lead]` line that adds behaviour no criterion
-states, including one a reuse match changed — and name the changed lines in its prompt. Adding a
-path to Reuses alone does not count. **If round 2 changes behaviour again, stop and
-ask** — the spec needs rework, not a third read. An edit that only clarifies wording does not earn
+states — and name the changed lines in its prompt. A reuse match counts only when reusing changes
+what a criterion does (the `[you]` case above); rewording a criterion to point at existing code,
+or adding a Reuses path, does not. **If round 2 changes behaviour again, stop and ask** — the spec
+needs rework, not a third read. An edit that only clarifies wording does not earn
 another round; `@test-writer` can still stop in Step 2 and return a question.
 
 **Coming back to the spec later counts against the same rule.** A question from Step 2, or a spec

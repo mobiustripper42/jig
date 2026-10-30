@@ -13,7 +13,7 @@ claims:
   - kind: "file"
     target: ".claude/skills/build-task/SKILL.md"
     note: "Step 1, sorting a reuse match"
-revisit_if: "The reuse check keeps reporting matches the Lead rejects, or @code-review still finds copies of existing code the check missed."
+revisit_if: "Receipts fill with [Lead] lines rejecting reuse matches, or @code-review still finds copies of existing code the check missed."
 ---
 
 ## DEC-J023: Readback flags existing code the spec would re-create
