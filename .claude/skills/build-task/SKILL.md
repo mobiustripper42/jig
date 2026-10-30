@@ -80,9 +80,15 @@ it changed behaviour, and that round is the second: if one has already run, stop
 
 Spawn `@test-writer` with: the issue number, and the instruction **write the tests.**
 
-It returns either a question — the spec forced a guess; sort it as in Step 1 and write the answer
-into the issue, then re-run readback only as Step 1's Rounds rule allows — or the files it created or edited (tests, fixtures, helpers), the stubs it wrote, a map
-of acceptance criterion → test names, and how each test fares against the stubs.
+It returns one of three things:
+
+- **A question** — the spec forced a guess. Sort it as in Step 1 and write the answer into the
+  issue, then re-run readback only as Step 1's Rounds rule allows.
+- **A stub report** — a stub would force a test to bend: edit an existing test, or work around
+  what the stub cannot provide. Bring it to the operator with your recommendation; do not let
+  `@test-writer` bend the test to get past it.
+- **The tests** — the files it created or edited (tests, fixtures, helpers), the stubs it wrote, a
+  map of acceptance criterion → test names, and how each test fares against the stubs.
 
 **Why stubs.** A red test proves something only when it fails on its own assertion: that failure is
 what shows it can catch the bug it is named for. When every test fails because the module doesn't
@@ -96,10 +102,13 @@ Check, in order:
 
 1. **Coverage both ways.** Every acceptance criterion has at least one test, except one marked
    `(by hand)`, which is checked at the hand-back instead. Every test names the criterion it
-   covers. A gap either way goes back to `@test-writer`.
+   covers. A gap either way goes back to `@test-writer`. A test file that existed before this run
+   and appears in its Files list was edited: that is a stub report, not a test.
 2. **Fails for the right reason.** Run the `Proof command` yourself, against the stubs. Each test
    must fail on its own assertion — a wrong value, a missing row, a call that didn't throw — not on
-   a missing file or function, a typo, a bad import path, or broken setup. A test that passes
+   a missing file or function, a typo, a bad import path, or broken setup. The one exception is a
+   column or table this task creates, which no stub can provide: "does not exist" is its right
+   reason, when the report marks it new in this task. A test that passes
    against the stubs is accepted only beside the failing partner the report names, the test that
    proves the behaviour it guards. Anything else goes back to `@test-writer`.
 3. **Lock the tests.** Commit every file `@test-writer` created or edited, except the stubs, on its
@@ -132,6 +141,8 @@ It returns one of:
    implementation), then `git stash drop`, and re-run Step 3 once, telling `@implementer` the stubs
    are gone and giving no stub list. A second violation: stop and tell the operator.
 2. Run the `Proof command` yourself. Green, or back to Step 3 with the failure output.
+3. Read `@implementer`'s "Stubs left as stubs". Anything but `None` is an empty function that no
+   test needed and would ship as a silent no-op: remove it, or bring it to the operator.
 
 **Two failed `@implementer` rounds on the same tests: stop and ask.** Something is wrong with the
 spec, the tests, or the task's size, and a third round is spending the allowance to find out
@@ -162,6 +173,7 @@ Print it every time, before the hand-back, and append it to the pull request bod
   readback      — <rounds>, <questions asked>
   settled       — none | each [code] and [Lead] line added during the run, word for word, one per line
   test-writer   — <tests> tests across <criteria> criteria
+  stubs         — <n> written, <n> left as stubs, <n> tests passing beside a partner
   implementer   — <rounds> rounds
   test lock     — intact | violated (<file>)
   review routes — <n> to test-writer, <n> to implementer, <n> fixed by Lead

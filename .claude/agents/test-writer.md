@@ -86,6 +86,11 @@ What to report:
    not work around a stub — reading a column through a form that survives the column not existing
    yet, say. Both get locked with the tests and outlive the stub. If a stub would force either,
    stop and report it instead of returning tests.
+7. What a stub cannot reach fails honestly. A column or table this task creates cannot be stubbed:
+   a test on it fails with "does not exist", and that is its right reason — report it as
+   `fails: <column> does not exist (new in this task)`. A changed signature on existing code keeps
+   its implementation and gets no stub: the test calls the new shape and fails on what the code does
+   today. Never work around either.
 
 **A test added after the code exists** — the Lead sends a review finding a test should have caught
 — gets no stubs. Write the test and run it against the current code: it must fail there, on its own

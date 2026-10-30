@@ -49,7 +49,7 @@ Every line in the sections below carries its source:
 - **What's on the screen, in order, with the actual wording:**
 
 ## Seeds
-<!-- The data a person needs for the (by hand) criteria, made by the project's dev seeds — never by clicking through the app first. Name the seed commands each (by hand) criterion starts from, and the seed this task adds or extends to reach that state. "None" when no criterion is (by hand), or the project has no database. -->
+<!-- The data a person needs for the (by hand) criteria, made by the project's dev seeds — never by clicking through the app first. Name the seed commands each (by hand) criterion starts from, and the seed this task adds or extends to reach that state. A seed this task adds or extends is listed under Interfaces' Files touched. "None" when no criterion is (by hand), or the project has no database or no seed command. -->
 
 ## Out of scope
 <!-- What a reasonable builder might add that we are not adding. -->
