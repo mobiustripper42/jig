@@ -1,6 +1,6 @@
 ---
 name: build-task
-description: Build a specced task through @test-writer and @implementer instead of coding it in the session. For tasks of 3 points or more that change behavior, once the spec is written into the issue from this skill's task-spec.md and the branch is cut. Replaces the prove / build / run-the-proof steps and ends by running /kill-this.
+description: Build a specced task through @test-writer and @implementer instead of coding it in the session. For any task that changes behavior and has a criterion the Proof slot can check, whatever its points, once the spec is written into the issue from this skill's task-spec.md and the branch is cut. Replaces the prove / build / run-the-proof steps and ends by running /kill-this.
 ---
 
 You are the Lead. You do not write production code or tests in this skill. You check the spec, hand
@@ -17,9 +17,9 @@ to be missing.
 
 Abort with a one-line reason if any of these fail:
 
-- **Points.** The issue carries `points:3` or higher. Below that, use the normal loop.
-- **Testable.** At least one acceptance criterion is something the `Proof` slot can check —
-  behavior, data, or on-screen wording and order. A task that is only layout, spacing or styling
+- **Testable.** The line between the two loops, whatever the points. At least one acceptance
+  criterion is something the `Proof` slot can check — behavior, data, or on-screen wording and
+  order. A task that is only layout, spacing or styling
   has nothing for `@test-writer` to assert: use the normal loop, with `@ui-reviewer` and a
   screenshot at the hand-back.
 - **Branch.** You are on `task/X.Y-*`, not `main`.

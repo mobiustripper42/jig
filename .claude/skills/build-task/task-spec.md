@@ -1,7 +1,10 @@
 <!--
-The spec for a task headed for /build-task (3+ points). It is the issue body: write it with
-`gh issue edit <N> --body-file`, and write every change there, not only in the chat. The agents
-read the issue by number and never see the conversation.
+The spec for a task headed for /build-task: any task that changes behaviour, whatever its points.
+It is the issue body: write it with `gh issue edit <N> --body-file`, and write every change there,
+not only in the chat. The agents read the issue by number and never see the conversation.
+
+A small task fills the same sections, briefly. A bug fix's AC1 is the reproduction, stated as the
+behaviour it should have; a section with nothing to say is "None".
 
 The Lead writes this from the spec conversation and reads the code to fill Interfaces. Walk the
 operator through it in this order, and stop at the first part they say is wrong:
