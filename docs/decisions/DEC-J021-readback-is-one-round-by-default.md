@@ -3,7 +3,7 @@ schema: 1
 id: DEC-J021
 title: "Readback is one round by default"
 topic: "Session workflow & skills"
-status: "draft"
+status: "active"
 date: "2026-10-26"
 ruling: "/build-task reads the spec back once. A second round runs only when round 1 changed what a criterion does, on those lines; a second behaviour change stops the run for rework."
 claims:
@@ -31,4 +31,4 @@ a third. Alongside it, `@test-writer` reports only what could fail a test, skips
 on a re-read sees only the changed lines; every accepted item is written into the issue; and the
 Lead's own calls are `[Lead]` lines in the receipt. See also DEC-J015.
 
-Draft until the first `/build-task` run under it (DEC-J020).
+Active from Haul's task 0.6 (its pull request 23), the first run under it (DEC-J020).

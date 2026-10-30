@@ -39,9 +39,10 @@ conversation, not in a variable.
 
 Spawn `@test-writer` with: the issue number, and the instruction **readback only — write nothing.**
 
-It returns three sections: **Assumptions** (things it would have to decide that the spec does
-not), **Questions**, and an **Interface check**. An Interfaces entry reported NOT FOUND and not
-marked new is a question. If there are no assumptions and no questions, go to Step 2.
+It returns four sections: **Assumptions** (things it would have to decide that the spec does
+not), **Questions**, an **Interface check**, and a **Reuse check** (existing code that already
+does something the spec would build). An Interfaces entry reported NOT FOUND and not marked new is
+a question. If all but the Interface check are empty, go to Step 2.
 
 Sort each item, and write every one you accept into the section of the issue it belongs to
 (`gh issue edit <N> --body-file`). An answer that lives only in this conversation is invisible to
@@ -54,12 +55,21 @@ both agents, and comes back as the same item next round.
 - **The operator would notice it in use** — stop. Put these to the operator one at a time, each
   with your recommendation. Write each answer as a `[you]` line.
 
+**A reuse match** goes into Reuses as a `[code]` line with the existing path — a Screen match into
+Screen's "Existing screen and components reused". Then the spec stops asking for the copy: the
+criterion that restated it is reworded to point at it, its "New or changed signatures" entry is
+removed, and "Files touched" gains the existing file if reuse means exporting from it. When
+reusing it would change behaviour — the existing rule differs from the spec's — sort it as a
+`[you]` item above, with your recommendation. A match you reject is one `[Lead]` line saying why.
+
 Keep every `[code]` and `[Lead]` line, word for word, for the receipt.
 
 **Rounds.** One round by default. Run a second only when round 1 changed what an acceptance
 criterion does — a criterion's text, or a `[code]`/`[Lead]` line that adds behaviour no criterion
-states — and name the changed lines in its prompt. **If round 2 changes behaviour again, stop and
-ask** — the spec needs rework, not a third read. An edit that only clarifies wording does not earn
+states — and name the changed lines in its prompt. A reuse match counts only when reusing changes
+what a criterion does (the `[you]` case above); rewording a criterion to point at existing code,
+or adding a Reuses path, does not. **If round 2 changes behaviour again, stop and ask** — the spec
+needs rework, not a third read. An edit that only clarifies wording does not earn
 another round; `@test-writer` can still stop in Step 2 and return a question.
 
 **Coming back to the spec later counts against the same rule.** A question from Step 2, or a spec

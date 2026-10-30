@@ -6,7 +6,8 @@ not only in the chat. The agents read the issue by number and never see the conv
 A small task fills the same sections, briefly. A bug fix's AC1 is the reproduction, stated as the
 behaviour it should have; a section with nothing to say is "None".
 
-The Lead writes this from the spec conversation and reads the code to fill Interfaces. Walk the
+The Lead writes this from the spec conversation and reads the code to fill Interfaces and to find
+what it must reuse — readback's reuse check is the second look, not the first. Walk the
 operator through it in this order, and stop at the first part they say is wrong:
   1. Summary
   2. Job and acceptance criteria
@@ -40,7 +41,7 @@ Every line in the sections below carries its source:
 - **Files touched:** `path/to/file.ts`, …
 - **New or changed signatures:** `functionName(arg: Type): ReturnType`, route `POST /api/…`, …
 - **Data shapes:** table/column, type, or JSON shape the tests will assert on
-- **Reuses:** existing functions/components this must call rather than re-create
+- **Reuses:** existing functions, components, constants and rules this must call rather than re-create
 
 ## Screen
 <!-- Only if the task has a screen. Otherwise write "None". -->
