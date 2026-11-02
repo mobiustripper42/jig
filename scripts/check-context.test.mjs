@@ -30,7 +30,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-let check, checkSections, expandBraces, headings, isClaim, sectionMatches, sectionRefs;
+let DOCS, check, checkSections, expandBraces, headings, isClaim, sectionMatches, sectionRefs;
 let fixture;
 let cwdBefore;
 
@@ -42,6 +42,8 @@ let cwdBefore;
 const FIXTURE_FILES = [
   "CLAUDE.md",
   ".claude/CLAUDE-context.md",
+  // Present, so the optional UI context is read like the other always-loaded docs.
+  ".claude/ui-context.md",
   "src/adapters/twilio-channel.ts",
   "src/adapters/sms-channel.ts",
   "app/lib/channel.ts",
@@ -143,7 +145,7 @@ beforeAll(async () => {
   cwdBefore = process.cwd();
   process.chdir(fixture);
   // Imported AFTER the chdir on purpose — see the header note.
-  ({ check, checkSections, expandBraces, headings, isClaim, sectionMatches, sectionRefs } =
+  ({ DOCS, check, checkSections, expandBraces, headings, isClaim, sectionMatches, sectionRefs } =
     await import("./check-context.mjs"));
 });
 
@@ -203,6 +205,18 @@ describe("expandBraces", () => {
 });
 
 describe("check", () => {
+  it("reads .claude/ui-context.md when the project has one", () => {
+    // A project with a UI keeps its review rules there, and /kill-this and /retro load it, so a
+    // dead path in it is the same defect as one in CLAUDE-context.md.
+    expect(DOCS).toContain(".claude/ui-context.md");
+    writeFileSync(".claude/ui-context.md", "See `src/adapters/gone-channel.ts`.\n");
+    try {
+      expect(check().join("\n")).toMatch(/ui-context\.md.*gone-channel/);
+    } finally {
+      writeFileSync(".claude/ui-context.md", "See `src/adapters/twilio-channel.ts`.\n");
+    }
+  });
+
   it("passes on docs whose every cited path and pattern resolves", () => {
     // No-arg `check()` reads the two context docs off disk — here, the fixture's. Asserting the
     // HOST repo's real docs is the gate's job, not this suite's; see the header note.

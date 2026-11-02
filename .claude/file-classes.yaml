@@ -137,6 +137,9 @@ file-classes:
   # The project-owned half of that pair. Never copied, never compared — the template is a
   # placeholder in `scaffold/claude/` and this is whatever the project wrote.
   - ".claude/CLAUDE-context.md": context
+  # The UI review's rules, for a project with screens. Optional, project-owned, never compared;
+  # `scaffold/claude/ui-context.md` is the starter.
+  - ".claude/ui-context.md": context
   # `.claude/doc-check.json` carries check-docs's rosters and exemption lists — the repo slug,
   # which docs claim a complete skill/agent roster, which are historical ledgers, which slash
   # commands are deliberately foreign. `presence`, not `context`, for the same reason
