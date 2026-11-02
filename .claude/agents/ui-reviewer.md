@@ -19,7 +19,7 @@ If the file does not exist, stop: "`.claude/ui-context.md` is missing. Create it
 
 1. Read the component/page source file(s).
 2. Read `.claude/ui-context.md` for the project's design system and checklist.
-3. Take Playwright screenshots at the viewports listed in `ui-context.md` (default: 375px and 1440px).
+3. Take Playwright screenshots at the viewports listed in `ui-context.md` (default: 375px and 1440px), in each language it names for review (default: the project's one language).
 4. Work through the project-specific checklist in `ui-context.md` against the source and screenshots.
 
 Review the routes and viewports you were given; given none, every route `ui-context.md` names. A route you could not reach goes under **Not reached** — never reviewed from source and called clean.

@@ -98,7 +98,7 @@ beforeAll(async () => {
   for (const rel of FIXTURE_FILES) {
     const abs = join(fixture, rel);
     mkdirSync(dirname(abs), { recursive: true });
-    // The two context docs must parse as clean: they are what no-arg `check()` reads.
+    // The context docs must parse as clean: they are what no-arg `check()` reads.
     writeFileSync(abs, rel.endsWith(".md") ? "See `src/adapters/twilio-channel.ts`.\n" : "");
   }
   writeFileSync(
@@ -218,7 +218,7 @@ describe("check", () => {
   });
 
   it("passes on docs whose every cited path and pattern resolves", () => {
-    // No-arg `check()` reads the two context docs off disk — here, the fixture's. Asserting the
+    // No-arg `check()` reads the context docs off disk — here, the fixture's. Asserting the
     // HOST repo's real docs is the gate's job, not this suite's; see the header note.
     expect(check()).toEqual([]);
   });
