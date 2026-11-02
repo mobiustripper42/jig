@@ -3,7 +3,7 @@ schema: 1
 id: DEC-J022
 title: "Every behaviour task builds through /build-task"
 topic: "Session workflow & skills"
-status: "draft"
+status: "superseded"
 date: "2026-10-29"
 ruling: "Any task that changes behaviour, whatever its points, is specced in its issue and built by /build-task, because code quality comes first. Points stay as the estimate and stop choosing the route."
 claims:
@@ -13,8 +13,7 @@ claims:
   - kind: "file"
     target: "CLAUDE.md"
     note: "Spec it"
-supersedes:
-  - DEC-J015
+superseded_by: DEC-J025
 revisit_if: "Usage of the plan becomes a problem, or tests keep passing on changes @code-review then finds broken."
 ---
 
@@ -33,4 +32,4 @@ line.
 Everything else DEC-J015 decided stands: tests and code by separate agents, the issue as the spec,
 tests locked before code, sequential runs only, and running the skill approves the spec.
 
-Draft until the first run under it (DEC-J020).
+Active from Haul's task 0.8 (its pull request 29), the first run under it (DEC-J020).

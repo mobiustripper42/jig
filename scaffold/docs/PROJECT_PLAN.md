@@ -34,7 +34,7 @@ this project needs. Points are yours to set.
 | 0.1 | Test harness installed and one real test passing | [N] | The `Proof` slot in `.claude/CLAUDE-context.md` names what a check is here |
 | 0.2 | The gate runs end to end and is green | [N] | One command. `/kill-this` runs it before every commit |
 | 0.3 | Security-shaped tests for whatever guards access | [N] | Delete if nothing guards access. Arrives with the layer it guards, which may be a later phase |
-| 0.4 | `@ui-reviewer` spec + `.claude/ui-context.md`, if there is a UI | [N] | Delete for a project with no surface. Arrives with the interface, which may be a later phase |
+| 0.4 | `.claude/ui-context.md` filled in from jig's starter, if there is a UI | [N] | Delete for a project with no surface. Arrives with the first screen, which may be a later phase. `/kill-this` and `/retro` run `@ui-reviewer` once it exists |
 | 0.5 | Session skills present in `.claude/skills/` | 1 | Installed with the rest of jig |
 | 0.6 | `CLAUDE.md`, `.claude/CLAUDE-context.md`, `docs/SPEC.md`, `docs/decisions/` filled in | [N] | Before the first working session if possible |
 

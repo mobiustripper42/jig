@@ -64,6 +64,9 @@ that never reached the spec is a red build rather than prose nobody cross-read.
 - DEC-J022 — Every behaviour task builds through /build-task
 - DEC-J023 — Readback flags existing code the spec would re-create
 - DEC-J024 — @test-writer writes empty stubs so each test fails on its own assertion
+- DEC-J025 — Every behaviour task builds through /build-task; a harvest does not
+- DEC-J026 — One shared home for anything a spec describes twice
+- DEC-J027 — @ui-reviewer runs per task on touched screens, and on every screen at phase end
 
 ### Model selection
 - DEC-J009 — Model and effort settings for sessions and agents

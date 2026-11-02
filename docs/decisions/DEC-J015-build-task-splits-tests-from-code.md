@@ -13,7 +13,7 @@ claims:
   - kind: "file"
     target: "CLAUDE.md"
     note: "Spec it routes 3+ point tasks to the template and the skill"
-superseded_by: DEC-J022
+superseded_by: DEC-J025
 revisit_if: "The receipts show readback or implementer rounds that cost more than the old loop's build, or tests passing on a change @code-review then finds broken."
 ---
 

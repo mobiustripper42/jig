@@ -3,7 +3,7 @@ schema: 1
 id: DEC-J023
 title: "Readback flags existing code the spec would re-create"
 topic: "Session workflow & skills"
-status: "draft"
+status: "active"
 date: "2026-10-30"
 ruling: "@test-writer's readback searches the code for anything that already does what the spec would build, and the Lead puts each match in Reuses before any test is written."
 claims:
@@ -31,4 +31,5 @@ constants, rules, components and the Screen section. A match becomes a Reuses li
 would change behaviour goes to the operator. Visual consistency is a separate question, left to
 `@ui-reviewer` for now.
 
-See also DEC-J021. Draft until the first run under it (DEC-J020).
+See also DEC-J021. Active from Haul's task 0.8 (its pull request 29), the first run under it
+(DEC-J020).
