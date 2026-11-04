@@ -186,6 +186,152 @@ describe('being run where it cannot work', () => {
 })
 
 /**
+ * A directory jig keeps, cited bare (issue 109). `CLAUDE.md` cited `docs/research/checker-roi/` and
+ * passed, because the gate compared cited paths only against jig's files and a directory is not one.
+ * Every project's `check:context` would have gone red at the next sync, on a line written here.
+ *
+ * A directory is jig's only when nothing under it reaches a project: every file there is `jig-only`
+ * AND no scaffold installs anything under it. Anything looser flags `docs/` or `.claude/skills/`,
+ * which every project has. Each case below that says nothing is the rule refusing to be looser; the
+ * first one is what makes those silences mean anything.
+ */
+describe('a shipped file citing a directory jig keeps to itself', () => {
+  const KEPT = {
+    'docs/research/checker-roi/README.md': '# pilot\n',
+    'docs/research/checker-roi/second-loop/tally.md': '# tally\n',
+  }
+
+  it('AC1: fails, naming the file, the line, the directory and the <jig>/ fix', () => {
+    const p = repo(
+      { 'CLAUDE.md': 'logic', 'docs/**': 'jig-only' },
+      { 'CLAUDE.md': '# Shell\n\nThe numbers are in `docs/research/checker-roi/`.\n', ...KEPT },
+    )
+    const { out, status } = run(p)
+    expect(status).toBe(1)
+    expect(out).toContain(
+      'CLAUDE.md:3 — cites `docs/research/checker-roi/`, which jig keeps. Write `<jig>/docs/research/checker-roi/`',
+    )
+  })
+
+  it('AC2: passes once the directory citation carries the <jig>/ prefix', () => {
+    const p = repo(
+      { 'CLAUDE.md': 'logic', 'docs/**': 'jig-only' },
+      { 'CLAUDE.md': 'The numbers are in `<jig>/docs/research/checker-roi/`.\n', ...KEPT },
+    )
+    const { out, status } = run(p)
+    expect(status).toBe(0)
+    expect(out).toMatch(/✓ shipped citations/)
+  })
+
+  it('AC6: matches the directory cited without its trailing slash', () => {
+    const p = repo(
+      { 'CLAUDE.md': 'logic', 'docs/**': 'jig-only' },
+      { 'CLAUDE.md': 'The numbers are in `docs/research/checker-roi`.\n', ...KEPT },
+    )
+    const { out, status } = run(p)
+    expect(status).toBe(1)
+    expect(out).toContain(
+      'CLAUDE.md:1 — cites `docs/research/checker-roi`, which jig keeps. Write `<jig>/docs/research/checker-roi`',
+    )
+  })
+
+  it('AC3: says nothing about a directory holding a file that ships, however deep', () => {
+    // The shipped file is one level down on purpose: a rule that looks only at a directory's direct
+    // children sees two `jig-only` files here and flags a path every project has.
+    const p = repo(
+      {
+        'CLAUDE.md': 'logic',
+        'docs/research/checker-roi/shared/GUIDE.md': 'logic',
+        'docs/**': 'jig-only',
+      },
+      {
+        'CLAUDE.md': 'The guide is under `docs/research/checker-roi/`.\n',
+        ...KEPT,
+        'docs/research/checker-roi/shared/GUIDE.md': '# guide\n',
+      },
+    )
+    const { out, status } = run(p)
+    expect(status).toBe(0)
+    expect(out).not.toMatch(/checker-roi/)
+  })
+
+  it('AC4: says nothing about a directory a scaffold installs a file under, though every jig file there is jig-only', () => {
+    // `scaffold/docs/research/README.md` lands as the project's `docs/research/README.md`, so the
+    // directory exists in every project whatever jig's own copies of it are classed.
+    const p = repo(
+      { 'CLAUDE.md': 'logic', 'scaffold/**': 'context', 'docs/**': 'jig-only' },
+      {
+        'CLAUDE.md': 'Notes go in `docs/research/`.\n',
+        ...KEPT,
+        'scaffold/docs/research/README.md': '# research\n',
+      },
+    )
+    const { out, status } = run(p)
+    expect(status).toBe(0)
+    expect(out).not.toMatch(/docs\/research/)
+  })
+
+  it('AC4: still says nothing about a bare docs/decisions/ citation', () => {
+    // Every file there is `jig-only` and no scaffold installs under it, so the directory rule alone
+    // would flag it. It is exempt today, and holding directories must not take that away.
+    const p = repo(
+      { 'CLAUDE.md': 'logic', 'docs/**': 'jig-only' },
+      {
+        'CLAUDE.md': 'Records live in `docs/decisions/`.\n',
+        'docs/decisions/DEC-001-a-choice.md': '---\nid: DEC-001\n---\n',
+      },
+    )
+    const { out, status } = run(p)
+    expect(status).toBe(0)
+    expect(out).not.toMatch(/docs\/decisions/)
+  })
+
+  it('AC5: says nothing about a directory jig does not hold at all', () => {
+    // `docs/**: jig-only` answers for `docs/deploy/` as confidently as for a directory jig has. A
+    // path jig does not hold is not one jig keeps, for a directory as for a file.
+    const p = repo(
+      { 'CLAUDE.md': 'logic', 'docs/**': 'jig-only' },
+      { 'CLAUDE.md': "muster's runbooks are in `docs/deploy/`.\n", ...KEPT },
+    )
+    const { out, status } = run(p)
+    expect(status).toBe(0)
+    expect(out).not.toMatch(/docs\/deploy/)
+  })
+
+  it('AC5: does not hold a directory by a bare string prefix of one it does hold', () => {
+    // `docs/res` is a string prefix of `docs/research/…` and holds nothing. Matching it as a prefix
+    // flags a path jig has never had.
+    const p = repo(
+      { 'CLAUDE.md': 'logic', 'docs/**': 'jig-only' },
+      { 'CLAUDE.md': 'Results go in `docs/res/`.\n', ...KEPT },
+    )
+    const { out, status } = run(p)
+    expect(status).toBe(0)
+    expect(out).not.toMatch(/docs\/res\//)
+  })
+
+  it('AC8: says nothing about a directory holding a file with no registry entry', () => {
+    // An unclassified file has not been decided about, so it is not `jig-only`, so the directory is
+    // not kept. Treating it as jig's would be this gate guessing — the opinion `subjects()` refuses.
+    const p = repo(
+      {
+        'CLAUDE.md': 'logic',
+        'docs/research/checker-roi/README.md': 'jig-only',
+        'docs/research/checker-roi/second-loop/tally.md': 'jig-only',
+      },
+      {
+        'CLAUDE.md': 'The numbers are in `docs/research/checker-roi/`.\n',
+        ...KEPT,
+        'docs/research/checker-roi/unfiled.md': '# nobody classed this\n',
+      },
+    )
+    const { out, status } = run(p)
+    expect(status).toBe(0)
+    expect(out).not.toMatch(/checker-roi/)
+  })
+})
+
+/**
  * The live assertion, and the one that would actually catch a regression in the exemptions: jig's
  * real corpus, checked as it stands. It is clean today — PR #41 fixed the only bare citation that
  * ever shipped — so this pins that the exemptions are wide enough for the real registry, not just
