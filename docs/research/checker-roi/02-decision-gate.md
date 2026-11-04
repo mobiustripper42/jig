@@ -4,7 +4,7 @@ Gathered 2026-11-03 to 2026-11-04. The pre-pilot checker for issue #104.
 
 **Verdict against the issue's bar:**
 - **Counts trace to cited records: met for muster only.** Muster is the one repo with a before and an after. jig, centerline and haul had the gate from their first decision record.
-- **Cost totals from labels and git history alone: met in part.** No `points:N` labels exist on this work, so build points come from session `## Task` blocks.
+- **Cost totals from labels, git and session blocks: met.** No `points:N` labels exist on this work, so build points come from session `## Task` blocks, which the operator ruled count as a cost source (README § Verdict). Jig's import isn't traceable.
 - **Saving stated as a range with its assumptions: met, but weakly.** The price per escape rests on one cited incident.
 
 **The mistake it targets:** a malformed or dangling decision record. That covers a stale index, a duplicate id, an unknown topic, a dangling reference, an oversized record, a missing `revisit_if`, a declared spec amendment that never landed, and an edit to a frozen record.
