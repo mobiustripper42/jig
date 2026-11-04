@@ -5,7 +5,7 @@ Gathered 2026-11-04. The second-loop checker for issue #104. Raw evidence, with 
 **Verdict against the issue's bar:**
 - **Counts trace to cited records: met, and both counts are 0.** That measures the checker's scope, not a rate.
 - **Cost totals from labels and git history alone: met in part.** Build points come from session `## Task` blocks, and three pieces aren't traceable.
-- **Saving stated as a range: not met.** No incident in this class has a recorded price.
+- **Saving stated as a range: weakly met.** One priced escape (keep-tape, 2 points), the same standard as the decision gate's one anchor.
 
 **The mistake it targets:** a context doc citing a path that doesn't exist.
 
@@ -41,7 +41,7 @@ The counts come from re-running today's path rule at every commit on `main` (`ev
 
 ## Cost
 
-**Build:** 3 points for the checker (muster `sessions/2026-07-28-1859-eric-main.md:139`). Extensions add up to 18, 6 of them in shared pull requests. Three pieces are **not traceable**: seeds pull request 159, seeds `57a546f` and jig pull request 1.
+**Build:** 3 points for the checker (muster `sessions/2026-07-28-1859-eric-main.md:139`). Extensions add up to 18, 9 of them in shared pull requests (seeds 199, haul 41, jig 101). Three pieces are **not traceable**: seeds pull request 159, seeds `57a546f` and jig pull request 1.
 
 **Upkeep:**
 - muster: 8 commits, 2 native.
@@ -53,7 +53,7 @@ The counts come from re-running today's path rule at every commit on `main` (`ev
 
 ## Catches
 
-18 episodes after excluding 13 false matches. Classified row by row:
+31 tool results carry a failure line. 9 are not `check:context` runs (`check:docs` output, reads of the script's source, a pull request body). The other 22 group into 18 episodes. Classified row by row:
 
 | Episodes | Count | Counted as a catch? |
 |---|---|---|
@@ -68,15 +68,21 @@ Outside transcripts: the scope widening found 1 real dead path (jig `411c3e1`), 
 
 **Corrected wording:** the ship commit's "16 flagged, 15 noise" (muster `8e71451d`) describes the checker's first draft, not its first run against the docs.
 
-## Price
+## Price, and the saving
 
-- **No incident in this class has a cost recorded for the mistake itself.**
-- **The one cost on record is keep-tape:**
-  - centerline copied 458 lines to go green and deleted them the same day (`1f16c8b`, `52a6036`);
-  - jig spent 2 points fixing it (pull request 41) and 3 points on a new checker (pull request 48).
+The rule, the same as the decision gate's (README § Verdict): a mistake of this class reached a `main` where nothing caught it, and the fix recorded points.
 
-  That defect was caught downstream, not prevented.
-- **The 79-day `app/reservations` escape:** it was loaded into `@ui-reviewer` prompts, but no wrong action was found. Recorded cost: 0.
+| Incident | Recorded cost |
+|---|---|
+| keep-tape: jig shipped `scripts/keep-tape.mjs` cited bare, and jig's gate couldn't see it because jig has the file | **2 points** to fix (jig pull request 41). Downstream, centerline copied 458 lines to go green and deleted them the same day (`1f16c8b`, `52a6036`). The 3-point preventive checker (jig pull request 48) is build, not price |
+| `app/reservations` in muster's `ui-context.md`, 79 days on `main` | loaded into `@ui-reviewer` prompts; no wrong action found; 0 recorded |
+
+**The range.** As with the decision gate, it rests on one anchor (2 points), with a band of 1 to 4 points per escape assumed, not cited.
+- **Saving:** 3 catches (C3, C7, C18) × 1–4 points = **3 to 12 points.**
+- **Cost:** 3 points to build, plus up to 18 of extensions.
+- The ranges overlap, so no net figure is claimed.
+
+**C3 is the keep-tape defect itself.** It was caught in muster after it had escaped jig, so it counts both as jig's priced escape and as a catch downstream. Leaving it out gives 2 to 8 points.
 
 ## What this means
 

@@ -1,19 +1,23 @@
 # Checker cost against saving: the worksheets
 
-## Verdict: the pilot does not hold up
+## Verdict: the pilot does not hold up as the issue words it
 
-Issue #104 set its bar as two of three checkers meeting three conditions. Only the decision gate meets them, and only in part. So the full report is not started. This section is the issue's one-page write-up.
+Issue #104 set its bar as two of three checkers meeting three conditions. Read as written, no checker meets all three: the cost condition asks for labels and git history, and the build points live in session `## Task` blocks instead. So the full report is not started. This section is the issue's one-page write-up.
 
 | Checker | Counts trace to records | Cost from labels and git | Saving as a range |
 |---|---|---|---|
-| Decision gate | met, muster only | in part | met, on one priced incident |
-| Permission denies | in part | not met | not met |
-| `check:context` | met; 0 before, 0 after | in part | not met |
+| Decision gate | met, muster only | in part: points from session blocks | weakly met: one priced escape |
+| Permission denies | in part | not met: several pieces have no points anywhere | not met: no priced escape |
+| `check:context` | met; 0 before, 0 after | in part: points from session blocks | weakly met: one priced escape |
+
+**The verdict turns on one reading.** If session `## Task` blocks count as a cost source, the decision gate and `check:context` meet all three conditions, weakly, and the bar of two is met. The worksheets support either reading. Choosing one is the operator's call, not this pilot's.
+
+**The rule for a priced escape**, applied the same way to every checker: a mistake of the checker's class reached a `main` where nothing caught it, and the task that fixed it recorded points. The decision gate has one: muster pull request 528 (1 point), before the gate existed. `check:context` has one: keep-tape, a dead citation jig's own gate couldn't see, fixed in jig pull request 41 (2 points). The denies have none.
 
 ### What could not be measured, and why
 
-1. **The price of an escape.** Across all three checkers there is one incident of a mistake that escaped with a cost in points recorded: muster pull request 528, 1 point (`02-decision-gate.md`). The other incidents record lines reverted, hours of red `main`, or nothing. No saving can be stated in points without a price, and that is what failed the denies and `check:context`.
-2. **A before rate.** No transcripts survive from before 2026-08-30. Every checker shipped before that, so every before-count comes from commits, session files, an audit or the seeds ledger. Those sources record defects that were found, not attempts, so a before and an after are rarely in the same unit (`01-calibration.md`).
+1. **The price of an escape.** Each checker has at most one priced escape (above). The other incidents record lines reverted, hours of red `main`, or nothing. One anchor is not a price, so every saving range rests on an assumed band around it.
+2. **A before rate.** No transcripts survive from before 2026-08-30, and every checker except the `git -C` denies (2026-10-07) shipped before that. Before-counts come from commits, session files, an audit or the seeds ledger. Those sources record defects that were found, not attempts, so a before and an after are rarely in the same unit (`01-calibration.md`).
 3. **Build cost from labels.** One `points:N` label exists on all of this work (jig issue 91). Session `## Task` blocks carry the points instead, and work done before a repo had session files has none.
 
 ### What would have to be recorded from now on
@@ -26,11 +30,15 @@ These are proposals, not built:
 ### What the pilot found anyway
 
 - **The `CLAUDE.md` § Scope Discipline quote can't be checked.** "Broken 11 times, 4 after" has no recorded source. The checkable pair on the same ledger row is 58 prose-rule breaks against a deny obeyed 7 of 7 (`01-calibration.md`).
-- **Denies are obeyed call by call, and leak session by session.** 2 of 1,290 denials were re-shaped on the next call. But `awk 'NR…'` did the `sed -n` job 168 times, and `npm exec` stood in for `npx` 21 times in one session, once fetching an uninstalled tool (`03-permission-denies.md`).
-- **Most red runs are not catches.**
+- **Denies are rarely re-shaped, but similar tools get through.**
+  - 2 of 1,290 denials were re-shaped within the next 3 calls to reach the same thing another way.
+  - 59 retried the same denied command and were denied again.
+  - `awk 'NR…'` did a file-range read 168 times. There is no count from before the deny, so whether it replaced `sed -n` is unknown.
+  - `npm exec` ran 21 times in one session after `npx` denials. Most were installed tools, which the `npx` deny blocks as a false positive; 1 fetched an uninstalled tool (`03-permission-denies.md`).
+- **Many red runs are not catches.**
   - Most of the decision gate's red runs are its own size rules (`02-decision-gate.md`).
-  - About 190 of the 1,290 denials were false positives and about 215 were policy.
-  - Most of `check:context`'s reds are install and sync stock from jig's own templates (`04-check-context.md`).
+  - About 190 of the 1,290 denials were false positives in the sense of a legitimate command denied, and about 215 were policy.
+  - Of `check:context`'s 18 red episodes, 3 are catches (`04-check-context.md`).
 - **`check:context` grew to where the dead paths were.** Inside its scope of the day it found 3 real dead paths in transcripts. The incident it was built for, a wrong description, is still out of its reach.
 
 ## The worksheets

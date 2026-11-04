@@ -282,7 +282,7 @@ permissions comparison itself (`82be2f8`, `c5410c1`, `d29df63`); the rest is the
 
 | Repo | Commits after first deny | new pattern | FN fix | FP / dead-rule removal | sync / install |
 |---|---|---|---|---|---|
-| seeds (template + own) | 14 | 7 (`3b37b57`, `be65249`, `d3512a6`, `5fac31e`, `4ddec2a`, `c864ce7`, `1930680`) | 1 (`b0d2526`) | 2 (`d60de45`, `33c3545`) | 3 (`a376237`, `ad73f4d`, + `.claude/` copies inside `3b37b57`/`be65249`/`4ddec2a`/`b0d2526`) |
+| seeds (template + own) | 12, plus `.claude/` copies inside four of them | 7 (`3b37b57`, `be65249`, `d3512a6`, `5fac31e`, `4ddec2a`, `c864ce7`, `1930680`) | 1 (`b0d2526`) | 2 (`d60de45`, `33c3545`) | 3 (`a376237`, `ad73f4d`, + `.claude/` copies inside `3b37b57`/`be65249`/`4ddec2a`/`b0d2526`) |
 | jig | 2 after import | 1 (`9a703df`) | 1 (`c8b37f9`) | 0 | — |
 | muster | 5 | — | — | — | 5 (`3d7bb7ea`, `0a7b2abb`, `79364778`, `fb86bf58`, `390d9a13`) |
 | centerline / haul / soundings / sheepdog / bushel / chiplog | 2 / 1 / 4 / 2 / 2 / 1 | — | — | — | all |
