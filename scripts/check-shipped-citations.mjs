@@ -58,6 +58,14 @@ const templates = () =>
   }).filter((rel) => !NOT_TEMPLATES.has(rel))
 
 /**
+ * The one home for "lies under" in what a citation names. A path prefix, never a bare string
+ * prefix: `docs/res` does not hold `docs/research/x.md`. The held-directory rule, the jig-kept rule,
+ * the scaffold-target rule and the `docs/decisions/` exemption all ask it. The file-subject checks
+ * in `subjects()` are deliberately separate: they judge files, not citations.
+ */
+const under = (dir, rel) => rel.startsWith(`${dir}/`)
+
+/**
  * THE EXEMPTIONS ARE MOST OF THIS GATE. Without them it reports 31 findings against jig's own
  * corpus and all 31 are noise, which is the failure `check-context.mjs` already carries a comment
  * about: a check that cries wolf gets muted, and a muted check is worse than none.
@@ -69,20 +77,13 @@ const templates = () =>
  *    lands as the project's `docs/SPEC.md`; jig's `docs/SPEC.md` is a different document and is
  *    jig-only. Six paths collide this way as of writing — the four docs DEC-S049 argued about, plus
  *    `.claude/CLAUDE-context.md` and `.claude/doc-check.json` — and the count is here to orient a
- *    reader, not to be relied on. The set is derived through `toProject` rather than hand-listed,
- *    so it cannot disagree with the mapping it inverts, and it grows on its own.
+ *    reader, not to be relied on. The set comes from the shared `scaffoldTargets`, derived through
+ *    `toProject` rather than hand-listed, so it cannot disagree with the mapping it inverts, and it
+ *    grows on its own.
  * 2. Decision records. Every project keeps its own at `docs/decisions/`; jig's are excluded from
  *    the template set outright, so this repo's class for that prefix says nothing about what a
  *    project has. `drift.mjs` excludes the same prefix for the same reason.
  */
-
-/**
- * The one home for "lies under". A path prefix, never a bare string prefix: `docs/res` does not
- * hold `docs/research/x.md`. The held-directory rule, the jig-kept rule, the scaffold-target rule
- * and the `docs/decisions/` exemption all ask it.
- */
-const under = (dir, rel) => rel.startsWith(`${dir}/`)
-
 const exemptions = (scaffolded) => (target) => {
   const clean = target.replace(/\/+$/, '')
   return scaffolded.has(clean) || clean === 'docs/decisions' || under('docs/decisions', clean)
@@ -147,6 +148,7 @@ export function check() {
       ![...scaffolded].some((t) => under(dir, t))
     )
   }
+  const keeps = (path) => (here.has(path) ? classOf(path) === 'jig-only' : keptDir(path))
   const failures = []
 
   for (const rel of subjects(all, scaffolded, classOf)) {
@@ -166,11 +168,10 @@ export function check() {
          * A path jig does not actually hold is not a path jig KEEPS. The registry classifies by
          * glob, so `docs/**: jig-only` answers for `docs/HARDWARE_BUILD_PLAN.md` — a muster
          * document this repo has never had — as confidently as for its own. Six of the first
-         * seventeen findings were a glob answering about a file that exists nowhere here.
+         * seventeen findings were a glob answering about a file that exists nowhere here. The same
+         * holds for a directory: one jig does not hold, `keptDir` answers false for.
          */
-        if (here.has(clean)) {
-          if (classOf(clean) !== 'jig-only') continue
-        } else if (!keptDir(clean)) continue
+        if (!keeps(clean)) continue
         failures.push(`${rel}:${i + 1} — cites \`${target}\`, which jig keeps. Write \`<jig>/${target}\``)
       }
     })
