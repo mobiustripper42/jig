@@ -25,7 +25,7 @@
 
 import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
-import { classifier, fileClasses, toProject } from './lib/file-classes.mjs'
+import { classifier, fileClasses, scaffoldTargets } from './lib/file-classes.mjs'
 import { PATHISH, isClaim } from './check-context.mjs'
 
 /** Same roots `drift.mjs` walks, for the same reason: they are the paths jig ships from. */
@@ -75,11 +75,17 @@ const templates = () =>
  *    the template set outright, so this repo's class for that prefix says nothing about what a
  *    project has. `drift.mjs` excludes the same prefix for the same reason.
  */
-const scaffoldTargets = (all) => new Set(all.filter((r) => r.startsWith('scaffold/')).map(toProject))
+
+/**
+ * The one home for "lies under". A path prefix, never a bare string prefix: `docs/res` does not
+ * hold `docs/research/x.md`. The held-directory rule, the jig-kept rule, the scaffold-target rule
+ * and the `docs/decisions/` exemption all ask it.
+ */
+const under = (dir, rel) => rel.startsWith(`${dir}/`)
 
 const exemptions = (scaffolded) => (target) => {
   const clean = target.replace(/\/+$/, '')
-  return scaffolded.has(clean) || clean === 'docs/decisions' || clean.startsWith('docs/decisions/')
+  return scaffolded.has(clean) || clean === 'docs/decisions' || under('docs/decisions', clean)
 }
 
 /**
@@ -127,6 +133,20 @@ export function check() {
   const scaffolded = scaffoldTargets(all)
   const exempt = exemptions(scaffolded)
   const here = new Set(all)
+  /**
+   * A directory is jig's only when nothing under it reaches a project: it is held (some file lies
+   * under it), every file there is `jig-only`, and no scaffold installs anything under it. Looser
+   * than that flags `docs/` or `.claude/skills/`, which every project has. An unclassified file is
+   * not `jig-only` — the same refusal to guess as `subjects()`.
+   */
+  const keptDir = (dir) => {
+    const inside = all.filter((f) => under(dir, f))
+    return (
+      inside.length > 0 &&
+      inside.every((f) => classOf(f) === 'jig-only') &&
+      ![...scaffolded].some((t) => under(dir, t))
+    )
+  }
   const failures = []
 
   for (const rel of subjects(all, scaffolded, classOf)) {
@@ -148,8 +168,9 @@ export function check() {
          * document this repo has never had — as confidently as for its own. Six of the first
          * seventeen findings were a glob answering about a file that exists nowhere here.
          */
-        if (!here.has(clean)) continue
-        if (classOf(clean) !== 'jig-only') continue
+        if (here.has(clean)) {
+          if (classOf(clean) !== 'jig-only') continue
+        } else if (!keptDir(clean)) continue
         failures.push(`${rel}:${i + 1} — cites \`${target}\`, which jig keeps. Write \`<jig>/${target}\``)
       }
     })
