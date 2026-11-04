@@ -2,7 +2,7 @@
 
 ## Verdict: the pilot holds up, weakly
 
-Issue #104 set its bar as two of three checkers meeting three conditions. The decision gate and `check:context` meet all three, and the full report follows as its own task.
+Issue #104 set its bar as two of three checkers meeting three conditions. The decision gate and `check:context` meet all three. **The full report is a Claude Doc: [What three checkers cost, and what they saved](https://claude.ai/artifact/WWBkMz5u2dthGwJSRL9YeF)** (2026-11-04). It is private to the operator until shared, and every number in it comes from the worksheets here.
 
 The cost condition asks for points from labels and git history. Only one `points:N` label exists on this work, so the operator ruled on 2026-11-04 that session `## Task` blocks count as a cost source. All 29 session-block points cited in the worksheets were checked against their files. Each line holds the stated value, under the header of the task named.
 
@@ -52,7 +52,7 @@ This directory is a record of findings as of the date on each file. It cites pat
 
 ### Order
 
-The work ran in two loops. The first was a pre-pilot: the decision gate on its own, plus the calibration recount, to test whether the method produced numbers that hold up. The second added the permission denies and `check:context`, and decided the issue's "believable" bar. The full report is a third task.
+The work ran in two loops. The first was a pre-pilot: the decision gate on its own, plus the calibration recount, to test whether the method produced numbers that hold up. The second added the permission denies and `check:context`, and decided the issue's "believable" bar. A third task wrote the full report from them.
 
 | File | Checker | Loop |
 |---|---|---|
