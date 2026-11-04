@@ -15,7 +15,7 @@ Recount done 2026-11-03, read-only.
 
 ## The rule and the deny
 
-- **Prose rule:** seeds `dev/claude/CLAUDE.md:84` at `9984696` (PR #184 merge, 2026-08-16 20:39; authored `7a2472b` 2026-08-16 20:04):
+- **Prose rule:** seeds `dev/claude/CLAUDE.md:84` at `9984696` (pull request 184 merge, 2026-08-16 20:39; authored `7a2472b` 2026-08-16 20:04):
   "**There is no new decision that amends an old one.** If it changes what an existing decision decided, it is that decision, later — not a new subject. ... Two decisions that merely relate carry a plain **see also**."
   It is also DEC-S036's 2026-08-16 amendment (`docs/decisions/DEC-S036-...md:33-62`).
   When each repo's loaded shell got it: seeds template 2026-08-16 20:04; muster `2822715e` 2026-08-17 00:13; soundings `8101207` 2026-08-19 12:30; seeds' own root shell `d5f2831` 2026-08-22 17:36 (the same commit that creates DEC-S049).
@@ -43,8 +43,8 @@ Recount done 2026-11-03, read-only.
 
 - 7 distinct denials, 5 transcripts, **3 repos** (seeds 4, soundings 2, muster 1). The "4 repos" in `ANALYSIS.md:13` is wrong; the ledger's own breakdown adds up to three.
 - Re-shaped and retried: 0 of 7, so "obeyed 7 of 7" holds if obeyed means the model didn't route around it.
-- Switched to the tool the rule points at (Read): 3 certain (#2, #5, #6), #7 eventually, #1 disputed. **#3 and #4 abandoned the check they were making** (LEDGER W9 calls this "a dropped goal").
-- 2 of 7 (#1, #7) weren't the targeted shape: they were pipe truncations the glob catches by accident.
+- Switched to the tool the rule points at (Read): 3 certain (row 2, row 5, row 6), row 7 eventually, row 1 disputed. **row 3 and row 4 abandoned the check they were making** (LEDGER W9 calls this "a dropped goal").
+- 2 of 7 (row 1, row 7) weren't the targeted shape: they were pipe truncations the glob catches by accident.
 - Not counted, but relevant: `22-seeds-main.md:289-292` says "Three further `sed -n` uses succeeded in the `soundings` repo" in the same window. That repo's deny wasn't in force yet, so the deny was not fleet-wide in practice.
 - These events span 2026-08-19 to 2026-08-24. They were tallied on the afternoon of 08-25; they did not happen then.
 

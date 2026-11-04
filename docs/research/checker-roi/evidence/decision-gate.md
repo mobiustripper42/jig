@@ -5,7 +5,7 @@ Gathered 2026-11-03/04. Read-only. Every row cites a commit (repo short-sha), a 
 
 Helper outputs in this scratchpad (regenerable):
 - `*-fp.txt` — first-parent history of `main` per repo: `sha|date|parents|#files under docs/DECISIONS.md or docs/decisions/|subject`
-- `muster-before.txt` / `muster-after.txt` — muster split at 0e0b808d (the merge of PR #569 that landed the gate)
+- `muster-before.txt` / `muster-after.txt` — muster split at 0e0b808d (the merge of pull request 569 that landed the gate)
 - `*-tasks.txt` — every `## Task` block with a `**Points:**` line, from each repo's `origin/sessions`
 - `reds.txt`, `reds.json`, `episodes.txt` — every red gate output in transcripts, grouped into episodes
 - scripts: `fp.sh`, `scan.py`, `scan2.py`, `runs2.py`, `episodes.py`, `ctx.py`, `find.py`
@@ -15,9 +15,9 @@ Helper outputs in this scratchpad (regenerable):
 | Event | Citation |
 |---|---|
 | Gate commit | muster ad3c04ab, 2026-07-27 12:29 -0400 |
-| Gate reaches muster main | muster 0e0b808d (Merge PR #569), 2026-07-27 12:57 -0400 |
+| Gate reaches muster main | muster 0e0b808d (Merge pull request 569), 2026-07-27 12:57 -0400 |
 | Gate built in session | muster sessions/2026-07-27-1548-eric-main.md:18 (Task 1) |
-| jig import | jig 4cb09ae, 2026-08-27 (merged via jig bb52ece, PR #1) |
+| jig import | jig 4cb09ae, 2026-08-27 (merged via jig bb52ece, pull request 1) |
 | centerline install | centerline 59f05b5, 2026-09-19 |
 | haul install | haul 6786cf1, 2026-10-25 |
 | seeds copy (dev/claude/scripts) | seeds 57a546f 2026-08-03, fb31c09 2026-08-16, f636723 2026-08-17 |
@@ -35,7 +35,7 @@ In-class defects that were on main (found by the 2026-07-25 audit's shard Z and 
 
 | # | Defect | Class | Found by | Citation |
 |---|---|---|---|---|
-| B1 | DEC-138 (and 134/135) named different decisions on main vs feature/reservations; ambiguity leaked onto main (USER_STORIES.md:93) | duplicate id | audit shard Z | muster 47661800; issue #562; fixed 704163a9, 41744b18 |
+| B1 | DEC-138 (and 134/135) named different decisions on main vs feature/reservations; ambiguity leaked onto main (USER_STORIES.md:93) | duplicate id | audit shard Z | muster 47661800; issue 562; fixed 704163a9, 41744b18 |
 | B2 | 4 of the last 9 DECs had no index row (first casualty DEC-127, the rule mandating rows) | stale index | audit shard Z | muster 47661800; docs/audit/2026-07-25/README.md:246-248; repaired 704163a9 |
 | B3 | Footer tally "Indexed 124 of 124" vs 137 rows / 138 bodies | stale index | gate first run | muster ad3c04ab message; sessions/2026-07-27-1548-eric-main.md:28 |
 | B4 | DEC-114 cited "DEC-100 submit spinner" after DEC-100 was renumbered; same miscite copied into components/admin/reveal-selected-row.tsx | dangling/renumber fallout | gate first run | muster ad3c04ab |
@@ -49,14 +49,14 @@ Collisions in the window that were resolved at merge (git text conflict, did not
 
 | Date | What | Citation |
 |---|---|---|
-| 2026-06-29 | DEC-080 taken by #188; crew code-login renumbered to 081 | muster 7e24a024, 37f89d3b; sessions/2026-06-29-1702-eric-main.md:82 |
+| 2026-06-29 | DEC-080 taken by muster pull request 188; crew code-login renumbered to 081 | muster 7e24a024, 37f89d3b; sessions/2026-06-29-1702-eric-main.md:82 |
 | 2026-07-11 | reservation DECs 098–104 → 105–111 | muster 4f4f2ebb; sessions/2026-07-11-1755-eric-reservations.md:101 |
 | 2026-07-12 | DEC 112→114 | muster d9315fbd; sessions/2026-07-11-1801-eric-268-scrollbar-gutter.md:154 |
 | 2026-07-12 | DEC 113→115 | muster 9f1238d3; same session :154 |
 | 2026-07-13 | DEC-118 claimed elsewhere; renumbered to 119 | sessions/2026-07-13-0428-eric-11.4-booking-link-confirm.md:96 |
 | 2026-07-20 | DEC-128 renumbered from 127 (taken on main) | sessions/2026-07-20-1408-eric-bug-483-inline-asks.md:24 |
 | 2026-07-22 | orphan branch's DEC-131/132 collide with main's | sessions/2026-07-22-1849-eric-main.md:67 |
-| 2026-07-25 | #528: same two DECs double-allocated three times (126/127 → 131/132 → 138/139), plus missing index entries and a pointer at a DEC that never landed | sessions/2026-07-25-0358-eric-chore-forward-merge-main-2.md:18-35; muster 5a2790e3 |
+| 2026-07-25 | muster pull request 528: same two DECs double-allocated three times (126/127 → 131/132 → 138/139), plus missing index entries and a pointer at a DEC that never landed | sessions/2026-07-25-0358-eric-chore-forward-merge-main-2.md:18-35; muster 5a2790e3 |
 
 ## 2. AFTER
 
@@ -67,11 +67,11 @@ CI: 362 runs on main since 2026-07-27; all 97 failed runs in the repo's history 
 
 | # | Event | Reached main? | Gate's role | Citation |
 |---|---|---|---|---|
-| A1 | Footer count stale after six DEC-adding PRs merged; main red ~8h | yes | caught, but post-merge on main CI | CI runs 30600418101 (1ccaf3ce), 30624422956 (41ccfd84), 30624445280 (a641307a) on 2026-07-31; fix muster 41498b98 + 9e4edfba (PR #629); sessions/2026-07-30-0307-eric-586-admin-nav.md:360-362 |
-| A2 | DEC-173 record never reached main (pushed after PR #1022 merged) | yes (absence) | gate green — nothing cited it; adjacent to class | muster 81962479 |
+| A1 | Footer count stale after six DEC-adding PRs merged; main red ~8h | yes | caught, but post-merge on main CI | CI runs 30600418101 (1ccaf3ce), 30624422956 (41ccfd84), 30624445280 (a641307a) on 2026-07-31; fix muster 41498b98 + 9e4edfba (pull request 629); sessions/2026-07-30-0307-eric-586-admin-nav.md:360-362 |
+| A2 | DEC-173 record never reached main (pushed after pull request 1022 merged) | yes (absence) | gate green — nothing cited it; adjacent to class | muster 81962479 |
 | A3 | `supersedes: [DEC-057]` flow list silently dropped by gen:decisions; "every gate still passes" | no (caught by grep in-branch) | false negative | /home/eric/.claude/tape/b300916f-c7a6-5e1a-b0f5-8264782bb87a.jsonl:2685 (2026-09-15T18:00) |
 | A4 | DEC-175 `amends_spec` inline list dropped; "the gate passed clean by not looking" | no (@code-review) | false negative | muster fc2bd70d |
-| A5 | DEC-107 and DEC-124 marked superseded with no successor (latent on main since before the rule) | yes, latent | caught when jig's pair rule arrived | muster d4a3c70d (PR #873, 1 pt: sessions/2026-08-31-1309-spec-2.8-2.10-conformance-audit.md:103) |
+| A5 | DEC-107 and DEC-124 marked superseded with no successor (latent on main since before the rule) | yes, latent | caught when jig's pair rule arrived | muster d4a3c70d (pull request 873, 1 pt: sessions/2026-08-31-1309-spec-2.8-2.10-conformance-audit.md:103) |
 | A6 | DEC-178 duplicate id (two lanes) | no | caught in PR CI | CI run 35508089967 (task/15.14-dec-webhook-synchronous, 2026-09-20T11:32Z, "id DEC-178 is already used by …"); muster 20bc5eb1; /home/eric/.claude/tape/muster-s91-2026-09-12-2220-main.jsonl:7598 |
 | A7 | DEC-144 three-way collision | no | noticed before merge (not a gate run in evidence) | muster 40c9df9c, f125e99f |
 | A8 | DEC-182 / DEC-185 collisions | no | resolved at merge-in of main | muster 811398af, 061e62d5 |
@@ -93,23 +93,23 @@ In-class defects reaching main: none found.
 
 ## 3. BUILD
 
-| PR | What | Points | Citation |
+| Pull request | What | Points | Citation |
 |---|---|---|---|
-| muster #569 | the validator (564a) | 2 | muster sessions/2026-07-27-1548-eric-main.md:56 |
-| muster #573 | split into files + generator + checker rewrite (564b) | 5 (shared with the split) | same file :100 |
-| muster #591 | amendment guard for every id family | 2 | sessions/2026-07-28-1859-eric-main.md:56 |
-| muster #592 | amends_spec declared + checked | 5 | sessions/2026-07-28-1859-eric-main.md:99 |
-| muster #847 | schema v1 gate | 5 | sessions/2026-08-26-2129-eric-816-schema-v1.md:41 |
-| jig #1 | import from muster (jig 4cb09ae) | not traceable (no task block; first jig session is 2026-08-27-2146) | — |
-| jig #5 | schema gate adoptable (baseline) | 5 | jig sessions/2026-08-27-2146-main.md:30 |
-| jig #6 | ship schema to projects | 2 | same :44 |
-| jig #19 | supersession pair rule | 3 | sessions/2026-08-30-1418-gate-the-context-file-roster.md:49 |
-| jig #23 | frozen means frozen (mostly check-dictionary) | 5 | same :140 |
-| jig #27 | archive keeps references resolving | 3 | same :188 |
-| jig #28 | lint fix | 1 | same :207 |
-| jig #29 | check-docs resolves archive (other gate) | 2 | same :228 |
-| jig #95 | draft status | 2 | sessions/2026-10-19-0428-main.md:47 |
-| jig #96 | gen:decisions reads flow supersedes | 2 | same :63 |
+| muster pull request 569 | the validator (564a) | 2 | muster sessions/2026-07-27-1548-eric-main.md:56 |
+| muster pull request 573 | split into files + generator + checker rewrite (564b) | 5 (shared with the split) | same file :100 |
+| muster pull request 591 | amendment guard for every id family | 2 | sessions/2026-07-28-1859-eric-main.md:56 |
+| muster pull request 592 | amends_spec declared + checked | 5 | sessions/2026-07-28-1859-eric-main.md:99 |
+| muster pull request 847 | schema v1 gate | 5 | sessions/2026-08-26-2129-eric-816-schema-v1.md:41 |
+| jig pull request 1 | import from muster (jig 4cb09ae) | not traceable (no task block; first jig session is 2026-08-27-2146) | — |
+| jig pull request 5 | schema gate adoptable (baseline) | 5 | jig sessions/2026-08-27-2146-main.md:30 |
+| jig pull request 6 | ship schema to projects | 2 | same :44 |
+| jig pull request 19 | supersession pair rule | 3 | sessions/2026-08-30-1418-gate-the-context-file-roster.md:49 |
+| jig pull request 23 | frozen means frozen (mostly check-dictionary) | 5 | same :140 |
+| jig pull request 27 | archive keeps references resolving | 3 | same :188 |
+| jig pull request 28 | lint fix | 1 | same :207 |
+| jig pull request 29 | check-docs resolves archive (other gate) | 2 | same :228 |
+| jig pull request 95 | draft status | 2 | sessions/2026-10-19-0428-main.md:47 |
+| jig pull request 96 | gen:decisions reads flow supersedes | 2 | same :63 |
 GitHub `points:N` labels: none on muster issues 564/589/590/816 or PRs 569/573/591/592/847 (gh issue/pr view); jig has only issue 91 labelled.
 
 ## 4. UPKEEP (numstat, `git log --follow`)
@@ -117,9 +117,9 @@ GitHub `points:N` labels: none on muster issues 564/589/590/816 or PRs 569/573/5
 ### muster scripts/check-decisions.mjs (first ship ad3c04ab +158/-0)
 | sha | date | +/- | type |
 |---|---|---|---|
-| e59926f1 | 07-27 | 25/5 | FP fix, latent, pre-merge in build PR #569 (preamble example row would fail the build) |
+| e59926f1 | 07-27 | 25/5 | FP fix, latent, pre-merge in build pull request 569 (preamble example row would fail the build) |
 | f41a895a | 07-27 | 77/144 | refactor (split) |
-| 725cf9f7 | 07-27 | 12/0 | FP fix latent (generator non-fixed-point -> stale on a correct file, "masked today") + FN fix (load() blind to mis-named files); pre-merge PR #573 |
+| 725cf9f7 | 07-27 | 12/0 | FP fix latent (generator non-fixed-point -> stale on a correct file, "masked today") + FN fix (load() blind to mis-named files); pre-merge pull request 573 |
 | b35ea7ce | 07-28 | 30/8 | FN fix (guard never ran for non-numeric ids) |
 | ec7fb996 | 07-28 | 47/3 | feature (amends_spec) |
 | 246ad137 | 07-28 | 1/1 | FN fix (whitespace scope) |
@@ -147,7 +147,7 @@ e59926f1 24/2, f41a895a 128/101, 725cf9f7 13/0, b35ea7ce 65/1, ec7fb996 111/0, f
 | d69f9d6 | 08-27 | 55/6 | FN fix (no schema: key skipped all rules) |
 | 7ccda51 | 08-27 | 67/32 | FP-class adoption fix (every legacy record failed in jig) — pushed unreviewed |
 | 95385f9 | 08-27 | 32/67 | revert of 7ccda51 |
-| 4df3e37 | 08-27 | 67/32 | re-land of 7ccda51 via PR #5 |
+| 4df3e37 | 08-27 | 67/32 | re-land of 7ccda51 via pull request 5 |
 | 5a9fed6 | 08-27 | 33/3 | FP fix latent (archived legacy record not-listed; CRLF/BOM failed forever) — found by review pre-merge |
 | 8821367 | 08-27 | 27/20 | FP fix latent (CRLF body) |
 | b0367f4 | 08-31 | 90/17 | feature (supersession pair) |
@@ -207,7 +207,7 @@ Integrity catches (not size/format), fixed in the record unless noted:
 | E37 | 10-15 | jig | superseded with no superseded_by (DEC-J009) | projects/-home-eric-jig/7e3c02a8-…jsonl:694 |
 | E40 | 10-25 | haul | 4 "dangling" refs that were correct citations of muster's records; prose reworded to dodge the pattern — FP worked around, checker unchanged | projects/-home-eric-haul/2acb7ce8-…jsonl:660 (edits :665-669) |
 | E42 | 10-26 | haul | missing required `claims` | projects/-home-eric-haul/2acb7ce8-…jsonl:1569 |
-| E45 | 10-26 | jig | DEC-J020 pair broken because gen:decisions dropped a flow-style supersedes — a generator bug caught; became jig PR #96 | projects/-home-eric-jig/5f7e3290-…jsonl:814 (fix :822) |
+| E45 | 10-26 | jig | DEC-J020 pair broken because gen:decisions dropped a flow-style supersedes — a generator bug caught; became jig pull request 96 | projects/-home-eric-jig/5f7e3290-…jsonl:814 (fix :822) |
 | E47 | 10-26 | centerline | DEC-026 cites DEC-025 not in tree — checkout had switched branches under the session | projects/-home-eric-centerline/1ea11e54-…jsonl:2389 (diagnosis :2417) |
 | E59 | 10-31 | muster | amends_spec §2.8.12 not a SPEC section (DEC-198) | projects/-home-eric-muster/d7971e5d-…/subagents/agent-abbc43984d193c535.jsonl:201 |
 | E63 | 11-01 | centerline | superseded_by -> superseded record; superseded with no successor | projects/-home-eric-centerline/d07653c0-…/subagents/agent-aae29d01c29204207.jsonl:45 |
@@ -223,10 +223,10 @@ False negatives found later: muster b35ea7ce, bf6a7a49, 246ad137, 725cf9f7 (part
 
 | Incident | Cost recorded | Citation |
 |---|---|---|
-| #528 triple double-allocation + missing index rows + a pointer at a DEC that never landed | 1 point | muster sessions/2026-07-25-0358-eric-chore-forward-merge-main-2.md:19 |
-| #562 DEC-138/134/135 collision, found by audit shard Z | shard Z: ~10 min wall, ~407k subagent tokens, covering 4 questions (index, cross-refs, amends, contradictions), not the collision alone; resolution merge touched 73 files; session points 0 ("/kill-this was never run") | docs/audit/2026-07-25/README.md:228-229; muster 47661800, 41744b18; sessions/2026-07-26-1357-eric-main.md:8,42 |
+| muster pull request 528 triple double-allocation + missing index rows + a pointer at a DEC that never landed | 1 point | muster sessions/2026-07-25-0358-eric-chore-forward-merge-main-2.md:19 |
+| muster issue 562 DEC-138/134/135 collision, found by audit shard Z | shard Z: ~10 min wall, ~407k subagent tokens, covering 4 questions (index, cross-refs, amends, contradictions), not the collision alone; resolution merge touched 73 files; session points 0 ("/kill-this was never run") | docs/audit/2026-07-25/README.md:228-229; muster 47661800, 41744b18; sessions/2026-07-26-1357-eric-main.md:8,42 |
 | Whole 2026-07-25 doc audit (B2, B6, B7 came from it) | per-shard token costs only, e.g. shard F 143k (README.md:284); total not stated | docs/audit/2026-07-25/README.md |
-| Stale footer on main after six PRs (caught by gate, but post-merge) | main red ~8h; PR #629 + generator change | sessions/2026-07-30-0307-eric-586-admin-nav.md:360-362; muster 41498b98, 9e4edfba |
+| Stale footer on main after six PRs (caught by gate, but post-merge) | main red ~8h; pull request 629 + generator change | sessions/2026-07-30-0307-eric-586-admin-nav.md:360-362; muster 41498b98, 9e4edfba |
 | DEC-173 missing from main | found ~1h after merge (16:35 merge, 17:33 fix) | muster 81962479 |
-| Flow-style supersedes silently dropped (gate green) | later jig PR #96, 2 points | tape/b300916f-…:2685; jig sessions/2026-10-19-0428-main.md:63 |
+| Flow-style supersedes silently dropped (gate green) | later jig pull request 96, 2 points | tape/b300916f-…:2685; jig sessions/2026-10-19-0428-main.md:63 |
 | DEC-175 amends_spec dropped (gate green) | caught by @code-review; points not separable | muster fc2bd70d |

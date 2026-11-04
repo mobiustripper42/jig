@@ -3,9 +3,9 @@
 Gathered 2026-11-03 to 2026-11-04. The pre-pilot checker for issue #104.
 
 **Verdict against the issue's bar:**
-- **Counts trace to cited records: met.**
+- **Counts trace to cited records: met for muster only.** Muster is the one repo with a before and an after. jig, centerline and haul had the gate from their first decision record.
 - **Cost totals from labels and git history alone: met in part.** No `points:N` labels exist on this work, so build points come from session `## Task` blocks.
-- **Saving stated as a range with its assumptions: met.**
+- **Saving stated as a range with its assumptions: met, but weakly.** The price per escape rests on one cited incident.
 
 **The mistake it targets:** a malformed or dangling decision record. That covers a stale index, a duplicate id, an unknown topic, a dangling reference, an oversized record, a missing `revisit_if`, a declared spec amendment that never landed, and an edit to a frozen record.
 
@@ -23,11 +23,11 @@ Gathered 2026-11-03 to 2026-11-04. The pre-pilot checker for issue #104.
 
 | | Window | Merged pull requests (touching decisions) | Mistakes of this class on `main` |
 |---|---|---|---|
-| Before | muster, 2026-06-03 to 07-27 | 241 (90) | **7**, found at once by an audit and the gate's first run |
-| After | muster, 07-27 to 10-31 | 315 (81) | 1 reached `main`, caught there by the gate |
-| After | jig, 08-25 to 10-30 | 75 (22) | 0 |
-| After | centerline, 09-18 to 11-01 | 112 (30) | 0 |
-| After | haul, 10-24 to 11-02 | 30 (16) | 0 |
+| Before | muster, 2026-06-03 to 07-27 | 241 (90) | **7 kinds of defect**, found at once by an audit and the gate's first run |
+| After | muster, 07-27 to 10-31 | 315 (81) | 2: one caught on `main` by the gate, one latent and caught when a new rule arrived |
+| Gate from the start | jig, 08-25 to 10-30 | 75 (22) | 0 found in commit messages |
+| Gate from the start | centerline, 09-18 to 11-01 | 112 (30) | 0 found in commit messages |
+| Gate from the start | haul, 10-24 to 11-02 | 30 (16) | 0 found in commit messages |
 
 **The seven before:**
 1. DEC-138, 134 and 135 named different decisions on `main` and on a feature branch (muster `47661800`; fixed in `704163a9` and `41744b18`).
@@ -40,9 +40,19 @@ Gathered 2026-11-03 to 2026-11-04. The pre-pilot checker for issue #104.
 
 Eight more id collisions in that window were caught by git merge conflicts and never reached `main` (for example `7e24a024`, `4f4f2ebb`, `d9315fbd`, `9f1238d3`).
 
-**The one after:** six pull requests merged and left the footer count stale. CI went red on muster `main` (runs 30600418101, 30624422956 and 30624445280, 2026-07-31) and stayed red for about 8 hours (muster `sessions/2026-07-30-0307-eric-586-admin-nav.md:360-362`). It was fixed in `41498b98`, and `9e4edfba` removed the footer count so it can't recur.
+**The two after:**
+1. Six pull requests merged and left the footer count stale. CI went red on muster `main` (runs 30600418101, 30624422956 and 30624445280, 2026-07-31) and stayed red for about 8 hours (muster `sessions/2026-07-30-0307-eric-586-admin-nav.md:360-362`). It was fixed in `41498b98`, and `9e4edfba` removed the footer count so it can't recur.
+2. DEC-107 and DEC-124 had been marked superseded with no successor. The defect was latent on `main` from before the gate, and was caught when jig's pair rule reached muster (muster `d4a3c70d`, pull request 873).
 
-**Caveat:** the before figure is a backlog found at once, not a rate per session. No transcripts cover that window, so it can't be one.
+**Duplicate-id collisions did not stop.** After the gate they were still caught the same way as before: by git at merge (DEC-144, DEC-182, DEC-185; muster `40c9df9c`, `811398af`, `061e62d5`), and once by the gate in pull request CI (DEC-178, run 35508089967). The gate moved where a collision is caught, not how often one is made.
+
+**Why "7 against 2" is not a rate comparison:**
+- **Different units.** The before side counts kinds of defect: B6 is 28 one-sided links and B7 is 17 unlanded amendments, each counted once. The after side counts incidents.
+- **Different search effort.** The 7 came from one exhaustive audit (muster `docs/audit/2026-07-25/README.md`) plus the gate's first sweep. The after counts come from commit messages and CI. The after side was searched far less thoroughly.
+- **The class grew.** B7 is a check the gate added a day after it shipped (`ec7fb996`).
+- **One repo.** jig, centerline and haul have no before, so their zeros say only that nothing visible escaped.
+
+What the before side does show is that muster's `main` carried a backlog of these defects that nobody had noticed, and that the audit and the gate's first run were what found it.
 
 ## Cost
 
@@ -76,7 +86,7 @@ jig pull request 1, the import, has no task block: **not traceable**.
 
 ## Catches
 
-139 red outputs in transcripts, grouped into 70 episodes. A run of retries on the same record in one session counts once.
+138 red outputs in transcripts, grouped into 69 episodes, across muster, jig, centerline, haul and sheepdog. A run of retries on the same record in one session counts once. The evidence lists 70; E8 is a false match, not a gate run, and is left out here.
 
 | Kind | Episodes |
 |---|---|
@@ -85,18 +95,23 @@ jig pull request 1, the import, has no task block: **not traceable**.
 | Bold lead-in | 10 |
 | Integrity (pairs, dangling, stale index, topic, spec section, key) | about 23 |
 
-An episode can carry several kinds, so these don't add up to 70.
+An episode can carry several kinds, so these don't add up to 69.
 
 **Most red runs are the gate's own size rules.** Those episodes are trim-and-retry loops while a record is being written, not defects heading for `main`. No recorded incident prices what an oversized record would have cost. So they count as running cost, not saving.
 
-**Integrity catches:** about 23 episodes. Of these, 3 were deliberate probes and 3 came from migrating sheepdog onto the gate. That leaves about 17 real mistakes fixed in the record:
-- supersession pairs ×7;
-- unknown topic ×2;
-- missing spec section ×2;
-- stale index ×2;
-- one each: a missing key, a stray README, and a branch switched under the session.
+**Integrity catches:** 23 episodes, listed in `evidence/decision-gate.md` § 6. Taking them row by row:
 
-One catch was a bug in the generator (`gen:decisions`): it was dropping a flow-style `supersedes`, which became jig pull request 96. Each catch is cited to a transcript line in `evidence/decision-gate.md` § 6, and every episode is listed in `evidence/decision-gate-episodes.txt`.
+| Episodes | Count | Counted as a catch? |
+|---|---|---|
+| E14, E17, E27, E28, E30, E31, E36, E37, E42, E59, E63, E66, E70 | 13 | **Yes**: a mistake in a record, fixed in the record |
+| E45 | 1 | Separately: a bug in the generator (`gen:decisions`), which became jig pull request 96 |
+| E1, E2, E3 | 3 | No: migrating sheepdog onto the gate |
+| E5, E6, E9 | 3 | No: deliberate probes |
+| E7 | 1 | No: the gate read a stray `archive/README.md` as a record |
+| E40 | 1 | No: a false positive, worked around |
+| E47 | 1 | No: the checkout switched branches under the session; the record was fine |
+
+So the gate made **13 record catches** and found one generator bug. The 13 by kind: supersession pairs ×6, unknown topic ×2, spec section ×2, stale index ×2, missing key ×1. Every episode is listed in `evidence/decision-gate-episodes.txt`.
 
 **CI catches:**
 - 1 on a muster pull request branch: a duplicate DEC-178 (run 35508089967, 2026-09-20).
@@ -114,12 +129,14 @@ These are the incidents where a mistake of this class reached `main` and nothing
 |---|---|
 | Muster pull request 528: a triple id collision, missing index rows, a pointer at a record that never landed | 1 point (muster `sessions/2026-07-25-0358-eric-chore-forward-merge-main-2.md:19`) |
 | Muster issue 562: DEC-138 collision, found by audit | audit shard Z took about 10 min and about 407k subagent tokens, covering four questions; the fix merge touched 73 files; 0 points recorded (audit README `:228-229`) |
-| Stale footer on `main` | about 8 h of red `main`, plus pull request 629 |
-| Flow-style `supersedes` dropped while the gate passed | 2 points (jig pull request 96) |
+| Stale footer on `main` | about 8 h of red `main`, plus pull request 629; no points recorded |
 
-**The range.** Assume each integrity catch would otherwise have reached `main`, and that each such escape costs what the incidents above did: 0.5 to 2 points apiece.
-- **Saving:** about 17 catches × 0.5–2 points = **8 to 34 points.**
+**Only one incident carries a price in points: 1 point** (pull request 528). The other two have no recorded points. Jig pull request 96 is left out on purpose: its 2 points were the cost of fixing the checker, already counted under build, not the cost of a mistake that escaped.
+
+**The range.** It rests on that one anchor. The band around it, 0.5 to 2 points per escape, is an assumption, not a citation.
+- **Saving:** 13 catches × 0.5–2 points = **6.5 to 26 points.** At the anchor alone, 13 points.
 - **Cost:** 2 points to build the gate, plus up to 42 points of extensions (17 in muster, 25 in jig), plus the size-rule fix cycles. Some extension points are shared with other work, so 42 is an upper bound.
+- **Net:** saving 6.5–26 points against cost 2–44 points plus unpriced loops. The ranges overlap, so this worksheet claims no net figure.
 
 **Assumptions written beside it:**
 - **Not every catch would have escaped.** Before the gate, git conflicts caught eight collisions at merge. That pushes the low end down.
@@ -129,6 +146,6 @@ These are the incidents where a mistake of this class reached `main` and nothing
 
 ## What this means for the second loop
 
-- The method works when before-counts come from commits, session files and audits.
-- The comparison that holds is the backlog: seven defects on `main` before the gate, against one in four repos after.
-- The open question is whether the size rules belong in the checker's cost or are a separate rule riding on the same gate. The full report should report them on a row of their own.
+- The method produces cited numbers when before-counts come from commits, session files and audits. It does not produce a rate comparison: no checker has transcripts on both sides of its ship date.
+- The price per escape is the weakest number. The second loop should look for priced incidents first, before counting catches.
+- The size rules should go on a row of their own in the full report. They are most of the gate's red runs and none of its priced saving.

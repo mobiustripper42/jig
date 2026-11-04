@@ -13,15 +13,16 @@ The work runs in two loops. The first is a pre-pilot: the decision gate on its o
 | `01-calibration.md` | The `CLAUDE.md` § Scope Discipline result (prose rule against deny) | pre-pilot |
 | `02-decision-gate.md` | `scripts/check-decisions.mjs` | pre-pilot |
 
-`evidence/` holds the raw evidence each worksheet summarizes, with a citation on every row. The evidence files mention helper outputs and scripts in a scratchpad; those were not kept. Each can be regenerated from the commands the evidence files describe.
+`evidence/` holds the raw evidence each worksheet summarizes, with a citation on every row. The evidence files mention helper outputs and scripts in a scratchpad; those were not kept. The counts can be rebuilt from the cited commits and files, but the grouping rules are described only in prose (for example, an episode is "same session, same record, under 1h apart").
 
 ## What limits every worksheet
 
 - **No transcripts before 2026-08-30.** The oldest file in `~/.claude/tape` starts 2026-08-30, and the oldest in `~/.claude/projects/` starts 2026-10-04. seeds and soundings have none. So every "before" count comes from commits, session files, audits and observation files, never from tool calls. The calibration recount (`01-calibration.md`) is where this was found.
 - **No `points:N` labels on any of the build work.** Build cost comes from the session `## Task` blocks' `**Points:**` lines instead.
 - **Months, not years.** The gate has about three months of history after it shipped.
+- **Transcript citations are not durable.** `~/.claude/tape/…:N` and `~/.claude/projects/…:N` are files on one machine, and older ones have already been lost (jig `0de60af`, "The tape is gone from this machine"). A catch cited only to a transcript line is checkable today, not necessarily later.
 - **Prevention leaves no trace.** A mistake the gate stopped while a record was being written shows up only as a red run in a transcript, and only for the window transcripts cover.
 
 ## Who gathered it
 
-Research agents gathered the evidence read-only on 2026-11-03 and 2026-11-04. The lead session spot-checked these citations against the repos: jig `625399c:docs/ANALYSIS.md:13-14`, seeds `70f3814:observations/LEDGER.md:36`, muster `ad3c04ab` and `41498b98`, muster `sessions/2026-07-27-1548-eric-main.md:56` and `sessions/2026-07-30-0307-eric-586-admin-nav.md:360-362`.
+Research agents gathered the evidence read-only on 2026-11-03 and 2026-11-04. The lead session spot-checked these citations against the repos: jig `625399c:docs/ANALYSIS.md:13-15`, seeds `70f3814:observations/LEDGER.md:36`, muster `ad3c04ab` and `41498b98`, muster `sessions/2026-07-27-1548-eric-main.md:56` and `sessions/2026-07-30-0307-eric-586-admin-nav.md:360-362`.
