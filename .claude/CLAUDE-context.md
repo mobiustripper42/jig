@@ -8,7 +8,7 @@ jig is an unusual consumer of its own templates — it is a workflow fixture, no
 
 A fixture. The name is the argument: a jig makes the wrong cut impossible rather than discouraged, and the constraint is physical instead of remembered.
 
-jig replaces `seeds`, which failed by growing prose faster than anyone could read it. The evidence, from seeds' observation ledger: a prose rule against `sed -n` file reads was broken 58 times in one week, then the deny that replaced it fired 7 times across 3 repos and was obeyed every time (`docs/research/checker-roi/01-calibration.md`). Across a full day, one decision file was opened — the one just written — while 257KB of record sat unread and its claims still reached us, laundered through `CLAUDE.md` and code comments citing records nobody had opened.
+jig replaces `seeds`, which failed by growing prose faster than anyone could read it. The evidence, from seeds' observation ledger: a prose rule against `sed -n` file reads was broken 58 times in one week, then the deny that replaced it fired 7 times across 3 repos and was never re-shaped to get around it (`docs/research/checker-roi/01-calibration.md`). Across a full day, one decision file was opened — the one just written — while 257KB of record sat unread and its claims still reached us, laundered through `CLAUDE.md` and code comments citing records nobody had opened.
 
 **The filter every mechanism here has to pass: does it work when nobody remembers it's there?** Keep it if yes. Bin it if it is a paragraph hoping to be recalled at the right moment.
 

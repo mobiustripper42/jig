@@ -1,6 +1,6 @@
 # Calibration: "a prose rule broken 11 times, a deny obeyed 7 of 7"
 
-Recounted 2026-11-03. `CLAUDE.md` § Scope Discipline quotes this result. Issue #104 makes it the calibration case, because it is the only count in the pilot whose answer is already on record.
+Recounted 2026-11-03. `CLAUDE.md` § Scope Discipline quoted this result until 2026-11-04, when it was replaced by the rule and a pointer here. Issue #104 makes it the calibration case, because it is the only count in the pilot whose answer is already on record.
 
 **Verdict:** the deny half reproduces, with corrections. The prose half ("11 times, 4 after") does not reproduce, and nothing on disk records where it came from. The same ledger row the 7 of 7 comes from holds a checkable pair instead: the prose rule against `sed -n` was broken 58 times in one week, and the deny that replaced it was obeyed 7 of 7.
 
@@ -66,5 +66,5 @@ Only the fourth row reproduces 11 / 4. It takes muster's files from 08-06 onward
 
 - The quoted result was never like for like: the deny counts tool calls stopped, the "11" counts decision files written. The W4 pair (58 against 7 of 7) is like for like, and it is the one the full report should cite.
 - Files written before 2026-08-16 followed what the instructions said at the time, so counting them as violations inflates the "11".
-- **The shell quotes a number nobody can check.** That is a finding against `CLAUDE.md` § Scope Discipline, not a reason to stop the pilot. Fixing that text is outside this task.
+- **The shell quotes a number nobody can check.** That was a finding against `CLAUDE.md` § Scope Discipline, not a reason to stop the pilot. The text was fixed on 2026-11-04, after the pilot.
 - **The method is limited by its sources, not broken.** Before-counts have to come from commits, session files and observation files. `02-decision-gate.md` builds its before-count from exactly those.
