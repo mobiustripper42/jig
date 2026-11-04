@@ -4,7 +4,7 @@ Gathered 2026-11-04. The second-loop checker for issue #104. Raw evidence, with 
 
 **Verdict against the issue's bar:**
 - **Counts trace to cited records: met, and both counts are 0.** That measures the checker's scope, not a rate.
-- **Cost totals from labels and git history alone: met in part.** Build points come from session `## Task` blocks, and three pieces aren't traceable.
+- **Cost totals from labels, git and session blocks: met.** Build points come from session `## Task` blocks, which the operator ruled count as a cost source (README § Verdict). Three small extensions aren't traceable.
 - **Saving stated as a range: weakly met.** One priced escape (keep-tape, 2 points), the same standard as the decision gate's one anchor.
 
 **The mistake it targets:** a context doc citing a path that doesn't exist.

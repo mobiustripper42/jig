@@ -4,7 +4,7 @@ Gathered 2026-11-04. The second-loop checker for issue #104. Raw evidence, with 
 
 **Verdict against the issue's bar:**
 - **Counts trace to cited records: met in part.** The after side is transcript lines. The before side is seeds ledger rows written from transcripts that are now lost.
-- **Cost totals from labels and git history alone: not met.** One `points:N` label exists (jig issue 91). Several pieces of build work have no points recorded anywhere.
+- **Cost totals from labels, git and session blocks: not met.** One `points:N` label exists (jig issue 91). Even counting session `## Task` blocks (README § Verdict), the first denies, the `sed -n` and `sed -i` denies and the jig import have no points recorded anywhere.
 - **Saving stated as a range: not met.** No incident of this class has a price in points.
 
 **The mistake it targets:** a command the operator has decided against, run anyway. Either it ran because nothing stopped it (before the deny, or where the pattern misses), or a denied command was re-shaped to route around the deny.

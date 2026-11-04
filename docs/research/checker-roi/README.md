@@ -1,31 +1,34 @@
 # Checker cost against saving: the worksheets
 
-## Verdict: the pilot does not hold up as the issue words it
+## Verdict: the pilot holds up, weakly
 
-Issue #104 set its bar as two of three checkers meeting three conditions. Read as written, no checker meets all three: the cost condition asks for labels and git history, and the build points live in session `## Task` blocks instead. So the full report is not started. This section is the issue's one-page write-up.
+Issue #104 set its bar as two of three checkers meeting three conditions. The decision gate and `check:context` meet all three, and the full report follows as its own task.
 
-| Checker | Counts trace to records | Cost from labels and git | Saving as a range |
+The cost condition asks for points from labels and git history. Only one `points:N` label exists on this work, so the operator ruled on 2026-11-04 that session `## Task` blocks count as a cost source. All 29 session-block points cited in the worksheets were checked against their files. Each line holds the stated value, under the header of the task named.
+
+| Checker | Counts trace to records | Cost from labels, git and session blocks | Saving as a range |
 |---|---|---|---|
-| Decision gate | met, muster only | in part: points from session blocks | weakly met: one priced escape |
-| Permission denies | in part | not met: several pieces have no points anywhere | not met: no priced escape |
-| `check:context` | met; 0 before, 0 after | in part: points from session blocks | weakly met: one priced escape |
+| Decision gate | met, muster only | met; jig's import is not traceable | weakly met: one priced escape |
+| Permission denies | in part | not met: the first denies, `sed -n`, `sed -i` and the jig import have no points anywhere | not met: no priced escape |
+| `check:context` | met; 0 before, 0 after | met; three small extensions are not traceable | weakly met: one priced escape |
 
-**The verdict turns on one reading.** If session `## Task` blocks count as a cost source, the decision gate and `check:context` meet all three conditions, weakly, and the bar of two is met. The worksheets support either reading. Choosing one is the operator's call, not this pilot's.
+**Weakly, because each saving rests on one priced escape.** Every saving range is an assumed band around a single anchor, and the full report has to lead with that.
 
 **The rule for a priced escape**, applied the same way to every checker: a mistake of the checker's class reached a `main` where nothing caught it, and the task that fixed it recorded points. The decision gate has one: muster pull request 528 (1 point), before the gate existed. `check:context` has one: keep-tape, a dead citation jig's own gate couldn't see, fixed in jig pull request 41 (2 points). The denies have none.
 
-### What could not be measured, and why
+### The method's limits
+
+These limits carry into the full report.
 
 1. **The price of an escape.** Each checker has at most one priced escape (above). The other incidents record lines reverted, hours of red `main`, or nothing. One anchor is not a price, so every saving range rests on an assumed band around it.
 2. **A before rate.** No transcripts survive from before 2026-08-30, and every checker except the `git -C` denies (2026-10-07) shipped before that. Before-counts come from commits, session files, an audit or the seeds ledger. Those sources record defects that were found, not attempts, so a before and an after are rarely in the same unit (`01-calibration.md`).
 3. **Build cost from labels.** One `points:N` label exists on all of this work (jig issue 91). Session `## Task` blocks carry the points instead, and work done before a repo had session files has none.
 
-### What would have to be recorded from now on
+### What would make the next measurement stronger
 
 These are proposals, not built:
 - **When a mistake reaches `main`, record what fixing it cost.** For example, a field on the `## Task` block of the fix: what escaped, and the points. That is the missing price.
 - **Keep transcripts past the month they last today,** or at least the denial and gate-failure lines from them. Without that, no checker shipped from now on will have a before.
-- **Accept session blocks as the cost source,** or put `points:N` labels on every issue. The bar asked for labels, and the work doesn't have them.
 
 ### What the pilot found anyway
 
@@ -49,7 +52,7 @@ This directory is a record of findings as of the date on each file. It cites pat
 
 ### Order
 
-The work ran in two loops. The first was a pre-pilot: the decision gate on its own, plus the calibration recount, to test whether the method produced numbers that hold up. The second added the permission denies and `check:context`, and decided the issue's "believable" bar.
+The work ran in two loops. The first was a pre-pilot: the decision gate on its own, plus the calibration recount, to test whether the method produced numbers that hold up. The second added the permission denies and `check:context`, and decided the issue's "believable" bar. The full report is a third task.
 
 | File | Checker | Loop |
 |---|---|---|
