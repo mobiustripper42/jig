@@ -32,7 +32,7 @@ These are proposals, not built:
 
 ### What the pilot found anyway
 
-- **The `CLAUDE.md` § Scope Discipline quote can't be checked.** "Broken 11 times, 4 after" has no recorded source. The checkable pair on the same ledger row is 58 prose-rule breaks against a deny obeyed 7 of 7 (`01-calibration.md`).
+- **The `CLAUDE.md` § Scope Discipline quote couldn't be checked.** "Broken 11 times, 4 after" has no recorded source; the quote was replaced on 2026-11-04. The checkable pair on the same ledger row is 58 prose-rule breaks against a deny obeyed 7 of 7 (`01-calibration.md`).
 - **Denies are rarely re-shaped, but similar tools get through.**
   - 2 of 1,290 denials were re-shaped within the next 3 calls to reach the same thing another way.
   - 59 retried the same denied command and were denied again.
