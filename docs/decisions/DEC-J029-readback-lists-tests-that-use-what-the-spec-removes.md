@@ -34,5 +34,4 @@ deleted when its behaviour goes, retargeted when it survives under a replacement
 operator when the spec doesn't say. Write mode may edit an existing test on purpose, but only one
 Removes lists.
 
-See also DEC-J023, the Reuse check this sits beside. Draft until the first `/build-task` run that
-uses it (DEC-J020).
+See also DEC-J023, the Reuse check this sits beside.
