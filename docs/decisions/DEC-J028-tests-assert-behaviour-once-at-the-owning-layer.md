@@ -3,7 +3,7 @@ schema: 1
 id: DEC-J028
 title: "Tests assert behaviour, read copy from the catalog, and test a rule once"
 topic: "Session workflow & skills"
-status: "draft"
+status: "active"
 date: "2026-11-07"
 ruling: "On its own judgement, @test-writer asserts what a caller or user sees, not style classes or structure; reads existing copy from the message catalog; and tests a rule's edge cases once, where it lives."
 claims:

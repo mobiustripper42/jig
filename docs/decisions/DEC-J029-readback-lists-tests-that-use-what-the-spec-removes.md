@@ -3,7 +3,7 @@ schema: 1
 id: DEC-J029
 title: "Readback lists the tests that use what the spec removes"
 topic: "Session workflow & skills"
-status: "draft"
+status: "active"
 date: "2026-11-08"
 ruling: "@test-writer's readback searches the tests for every export, key, route, page or file the spec removes or renames; each use goes on Interfaces' Removes line as a deletion or a retarget, and write mode edits only the tests that line lists."
 claims:
