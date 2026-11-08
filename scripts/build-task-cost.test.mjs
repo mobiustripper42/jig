@@ -4,10 +4,10 @@
 
 import { describe, expect, it } from 'vitest'
 import { spawnSync } from 'node:child_process'
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { format, load, tally } from '../.claude/skills/build-task/cost.mjs'
+import { PLACEHOLDER, format, load, tally, writeReceipt } from '../.claude/skills/build-task/cost.mjs'
 
 const COST = join(process.cwd(), '.claude', 'skills', 'build-task', 'cost.mjs')
 const T0 = Date.parse('2026-10-18T12:00:00Z')
@@ -142,5 +142,81 @@ describe('load and the command', () => {
     })
     expect(r.status).toBe(0)
     expect(r.stdout.trim()).toBe('unavailable — no CLAUDE_CODE_SESSION_ID in this shell')
+  })
+})
+
+// Haul's receipts carried the cost in four hand-typed shapes (PR 24's columns, PR 89's, 93's and
+// 67's bullets), so no two runs could be compared without retyping them. The script writes its
+// own lines into the receipt file, and the Lead never types them.
+describe('--receipt', () => {
+  const run = (args, env) => spawnSync(process.execPath, [COST, ...args], { env: { ...process.env, ...env }, encoding: 'utf8' })
+  const setup = (body) => {
+    const home = mkdtempSync(join(tmpdir(), 'cost-receipt-'))
+    const dir = join(home, '.claude', 'projects', '-work-alpha')
+    mkdirSync(join(dir, 'sid'), { recursive: true })
+    writeFileSync(join(dir, 'sid.jsonl'), `${[user(0), reply(1, 'm', 1500)].map((e) => JSON.stringify(e)).join('\n')}\n`)
+    const file = join(home, 'receipt.md')
+    if (body !== undefined) writeFileSync(file, body)
+    return { home, file, env: { HOME: home, CLAUDE_CODE_SESSION_ID: 'sid' } }
+  }
+  const receipt = ['```', '/build-task receipt — issue #1', '  review routes — 0 to test-writer, 0 to implementer, 0 fixed by Lead', PLACEHOLDER, '```', ''].join('\n')
+
+  it('replaces the placeholder line with the cost lines, inside the fence', () => {
+    const { file, env } = setup(receipt)
+    const r = run(['--since', at(0), '--cwd', '/work/alpha', '--receipt', file], env)
+    expect(r.status).toBe(0)
+    const lines = readFileSync(file, 'utf8').split('\n')
+    expect(lines.slice(3)).toEqual(['  cost          — 1.5k output tokens, 1 active min', '  lead          opus      1.5k out       0 cache read', '```', ''])
+  })
+
+  it('appends the lines at the end, and says so, when the file has no placeholder', () => {
+    const { file, env } = setup('receipt\n')
+    const r = run(['--since', at(0), '--cwd', '/work/alpha', '--receipt', file], env)
+    expect(r.status).toBe(0)
+    expect(readFileSync(file, 'utf8')).toBe('receipt\n  cost          — 1.5k output tokens, 1 active min\n  lead          opus      1.5k out       0 cache read\n')
+    expect(r.stdout).toContain(`no cost placeholder in ${file}; appended at the end`)
+  })
+
+  it('writes the unavailable line in place of the placeholder, and exits 0', () => {
+    const { file, env } = setup(receipt)
+    const r = run(['--since', at(0), '--receipt', file], { ...env, CLAUDE_CODE_SESSION_ID: '' })
+    expect(r.status).toBe(0)
+    expect(readFileSync(file, 'utf8').split('\n')[3]).toBe('  cost          — unavailable — no CLAUDE_CODE_SESSION_ID in this shell')
+  })
+
+  it('prints the same lines to stdout with or without --receipt', () => {
+    const { file, env } = setup(receipt)
+    const plain = run(['--since', at(0), '--cwd', '/work/alpha'], env)
+    const withFile = run(['--since', at(0), '--cwd', '/work/alpha', '--receipt', file], env)
+    expect(withFile.stdout).toBe(plain.stdout)
+  })
+
+  it('says so, and exits 0, when the receipt file does not exist', () => {
+    const { file, env } = setup()
+    const r = run(['--since', at(0), '--cwd', '/work/alpha', '--receipt', file], env)
+    expect(r.status).toBe(0)
+    expect(r.stdout).toContain(`unavailable — no receipt file at ${file}`)
+  })
+
+  it('says so, and exits 0, when the receipt cannot be read or written', () => {
+    const { home, env } = setup()
+    const r = run(['--since', at(0), '--cwd', '/work/alpha', '--receipt', home], env)
+    expect(r.status).toBe(0)
+    expect(r.stdout).toContain('unavailable — could not write receipt: EISDIR')
+  })
+
+  it("matches the cost line in SKILL.md's template, so a template edit cannot route every receipt to the append", () => {
+    const skill = readFileSync(join(process.cwd(), '.claude', 'skills', 'build-task', 'SKILL.md'), 'utf8')
+    expect(skill.split('\n')).toContain(PLACEHOLDER)
+  })
+})
+
+describe('writeReceipt', () => {
+  it('reports which it did', () => {
+    const file = join(mkdtempSync(join(tmpdir(), 'cost-wr-')), 'r.md')
+    writeFileSync(file, `a\n${PLACEHOLDER}\nb\n`)
+    expect(writeReceipt(file, ['x', 'y'])).toBe('replaced')
+    expect(readFileSync(file, 'utf8')).toBe('a\n  cost          — x\ny\nb\n')
+    expect(writeReceipt(file, ['z'])).toBe('appended')
   })
 })
