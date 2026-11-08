@@ -106,11 +106,13 @@ export function format(t) {
 }
 
 /** The receipt's cost line as SKILL.md's template writes it, for `--receipt` to fill. */
-export const PLACEHOLDER = '  cost          — <cost.mjs>'
+const COST_PREFIX = '  cost          — '
+export const PLACEHOLDER = `${COST_PREFIX}<cost.mjs>`
 
 /**
  * Puts the cost lines into the receipt file: the first placeholder becomes the first line, the rest
- * follow it, so they stay inside the receipt's fence. With no placeholder they go at the end.
+ * follow it, so they stay inside the receipt's fence. With no placeholder they go at the end, in the
+ * same shape.
  *
  * Why the script writes them: in Haul the Lead retyped them, and its receipts carried the cost in
  * four shapes, so no two runs could be compared without retyping them again (issue 113).
@@ -118,13 +120,14 @@ export const PLACEHOLDER = '  cost          — <cost.mjs>'
 export function writeReceipt(file, lines) {
   const text = readFileSync(file, 'utf8')
   const rows = text.split('\n')
+  const filled = [`${COST_PREFIX}${lines[0]}`, ...lines.slice(1)]
   const i = rows.indexOf(PLACEHOLDER)
   if (i >= 0) {
-    rows.splice(i, 1, `${PLACEHOLDER.slice(0, -'<cost.mjs>'.length)}${lines[0]}`, ...lines.slice(1))
+    rows.splice(i, 1, ...filled)
     writeFileSync(file, rows.join('\n'))
     return 'replaced'
   }
-  writeFileSync(file, `${text}${text && !text.endsWith('\n') ? '\n' : ''}${lines.join('\n')}\n`)
+  writeFileSync(file, `${text}${text && !text.endsWith('\n') ? '\n' : ''}${filled.join('\n')}\n`)
   return 'appended'
 }
 
@@ -177,8 +180,13 @@ if (process.argv[1]?.endsWith('cost.mjs')) {
   }
   console.log(lines.join('\n'))
   const receipt = arg('--receipt')
+  // A directory, an unreadable file or a full disk throws here, and the cost must never fail a run.
   if (receipt) {
-    if (!existsSync(receipt)) console.log(`unavailable — no receipt file at ${receipt}`)
-    else if (writeReceipt(receipt, lines) === 'appended') console.log(`no cost placeholder in ${receipt}; appended at the end`)
+    try {
+      if (!existsSync(receipt)) console.log(`unavailable — no receipt file at ${receipt}`)
+      else if (writeReceipt(receipt, lines) === 'appended') console.log(`no cost placeholder in ${receipt}; appended at the end`)
+    } catch (e) {
+      console.log(`unavailable — could not write receipt: ${e.message}`)
+    }
   }
 }

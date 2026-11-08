@@ -245,7 +245,10 @@ minutes, which include short waits on the operator but not long ones, into the f
 `<cost.mjs>`. Never type or reshape those lines: in Haul they were retyped in four shapes, and the
 receipts could not be compared. Whatever it writes stays, `unavailable — <why>` included, and the
 run carries on. If it printed the `echo` line, it never ran: put that line where `<cost.mjs>` was.
-That file is the section `gh pr edit` appends and the receipt you print.
+If it printed `no receipt file at`, `could not write receipt` or `no cost placeholder`, fix the file
+and run it again; once more failing, the cost line is `unavailable — <what it printed>`. The new
+body for `gh pr edit` is the current body, then `## /build-task receipt`, then that file; print
+the file as the receipt.
 
 The receipt is also what this workflow spent, in a shape the old loop's session file can be
 compared against. `settled` is the operator's audit of the calls made without them — every

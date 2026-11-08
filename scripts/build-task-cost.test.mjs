@@ -173,7 +173,7 @@ describe('--receipt', () => {
     const { file, env } = setup('receipt\n')
     const r = run(['--since', at(0), '--cwd', '/work/alpha', '--receipt', file], env)
     expect(r.status).toBe(0)
-    expect(readFileSync(file, 'utf8')).toBe('receipt\n1.5k output tokens, 1 active min\n  lead          opus      1.5k out       0 cache read\n')
+    expect(readFileSync(file, 'utf8')).toBe('receipt\n  cost          — 1.5k output tokens, 1 active min\n  lead          opus      1.5k out       0 cache read\n')
     expect(r.stdout).toContain(`no cost placeholder in ${file}; appended at the end`)
   })
 
@@ -196,6 +196,18 @@ describe('--receipt', () => {
     const r = run(['--since', at(0), '--cwd', '/work/alpha', '--receipt', file], env)
     expect(r.status).toBe(0)
     expect(r.stdout).toContain(`unavailable — no receipt file at ${file}`)
+  })
+
+  it('says so, and exits 0, when the receipt cannot be read or written', () => {
+    const { home, env } = setup()
+    const r = run(['--since', at(0), '--cwd', '/work/alpha', '--receipt', home], env)
+    expect(r.status).toBe(0)
+    expect(r.stdout).toContain('unavailable — could not write receipt: EISDIR')
+  })
+
+  it("matches the cost line in SKILL.md's template, so a template edit cannot route every receipt to the append", () => {
+    const skill = readFileSync(join(process.cwd(), '.claude', 'skills', 'build-task', 'SKILL.md'), 'utf8')
+    expect(skill.split('\n')).toContain(PLACEHOLDER)
   })
 })
 
