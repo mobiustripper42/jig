@@ -50,11 +50,13 @@ abandoned before then leaves it as a commit on the branch.
 
 Spawn `@test-writer` with: the issue number, and the instruction **readback only — write nothing.**
 
-It returns four sections: **Assumptions** (things it would have to decide that the spec does
-not), **Questions**, an **Interface check**, and a **Reuse check** (existing code that already
+It returns five sections: **Assumptions** (things it would have to decide that the spec does
+not), **Questions**, an **Interface check**, a **Reuse check** (existing code that already
 does something the spec would build, and anything the spec describes in more than one place
-without naming one shared home for it). An Interfaces entry reported NOT FOUND and not marked new
-is a question. If all but the Interface check are empty, go to Step 2.
+without naming one shared home for it), and a **Removal check** (every test that uses something
+the spec removes or renames). An Interfaces entry reported NOT FOUND and not marked new
+is a question. If all but the Interface check are empty, and the Removal check holds only `used by
+no test`, go to Step 2.
 
 Sort each item, and write every one you accept into the section of the issue it belongs to
 (`gh issue edit <N> --body-file`). An answer that lives only in this conversation is invisible to
@@ -80,6 +82,14 @@ new, with its file added to "Files touched". A CSS class is not a signature and 
 place that described it is reworded to point at that home. When the places describe it differently,
 choosing one changes what a criterion does: sort it as a `[you]` item above, with your
 recommendation.
+
+**A test that uses something removed** goes onto Interfaces' Removes line, with its file added to
+"Files touched", saying what happens to it. When the behaviour it checks goes away with the removed
+thing, it is deleted: a `[code]` line citing the criterion or Removes entry that takes the
+behaviour away. When the behaviour survives under what replaces it, it is retargeted: a `[code]`
+line naming the replacement. When the spec does not say whether the behaviour survives, sort it as
+a `[you]` item above, with your recommendation. A removal changes what that test checks, not what
+a criterion does, so it earns no second round on its own.
 
 Keep every `[code]` and `[Lead]` line, word for word, for the receipt.
 
@@ -124,7 +134,8 @@ Check, in order:
 1. **Coverage both ways.** Every acceptance criterion has at least one test, except one marked
    `(by hand)`, which is checked at the hand-back instead. Every test names the criterion it
    covers. A gap either way goes back to `@test-writer`. A test file that existed before this run
-   and appears in its Files list was edited: that is a stub report, not a test.
+   and appears in its Files list was edited: that is a stub report, not a test — unless Interfaces'
+   Removes line lists it, and the edit is the deletion or retarget that line names.
 2. **Fails for the right reason.** Run the `Proof command` yourself, against the stubs. Each test
    must fail on its own assertion — a wrong value, a missing row, a call that didn't throw — not on
    a missing file or function, a typo, a bad import path, or broken setup. The one exception is a
