@@ -1,16 +1,16 @@
 ---
 name: build-task
-description: Build a specced task through @test-writer and @implementer instead of coding it in the session. For any task that changes behavior and has a criterion the Proof slot can check, whatever its points, once the spec is written into the issue from this skill's task-spec.md and the branch is cut. Replaces the prove / build / run-the-proof steps and ends by running /kill-this.
+description: Build a specced task through @test-writer and @implementer instead of coding it in the session. For any task that changes behavior and has a criterion the Proof slot can check, whatever its points, once the spec has been walked with the operator from this skill's task-spec.md and the branch is cut; Step 0 writes the spec into the issue. Replaces the prove / build / run-the-proof steps and ends by running /kill-this.
 ---
 
 You are the Lead. You do not write production code or tests in this skill. You check the spec, hand
 work to two agents, verify what they return, and ship. Every check below is one you run yourself —
 an agent's report that something passed is a claim, not a result.
 
-**The operator running this skill is the approval of the spec.** The spec was written into the
-issue from `task-spec.md` (beside this file) and worked through with the operator before now:
-the summary first, then the job and acceptance criteria, then the `[Lead]` lines. Do not present
-it again. From here the run goes to the pull request, stopping only where information turns out
+**The operator running this skill is the approval of the spec.** The spec was worked through
+with the operator from `task-spec.md` (beside this file) before now: the summary first, then the
+job and acceptance criteria, then the `[Lead]` lines. Step 0 writes it into the issue; the
+operator does not. Do not present it again. From here the run goes to the pull request, stopping only where information turns out
 to be missing.
 
 ## Step 0 — Gate
@@ -25,8 +25,15 @@ Abort with a one-line reason if any of these fail:
 - **Branch.** You are on `task/X.Y-*`, not `main`.
 - **Proof slot.** `.claude/CLAUDE-context.md` § Workflow Mechanisms names a real `Proof` and
   `Proof command`. If it says `none`, there is nothing to write tests in — use the normal loop.
-- **Spec.** Read the issue body with `gh issue view <N>`. Every section in `task-spec.md` is
-  present and non-empty, and `Open questions` is empty. "None" is an answer; blank is not.
+- **Spec.** Write the spec this conversation walked with the operator into the issue, in
+  `task-spec.md`'s sections: `gh issue edit <N> --body-file <file>`, then print the issue's link.
+  Write only what the walk settled; a section it left unsettled is the abort, naming the section.
+  If the issue body holds anything else — the request it was filed with — post that as an issue
+  comment first, so it is kept and the agents, who read the body, never take it for the spec.
+  With no walk in this conversation — a run started again after a Stop, in a fresh context —
+  write nothing and use the issue as it stands. Then read the body back with `gh issue view <N>`:
+  every section in `task-spec.md` is present and non-empty, and `Open questions` is empty.
+  "None" is an answer; blank is not.
 
 The issue body is the spec. Agents are pointed at it by number. Never paraphrase it into a prompt.
 The one exception is a second readback round, whose prompt names the lines that changed.

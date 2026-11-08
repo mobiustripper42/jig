@@ -1,7 +1,7 @@
 <!--
 The spec for a task headed for /build-task: any task that changes behaviour, whatever its points.
-It is the issue body: write it with `gh issue edit <N> --body-file`, and write every change there,
-not only in the chat. The agents read the issue by number and never see the conversation.
+It is the issue body: /build-task's Step 0 writes it there from the walk, with `gh issue edit <N>
+--body-file`, and every later change is written there too, not only in the chat. The agents read the issue by number and never see the conversation.
 
 A small task fills the same sections, briefly. A bug fix's AC1 is the reproduction, stated as the
 behaviour it should have; a section with nothing to say is "None".
@@ -13,7 +13,8 @@ operator through it in this order, and stop at the first part they say is wrong:
   1. Summary
   2. Job and acceptance criteria
   3. Every [Lead] line, grouped by section. [you] and [code] lines only if asked.
-The operator approves by running /build-task. It refuses to start while any section is blank or
+The operator approves the walk by running /build-task. Its Step 0 writes the spec into the issue,
+then refuses to start while any section is blank or
 Open questions has anything in it. "None" is an answer; blank is not.
 
 Every line in the sections below carries its source:
