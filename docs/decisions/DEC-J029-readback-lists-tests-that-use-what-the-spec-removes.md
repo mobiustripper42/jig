@@ -3,7 +3,7 @@ schema: 1
 id: DEC-J029
 title: "Readback lists the tests that use what the spec removes"
 topic: "Session workflow & skills"
-status: "draft"
+status: "active"
 date: "2026-11-08"
 ruling: "@test-writer's readback searches the tests for every export, key, route, page or file the spec removes or renames; each use goes on Interfaces' Removes line as a deletion or a retarget, and write mode edits only the tests that line lists."
 claims:
@@ -34,5 +34,4 @@ deleted when its behaviour goes, retargeted when it survives under a replacement
 operator when the spec doesn't say. Write mode may edit an existing test on purpose, but only one
 Removes lists.
 
-See also DEC-J023, the Reuse check this sits beside. Draft until the first `/build-task` run that
-uses it (DEC-J020).
+See also DEC-J023, the Reuse check this sits beside.
