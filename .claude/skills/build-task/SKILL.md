@@ -10,8 +10,8 @@ an agent's report that something passed is a claim, not a result.
 **The operator running this skill is the approval of the spec.** The spec was worked through
 with the operator from `task-spec.md` (beside this file) before now: the summary first, then the
 job and acceptance criteria, then the `[Lead]` lines. Step 0 writes it into the issue; the
-operator does not. Do not present it again. From here the run goes to the pull request, stopping only where information turns out
-to be missing.
+operator does not. Do not present it again. From here the run goes to the pull request,
+stopping only where information turns out to be missing.
 
 ## Step 0 — Gate
 
@@ -25,15 +25,20 @@ Abort with a one-line reason if any of these fail:
 - **Branch.** You are on `task/X.Y-*`, not `main`.
 - **Proof slot.** `.claude/CLAUDE-context.md` § Workflow Mechanisms names a real `Proof` and
   `Proof command`. If it says `none`, there is nothing to write tests in — use the normal loop.
-- **Spec.** Write the spec this conversation walked with the operator into the issue, in
-  `task-spec.md`'s sections: `gh issue edit <N> --body-file <file>`, then print the issue's link.
-  Write only what the walk settled; a section it left unsettled is the abort, naming the section.
-  If the issue body holds anything else — the request it was filed with — post that as an issue
-  comment first, so it is kept and the agents, who read the body, never take it for the spec.
-  With no walk in this conversation — a run started again after a Stop, in a fresh context —
-  write nothing and use the issue as it stands. Then read the body back with `gh issue view <N>`:
-  every section in `task-spec.md` is present and non-empty, and `Open questions` is empty.
-  "None" is an answer; blank is not.
+- **Spec.** Decide by the issue body, not by memory of the conversation. If the body already has
+  every section heading in `task-spec.md`, it is the spec — an earlier run's, with its `[code]`,
+  `[Lead]` and `[you]` lines, or one written by hand: write nothing. A spec already in the issue is
+  changed by editing it there, never by re-writing it from the conversation. Otherwise write the
+  spec the operator walked in this conversation, in this order:
+  1. Every section was settled in the walk. If one was not, or there was no walk, abort naming
+     what is missing, with the issue untouched.
+  2. Write the body file in the scratchpad.
+  3. If the body holds anything — the request the issue was filed with — post it as an issue
+     comment, so it is kept and the agents, who read only the body, never take it for the spec.
+  4. `gh issue edit <N> --body-file <file>`. If it fails, stop. Print the issue's link.
+
+  Then read the body back with `gh issue view <N>`: every section in `task-spec.md` is present
+  and non-empty, and `Open questions` is empty. "None" is an answer; blank is not.
 
 The issue body is the spec. Agents are pointed at it by number. Never paraphrase it into a prompt.
 The one exception is a second readback round, whose prompt names the lines that changed.

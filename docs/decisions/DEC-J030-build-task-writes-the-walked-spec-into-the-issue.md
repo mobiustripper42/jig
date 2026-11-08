@@ -5,7 +5,7 @@ title: "/build-task writes the walked spec into the issue"
 topic: "Session workflow & skills"
 status: "draft"
 date: "2026-11-08"
-ruling: "The spec is walked with the operator in the conversation, and /build-task's Step 0 writes it into the issue; running the skill approves the walk. A run with no walk uses the issue as it stands."
+ruling: "The spec is walked with the operator in the conversation, and /build-task's Step 0 writes it into the issue; running the skill approves the walk. An issue whose body is already a spec is used as it stands."
 claims:
   - kind: "file"
     target: ".claude/skills/build-task/SKILL.md"
@@ -24,7 +24,8 @@ second item). The operator asks for the write each time, and sometimes forgets t
 
 So the write moves into the skill. Running `/build-task` now approves the walk rather than a body
 the operator could read first; the issue link is printed as Step 0 writes it. The issue's original
-request is kept as a comment, out of the body the agents read. Invoking the skill approves the
-write (DEC-J002).
+request is kept as a comment, out of the body the agents read. Step 0 decides by the body, not
+the conversation: a body that is already a spec holds a run's readback lines, and a re-write from
+the walk would drop them. Invoking the skill approves the write (DEC-J002).
 
-See also DEC-J025, which sets the route. Draft until the first run under it (DEC-J020).
+See also DEC-J025, which sets the route, and DEC-J022, whose "specced in its issue" this narrows. Draft until the first run under it (DEC-J020).
