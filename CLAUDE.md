@@ -103,7 +103,7 @@ Two things the gate cannot check, which is why they are here:
 
 ## Pull Request Workflow
 
-- One branch per task: `task/X.Y-short-description`. Pull request title references the issue: `closes #N`.
+- One branch per task: `task/X.Y-short-description`, or `task/<issue>-short-description` for a task with no plan row. Pull request title references the issue: `closes #N`.
 - `/kill-this` opens the pull request. Self-merge after review unless a stakeholder needs to look.
 - Keep ≤3 open pull requests. Prefer 1.
 - Never two open pull requests with migrations on the same table.
