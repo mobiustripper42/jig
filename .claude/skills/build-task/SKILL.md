@@ -22,7 +22,7 @@ Abort with a one-line reason if any of these fail:
   order. A task that is only layout, spacing or styling
   has nothing for `@test-writer` to assert: use the normal loop, with `@ui-reviewer` and a
   screenshot at the hand-back.
-- **Branch.** You are on `task/X.Y-*`, not `main`.
+- **Branch.** You are on `task/X.Y-*` or `task/<issue>-*`, not `main`.
 - **Proof slot.** `.claude/CLAUDE-context.md` § Workflow Mechanisms names a real `Proof` and
   `Proof command`. If it says `none`, there is nothing to write tests in — use the normal loop.
 - **Spec.** Decide by the issue body, not by memory of the conversation. If the body already has

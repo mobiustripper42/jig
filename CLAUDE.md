@@ -40,7 +40,7 @@ Project-specific docs are listed in `.claude/CLAUDE-context.md` under `## Additi
 
 ## Migration Protocol
 
-- **All schema changes go through migrations.** Migrations are the source of truth — never edit schema through a dashboard, never hand-patch an applied migration.
+- **All schema changes go through migrations.** Migrations are the source of truth — never edit schema through a dashboard, never hand-patch an applied migration. Applied means merged and run against a shared database; before that it is a draft on its branch.
 - **Before creating one:** check for open pull requests touching the same tables (`gh pr list`). If they overlap, merge first or rename to a later timestamp.
 
 Toolchain specifics live in `.claude/CLAUDE-context.md` under `## Migration Protocol (project)`. Projects without a database mark it `N/A` there.
