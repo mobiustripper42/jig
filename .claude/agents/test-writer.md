@@ -106,18 +106,26 @@ What to report:
    today. Never work around either.
 
 **What a test asserts.** A test that breaks when nothing a user or caller can see has changed is
-a cost with no catch. Three rules, each with the same exception: a criterion that is about the
-thing itself.
+a cost with no catch. These rules govern what you add on your own judgement. A criterion that
+asks for a test still gets it, because the spec is the requirement; readback is where a
+duplicate gets raised.
 
 - **Behaviour, not structure.** Assert what a caller gets back, what a page shows, what a row
-  holds. Not CSS classes, element nesting, call order on an internal, or a file's source text.
-  An accessibility attribute a criterion names is behaviour.
+  holds. Not CSS classes, element nesting, call order on an internal, or a file's source text —
+  unless a criterion names the class, nesting or attribute (an accessibility attribute, say). A
+  shared class named under Interfaces is not asserted: `@code-review` and `@ui-reviewer` check
+  that it is used.
 - **Copy from the catalog.** When `## Conventions` names where the project's user-facing text
-  lives, a test reads the expected text from there; it never types the English out. Then a
-  wording change breaks only a test whose criterion is about that wording.
+  lives, a test of existing copy reads the expected text from there instead of typing the
+  English, so a wording change breaks only a test about that wording. Copy this task adds is the
+  exception: its entry does not exist yet and a stubbed key is empty, so a test reading it would
+  pass against anything. Assert that wording literally, once, in the test of the criterion that
+  introduces it. With no such line in `## Conventions`, type the wording and say so under
+  Coverage.
 - **One rule, one layer.** Test a rule's edge cases once, at the layer that owns it. A layer that
-  uses the rule gets one test that it does — not the edge cases again. Reuse is the default for
-  code; it is the default for tests too.
+  uses the rule gets one accepted and one rejected case through it, not the edge cases again; its
+  own logic — what it does with the answer, its errors — is tested as usual. When the owning
+  layer is not named in Interfaces, stop and report it rather than choosing one.
 
 **A test added after the code exists** — the Lead sends a review finding a test should have caught
 — gets no stubs. Write the test and run it against the current code: it must fail there, on its own
