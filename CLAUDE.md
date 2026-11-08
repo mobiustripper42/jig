@@ -40,7 +40,7 @@ Project-specific docs are listed in `.claude/CLAUDE-context.md` under `## Additi
 
 ## Migration Protocol
 
-- **All schema changes go through migrations.** Migrations are the source of truth — never edit schema through a dashboard, never hand-patch an applied migration.
+- **All schema changes go through migrations.** Migrations are the source of truth — never edit schema through a dashboard, never hand-patch an applied migration. Applied means merged and run against a shared database; before that it is a draft on its branch.
 - **Before creating one:** check for open pull requests touching the same tables (`gh pr list`). If they overlap, merge first or rename to a later timestamp.
 
 Toolchain specifics live in `.claude/CLAUDE-context.md` under `## Migration Protocol (project)`. Projects without a database mark it `N/A` there.
@@ -103,7 +103,7 @@ Two things the gate cannot check, which is why they are here:
 
 ## Pull Request Workflow
 
-- One branch per task: `task/X.Y-short-description`. Pull request title references the issue: `closes #N`.
+- One branch per task: `task/X.Y-short-description`, or `task/<issue>-short-description` for a task with no plan row. Pull request title references the issue: `closes #N`.
 - `/kill-this` opens the pull request. Self-merge after review unless a stakeholder needs to look.
 - Keep ≤3 open pull requests. Prefer 1.
 - Never two open pull requests with migrations on the same table.
