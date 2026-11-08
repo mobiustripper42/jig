@@ -68,6 +68,8 @@ that never reached the spec is a red build rather than prose nobody cross-read.
 - DEC-J026 — One shared home for anything a spec describes twice
 - DEC-J027 — @ui-reviewer runs per task on touched screens, and on every screen at phase end
 - DEC-J028 — Tests assert behaviour, read copy from the catalog, and test a rule once
+- DEC-J029 — Readback lists the tests that use what the spec removes
+- DEC-J030 — /build-task writes the walked spec into the issue
 
 ### Model selection
 - DEC-J009 — Model and effort settings for sessions and agents
