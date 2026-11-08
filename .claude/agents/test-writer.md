@@ -67,8 +67,9 @@ layer that owns the rule, so the spec can say the others only check that they us
 
 **The removal check.** For each thing the spec removes or renames — an export, constant, copy or
 config key, route, page or file, whether Interfaces lists it under Removes or a criterion implies
-it — search every test, fixture and helper for a use of it, and list each use with its path, line
-and test name. A rename removes the old name. A thing no test uses is listed as `used by no test`,
+it — search every test, fixture, helper, snapshot and test config for a use of it, and list each
+use with its path, line and test name. For a copy key, search for its current wording too, since a
+test may type the text instead of reading the key. A rename removes the old name. A thing no test uses is listed as `used by no test`,
 so the operator can see it was searched. A use the Removes line already lists is not reported
 again. A test that uses a removed thing passes today and fails once the code is gone, and a test is
 locked before that happens — which is why this section is not filtered by what could fail one.
@@ -117,9 +118,11 @@ What to report:
    today. Never work around either.
 8. Edit the existing tests Interfaces lists under Removes, and no other existing test. Each line
    says what happens to its test: deleted, or retargeted to what replaces the removed thing. List
-   every such file under Files. A retargeted test is run against the stubs like any other; a
-   deleted one is not. An existing test this task breaks that Removes does not list is a question,
-   not an edit: stop and return it.
+   every such file under Files. A retargeted test keeps its name and needs no criterion id, and
+   item 5 does not apply to it: it guards behaviour that already exists, so it may pass against
+   the stubs. Report it under Against the stubs as `retargeted: <replacement>`. An existing test
+   that uses something removed and is not listed under Removes is a question, not an edit: stop
+   and return it.
 
 **What a test asserts.** A test that breaks when nothing a user or caller can see has changed is
 a cost with no catch. These rules govern what you add on your own judgement. A criterion that
@@ -164,7 +167,7 @@ Return:
 | AC1 | <test names> |
 
 ### Against the stubs
-- <test name> — fails: <the assertion that failed> | passes: guards <what>, partner <failing test>
+- <test name> — fails: <the assertion that failed> | passes: guards <what>, partner <failing test> | retargeted: <replacement>
 
 ### Proof output
 <the run against the stubs>

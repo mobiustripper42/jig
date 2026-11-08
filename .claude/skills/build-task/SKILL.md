@@ -55,8 +55,8 @@ not), **Questions**, an **Interface check**, a **Reuse check** (existing code th
 does something the spec would build, and anything the spec describes in more than one place
 without naming one shared home for it), and a **Removal check** (every test that uses something
 the spec removes or renames). An Interfaces entry reported NOT FOUND and not marked new
-is a question. If all but the Interface check are empty, and the Removal check holds only `used by
-no test`, go to Step 2.
+is a question. If Assumptions, Questions and the Reuse check are empty, and the Removal check is
+`None` or holds only `used by no test`, go to Step 2.
 
 Sort each item, and write every one you accept into the section of the issue it belongs to
 (`gh issue edit <N> --body-file`). An answer that lives only in this conversation is invisible to
@@ -118,7 +118,7 @@ It returns one of three things:
 - **A stub report** — a stub would force a test to bend: edit an existing test, or work around
   what the stub cannot provide. Bring it to the operator with your recommendation; do not let
   `@test-writer` bend the test to get past it.
-- **The tests** — the files it created or edited (tests, fixtures, helpers), the stubs it wrote, a
+- **The tests** — the files it created, edited or deleted (tests, fixtures, helpers), the stubs it wrote, a
   map of acceptance criterion → test names, and how each test fares against the stubs.
 
 **Why stubs.** A red test proves something only when it fails on its own assertion: that failure is
@@ -135,7 +135,9 @@ Check, in order:
    `(by hand)`, which is checked at the hand-back instead. Every test names the criterion it
    covers. A gap either way goes back to `@test-writer`. A test file that existed before this run
    and appears in its Files list was edited: that is a stub report, not a test — unless Interfaces'
-   Removes line lists it, and the edit is the deletion or retarget that line names.
+   Removes line lists it, and the edit is the deletion or retarget that line names. A retargeted
+   test keeps its own name, with no criterion id, and is exempt from the naming rule and from
+   check 2: it guards behaviour that already exists, so it may pass against the stubs.
 2. **Fails for the right reason.** Run the `Proof command` yourself, against the stubs. Each test
    must fail on its own assertion — a wrong value, a missing row, a call that didn't throw — not on
    a missing file or function, a typo, a bad import path, or broken setup. The one exception is a
@@ -143,7 +145,7 @@ Check, in order:
    reason, when the report marks it new in this task. A test that passes
    against the stubs is accepted only beside the failing partner the report names, the test that
    proves the behaviour it guards. Anything else goes back to `@test-writer`.
-3. **Lock the tests.** Commit every file `@test-writer` created or edited, except the stubs, on its
+3. **Lock the tests.** Commit every file `@test-writer` created, edited or deleted, except the stubs, on its
    own: `git add <files>` then `git commit -m "build-task: tests (squashed at ship)"`. Record
    `TESTS=$(git rev-parse HEAD)`, and keep the test files: every file a `@test-writer` report in
    this run lists under Files. The commit is the lock: it holds the original bytes, so a
@@ -211,6 +213,7 @@ Print it every time, before the hand-back, and append it to the pull request bod
 /build-task receipt — issue #<N>
   readback      — <rounds>, <questions asked>
   settled       — none | each [code] and [Lead] line added during the run, word for word, one per line
+  removals      — none | each removed thing the Removal check searched, with its tests or "used by no test"
   test-writer   — <tests> tests across <criteria> criteria
   stubs         — <n> written, <n> left as stubs, <n> tests passing beside a partner
   implementer   — <rounds> rounds, <stops> stops (a run started again after a Stop counts it)
