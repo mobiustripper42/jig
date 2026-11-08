@@ -155,6 +155,7 @@ Write what this project actually does, not what a template guessed.
 - **[Error handling]** — [the contract: what a failure returns and where it surfaces]
 - **[Naming]** — [files, symbols, database columns, migrations]
 - **[Testing layout]** — [what runs where]
+- **[User-facing text]** — [the path of the message catalog tests read copy from, or "inline: no catalog"]
 
 ## Workflow Notes (project)
 

@@ -58,7 +58,9 @@ no one shared home named for it in Interfaces (a CSS class, component, function 
 criterion that only restates the Screen section's wording is not one. A search of the code cannot
 find this copy, because it does not exist yet: the builder writes it twice, and every test passes.
 Report each one with the places that describe it. Skip one whose places already point at a single
-named home.
+named home. The test-side form of this finding is a rule the criteria ask to be checked at more
+than one layer — the same boundary at the function, the action and the page. Report it with the
+layer that owns the rule, so the spec can say the others only check that they use it.
 
 What to report:
 - **Only what could fail a test.** Report an assumption only if a reasonable builder could go the
@@ -102,6 +104,20 @@ What to report:
    `fails: <column> does not exist (new in this task)`. A changed signature on existing code keeps
    its implementation and gets no stub: the test calls the new shape and fails on what the code does
    today. Never work around either.
+
+**What a test asserts.** A test that breaks when nothing a user or caller can see has changed is
+a cost with no catch. Three rules, each with the same exception: a criterion that is about the
+thing itself.
+
+- **Behaviour, not structure.** Assert what a caller gets back, what a page shows, what a row
+  holds. Not CSS classes, element nesting, call order on an internal, or a file's source text.
+  An accessibility attribute a criterion names is behaviour.
+- **Copy from the catalog.** When `## Conventions` names where the project's user-facing text
+  lives, a test reads the expected text from there; it never types the English out. Then a
+  wording change breaks only a test whose criterion is about that wording.
+- **One rule, one layer.** Test a rule's edge cases once, at the layer that owns it. A layer that
+  uses the rule gets one test that it does — not the edge cases again. Reuse is the default for
+  code; it is the default for tests too.
 
 **A test added after the code exists** — the Lead sends a review finding a test should have caught
 — gets no stubs. Write the test and run it against the current code: it must fail there, on its own

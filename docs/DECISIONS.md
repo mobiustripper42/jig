@@ -67,6 +67,7 @@ that never reached the spec is a red build rather than prose nobody cross-read.
 - DEC-J025 — Every behaviour task builds through /build-task; a harvest does not
 - DEC-J026 — One shared home for anything a spec describes twice
 - DEC-J027 — @ui-reviewer runs per task on touched screens, and on every screen at phase end
+- DEC-J028 — Tests assert behaviour, read copy from the catalog, and test a rule once
 
 ### Model selection
 - DEC-J009 — Model and effort settings for sessions and agents
