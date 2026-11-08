@@ -231,18 +231,21 @@ Print it every time, before the hand-back, and append it to the pull request bod
   implementer   — <rounds> rounds, <stops> stops (a run started again after a Stop counts it)
   test lock     — intact | violated (<file>)
   review routes — <n> to test-writer, <n> to implementer, <n> fixed by Lead
-  cost          — <first line of cost.mjs>
-<the rest of cost.mjs's lines, as printed>
+  cost          — <cost.mjs>
 ```
 
-For the cost, run this from the repo root after `/kill-this` has opened the pull request, with the
-time Step 0 printed:
+Write every line but the cost, after `/kill-this` has opened the pull request, into a file in the
+scratchpad, keeping the cost line exactly as the template has it. Then, from the repo root, with
+the time Step 0 printed:
 
-    node .claude/skills/build-task/cost.mjs --since <time> 2>/dev/null || echo "unavailable — cost.mjs did not run"
+    node .claude/skills/build-task/cost.mjs --since <time> --receipt <file> 2>/dev/null || echo "unavailable — cost.mjs did not run"
 
-It reads this session's transcripts and prints the output tokens each role wrote and the active
-minutes, which include short waits on the operator but not long ones. Whatever it prints goes in
-the receipt as is, `unavailable — <why>` included, and the run carries on.
+It reads this session's transcripts and writes the output tokens each role wrote and the active
+minutes, which include short waits on the operator but not long ones, into the file in place of
+`<cost.mjs>`. Never type or reshape those lines: in Haul they were retyped in four shapes, and the
+receipts could not be compared. Whatever it writes stays, `unavailable — <why>` included, and the
+run carries on. If it printed the `echo` line, it never ran: put that line where `<cost.mjs>` was.
+That file is the section `gh pr edit` appends and the receipt you print.
 
 The receipt is also what this workflow spent, in a shape the old loop's session file can be
 compared against. `settled` is the operator's audit of the calls made without them — every
