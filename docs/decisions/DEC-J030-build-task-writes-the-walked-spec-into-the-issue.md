@@ -3,7 +3,7 @@ schema: 1
 id: DEC-J030
 title: "/build-task writes the walked spec into the issue"
 topic: "Session workflow & skills"
-status: "draft"
+status: "active"
 date: "2026-11-08"
 ruling: "The spec is walked with the operator in the conversation, and /build-task's Step 0 writes it into the issue; running the skill approves the walk. An issue whose body is already a spec is used as it stands."
 claims:
@@ -28,4 +28,4 @@ request is kept as a comment, out of the body the agents read. Step 0 decides by
 the conversation: a body that is already a spec holds a run's readback lines, and a re-write from
 the walk would drop them. Invoking the skill approves the write (DEC-J002).
 
-See also DEC-J025, which sets the route, and DEC-J022, whose "specced in its issue" this narrows. Draft until the first run under it (DEC-J020).
+See also DEC-J025, which sets the route, and DEC-J022, whose "specced in its issue" this narrows.
