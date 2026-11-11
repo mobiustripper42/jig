@@ -8,8 +8,8 @@ work to two agents, verify what they return, and ship. Every check below is one 
 an agent's report that something passed is a claim, not a result.
 
 **The operator running this skill is the approval of the spec.** The spec was worked through
-with the operator from `task-spec.md` (beside this file) before now: the summary first, then the
-job and acceptance criteria, then the `[Lead]` lines. Step 0 writes it into the issue; the
+with the operator from `task-spec.md` (beside this file) before now, in the stops it lists.
+Step 0 writes it into the issue; the
 operator does not. Do not present it again. From here the run goes to the pull request,
 stopping only where information turns out to be missing.
 
@@ -56,9 +56,7 @@ commit it on its own: `git add -A`, name in one line the files `git diff --cache
 lists, then `git commit -m "build-task: work already in the tree (squashed at ship)"`. It ships with
 the task but is not the build. Committed, it is out of reach of the test lock and of every stash
 below, which would otherwise take it with the build and delete it. Step 5 folds it back in; a run
-abandoned before then leaves it as a commit on the branch. A file the operator keeps uncommitted on
-purpose is not committed: name it, copy it to the scratchpad, leave it out of every commit, and put
-it back after any stash is dropped.
+abandoned before then leaves it as a commit on the branch.
 
 ## Step 1 — Readback
 
