@@ -56,7 +56,9 @@ commit it on its own: `git add -A`, name in one line the files `git diff --cache
 lists, then `git commit -m "build-task: work already in the tree (squashed at ship)"`. It ships with
 the task but is not the build. Committed, it is out of reach of the test lock and of every stash
 below, which would otherwise take it with the build and delete it. Step 5 folds it back in; a run
-abandoned before then leaves it as a commit on the branch.
+abandoned before then leaves it as a commit on the branch. A file the operator keeps uncommitted on
+purpose is not committed: name it, copy it to the scratchpad, leave it out of every commit, and put
+it back after any stash is dropped.
 
 ## Step 1 — Readback
 
