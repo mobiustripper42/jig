@@ -383,7 +383,7 @@ export function supersessionProblems(rewritten, seenIds) {
       path.push(id)
       id = rewritten.get(id).superseded_by
     }
-    if (path.includes(id) && !done.has(id)) {
+    if (path.includes(id)) {
       const loop = path.slice(path.indexOf(id))
       const low = loop.indexOf([...loop].sort()[0])
       const ordered = [...loop.slice(low), ...loop.slice(0, low)]
