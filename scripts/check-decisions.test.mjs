@@ -904,6 +904,20 @@ describe('supersession is a pair, or it is a dangling argument', () => {
       ])
     })
 
+    it('AC5: reports a loop once when a chain runs into it from a record whose id sorts above the loop', () => {
+      // DEC-300 is not in the loop, but its link leads into it, and its walk starts after the
+      // loop's own walk has already reported it. That walk must stop at the records already walked
+      // rather than go round the loop a second time and say it again.
+      const m = corpus(
+        rec('DEC-100', { status: 'superseded', superseded_by: 'DEC-200', supersedes: ['DEC-300', 'DEC-200'] }),
+        rec('DEC-200', { status: 'superseded', superseded_by: 'DEC-100', supersedes: ['DEC-100'] }),
+        rec('DEC-300', { status: 'superseded', superseded_by: 'DEC-100' }),
+      )
+      expect(supersessionProblems(m, ids(m))).toEqual([
+        ['docs/decisions/DEC-100-x.md', 'superseded_by loops: DEC-100 → DEC-200 → DEC-100'],
+      ])
+    })
+
     it('AC6: still checks reciprocity on every link of a chain, on the successor that has to change', () => {
       // DEC-200 is itself superseded, which used to stop the link check before it reached
       // reciprocity. Accepting the chain must not skip the pairwise rule.
