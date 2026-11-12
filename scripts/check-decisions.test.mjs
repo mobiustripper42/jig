@@ -806,16 +806,6 @@ describe('supersession is a pair, or it is a dangling argument', () => {
     expect(msgs(m)).toHaveLength(1)
   })
 
-  it('rejects a superseded_by pointing at a record that is itself retired', () => {
-    // Pre-existing rule, moved in with the rest. A chain is a thing a reader has to walk.
-    const m = corpus(
-      rec('DEC-100', { status: 'superseded', superseded_by: 'DEC-200' }),
-      rec('DEC-200', { status: 'superseded', superseded_by: 'DEC-300', supersedes: ['DEC-100'] }),
-      rec('DEC-300', { supersedes: ['DEC-200'] }),
-    )
-    expect(msgs(m)).toEqual([expect.stringMatching(/whose status is superseded/)])
-  })
-
   /**
    * A draft is rewritten in place; only a decision something is built on gets superseded. The case
    * was a refund rule in Haul that the farm changed before any code implemented it (DEC-J020).
@@ -836,6 +826,95 @@ describe('supersession is a pair, or it is a dangling argument', () => {
       rec('DEC-100', { status: 'superseded', superseded_by: 'DEC-200' }),
     )
     expect(msgs(m)).toEqual([])
+  })
+
+  /**
+   * A SUPERSEDE CHAIN IS HISTORY, NOT A DEFECT (issue #125). Superseding a built decision makes a
+   * new record (DEC-J020); superseding that one again makes a chain. The gate used to demand every
+   * earlier `superseded_by` be rewritten to the newest record, and Haul did exactly that to get
+   * green — its frontmatter then said DEC-033 replaced DEC-005 directly, which never happened.
+   *
+   * The rule stays per link: a link to a superseded record is accepted, because that record's own
+   * link is checked when the gate reaches it. Each failure is reported once, on the file that
+   * needs editing. In every fixture below, each link not under test is reciprocal, so a test
+   * expecting one message expects exactly one.
+   */
+  describe('a supersede chain', () => {
+    it('AC1: accepts Haul\'s real history, each record naming only its direct predecessor', () => {
+      const m = corpus(
+        rec('DEC-005', { status: 'superseded', superseded_by: 'DEC-032' }),
+        rec('DEC-032', { status: 'superseded', superseded_by: 'DEC-033', supersedes: ['DEC-005'] }),
+        rec('DEC-033', { supersedes: ['DEC-032'] }),
+      )
+      expect(supersessionProblems(m, ids(m))).toEqual([])
+    })
+
+    it('AC2: accepts a chain of three links — length is not capped', () => {
+      const m = corpus(
+        rec('DEC-100', { status: 'superseded', superseded_by: 'DEC-200' }),
+        rec('DEC-200', { status: 'superseded', superseded_by: 'DEC-300', supersedes: ['DEC-100'] }),
+        rec('DEC-300', { status: 'superseded', superseded_by: 'DEC-400', supersedes: ['DEC-200'] }),
+        rec('DEC-400', { supersedes: ['DEC-300'] }),
+      )
+      expect(supersessionProblems(m, ids(m))).toEqual([])
+    })
+
+    it('AC3: rejects a link to a withdrawn record, once, on the retired record, as a chain with no live end', () => {
+      // `withdrawn` means nothing replaced it, so a reader following the link lands nowhere.
+      const m = corpus(
+        rec('DEC-100', { status: 'superseded', superseded_by: 'DEC-200' }),
+        rec('DEC-200', { status: 'withdrawn', supersedes: ['DEC-100'] }),
+      )
+      expect(paths(m)).toEqual(['docs/decisions/DEC-100-x.md'])
+      const [msg] = msgs(m)
+      expect(msg).toContain('DEC-200')
+      expect(msg).toContain('withdrawn')
+      expect(msg.endsWith('— a chain must end at an active or draft record')).toBe(true)
+    })
+
+    it('AC4: reports a chain ending at a withdrawn record on the last link only, not on every record upstream', () => {
+      const m = corpus(
+        rec('DEC-100', { status: 'superseded', superseded_by: 'DEC-200' }),
+        rec('DEC-200', { status: 'superseded', superseded_by: 'DEC-300', supersedes: ['DEC-100'] }),
+        rec('DEC-300', { status: 'withdrawn', supersedes: ['DEC-200'] }),
+      )
+      expect(paths(m)).toEqual(['docs/decisions/DEC-200-x.md'])
+    })
+
+    it('AC5: reports a loop once, in order, on the record with the lowest id', () => {
+      const m = corpus(
+        rec('DEC-100', { status: 'superseded', superseded_by: 'DEC-200', supersedes: ['DEC-200'] }),
+        rec('DEC-200', { status: 'superseded', superseded_by: 'DEC-100', supersedes: ['DEC-100'] }),
+      )
+      expect(supersessionProblems(m, ids(m))).toEqual([
+        ['docs/decisions/DEC-100-x.md', 'superseded_by loops: DEC-100 → DEC-200 → DEC-100'],
+      ])
+    })
+
+    it('AC5: starts a longer loop at its lowest id and follows superseded_by from there, whatever order the map holds', () => {
+      // The map's first record is not the loop's lowest id, so a walk that starts wherever
+      // iteration happens to begin names the loop from the wrong record.
+      const m = corpus(
+        rec('DEC-300', { status: 'superseded', superseded_by: 'DEC-200', supersedes: ['DEC-100'] }),
+        rec('DEC-200', { status: 'superseded', superseded_by: 'DEC-100', supersedes: ['DEC-300'] }),
+        rec('DEC-100', { status: 'superseded', superseded_by: 'DEC-300', supersedes: ['DEC-200'] }),
+      )
+      expect(supersessionProblems(m, ids(m))).toEqual([
+        ['docs/decisions/DEC-100-x.md', 'superseded_by loops: DEC-100 → DEC-300 → DEC-200 → DEC-100'],
+      ])
+    })
+
+    it('AC6: still checks reciprocity on every link of a chain, on the successor that has to change', () => {
+      // DEC-200 is itself superseded, which used to stop the link check before it reached
+      // reciprocity. Accepting the chain must not skip the pairwise rule.
+      const m = corpus(
+        rec('DEC-100', { status: 'superseded', superseded_by: 'DEC-200' }),
+        rec('DEC-200', { status: 'superseded', superseded_by: 'DEC-300' }),
+        rec('DEC-300', { supersedes: ['DEC-200'] }),
+      )
+      expect(paths(m)).toEqual(['docs/decisions/DEC-200-x.md'])
+      expect(msgs(m)).toEqual([expect.stringMatching(/^DEC-200 does not list DEC-100 in `supersedes`/)])
+    })
   })
 })
 
