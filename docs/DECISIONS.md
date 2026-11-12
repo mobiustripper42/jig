@@ -50,6 +50,7 @@ that never reached the spec is a red build rather than prose nobody cross-read.
 - DEC-J004 — Records predating schema v1 are frozen by a generated baseline
 - DEC-J005 — Amending a record in place is retired
 - DEC-J020 — A draft is rewritten in place; a built decision is superseded
+- DEC-J031 — A supersede chain is allowed if it ends at a live record
 
 ### Session workflow & skills
 - DEC-J002 — A skill invocation approves the pushes inside its own ritual
