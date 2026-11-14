@@ -11,7 +11,7 @@ The Lead drafts this from the spec conversation and reads the code to fill Inter
 what it must reuse, and to search the tests for everything it removes — readback's reuse and
 removal checks are the second look, not the first. A task with a screen starts from its design:
 before stop 1 the Lead opens its approved mockups (where they live is in `.claude/ui-context.md`)
-and the built screens it changes, and the Summary and the points are drafted from them, not from
+and the built screens it changes, and the Summary and the poker estimate are drafted from them, not from
 the code alone. Walk it in stops, one per reply, and wait for the operator's answer at each:
   1. Summary and Job, together
   2. Acceptance criteria
