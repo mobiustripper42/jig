@@ -285,7 +285,7 @@ If `EXISTING_PR_STATE` was `OPEN` and Step 4.2 was skipped, surface the existing
 
 A test: If this test fails, what's broken for a member?
 A function: What is this handling that I never asked for?
-Answering is optional. Answer with `/sample`.
+Answering is optional. Answer with `/sample 1 real, 2 can't tell, 3 waste`.
 ```
 
 The lines are `path:line`, for the operator to paste into an editor. A `**Sample:** none` block prints as it is, without the questions.
