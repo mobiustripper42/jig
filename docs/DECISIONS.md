@@ -72,6 +72,7 @@ that never reached the spec is a red build rather than prose nobody cross-read.
 - DEC-J029 — Readback lists the tests that use what the spec removes
 - DEC-J030 — /build-task writes the walked spec into the issue
 - DEC-J032 — The hand-back carries a script-picked sample, answered through /sample
+- DEC-J033 — Words are approved in the spec and checked by hand, never asserted by a test
 
 ### Model selection
 - DEC-J009 — Model and effort settings for sessions and agents
