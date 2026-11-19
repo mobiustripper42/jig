@@ -72,7 +72,7 @@ The shell's `## Micro Workflow` says what its two proof steps must achieve and n
 
 | Slot | What it answers | This project |
 |---|---|---|
-| **Proof** | What counts as a check written before the change | `<what a check is, here>`. A check never asserts fixed user-facing text, typed or read from the catalog; words are checked at the hand-back |
+| **Proof** | What counts as a check written before the change. A check never asserts fixed user-facing text, typed or read from the catalog; words are checked at the hand-back | `<what a check is, here>` |
 | **Proof command** | How to run the checks covering what you touched | `<the command>` |
 
 **The gate** (`npm run verify`, `cargo test`, …) is what `/kill-this` runs before committing — name it under `## Commands`, not here.
