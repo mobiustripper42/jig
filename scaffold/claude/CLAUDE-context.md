@@ -72,7 +72,7 @@ The shell's `## Micro Workflow` says what its two proof steps must achieve and n
 
 | Slot | What it answers | This project |
 |---|---|---|
-| **Proof** | What counts as a check written before the change | `<what a check is, here>` |
+| **Proof** | What counts as a check written before the change | `<what a check is, here>`. A check never asserts fixed user-facing text, typed or read from the catalog; words are checked at the hand-back |
 | **Proof command** | How to run the checks covering what you touched | `<the command>` |
 
 **The gate** (`npm run verify`, `cargo test`, …) is what `/kill-this` runs before committing — name it under `## Commands`, not here.
@@ -155,7 +155,7 @@ Write what this project actually does, not what a template guessed.
 - **[Error handling]** — [the contract: what a failure returns and where it surfaces]
 - **[Naming]** — [files, symbols, database columns, migrations]
 - **[Testing layout]** — [what runs where]
-- **[User-facing text]** — [the path of the message catalog tests read copy from, or "inline: no catalog"]
+- **[User-facing text]** — [the path of the message catalog the implementer writes the spec's approved words into, or "inline: no catalog"]
 
 ## Workflow Notes (project)
 

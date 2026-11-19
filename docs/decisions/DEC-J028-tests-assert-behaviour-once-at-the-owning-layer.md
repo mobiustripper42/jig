@@ -3,7 +3,7 @@ schema: 1
 id: DEC-J028
 title: "Tests assert behaviour, read copy from the catalog, and test a rule once"
 topic: "Session workflow & skills"
-status: "active"
+status: "superseded"
 date: "2026-11-07"
 ruling: "On its own judgement, @test-writer asserts what a caller or user sees, not style classes or structure; reads existing copy from the message catalog; and tests a rule's edge cases once, where it lives."
 claims:
@@ -13,6 +13,7 @@ claims:
   - kind: "file"
     target: "scaffold/claude/CLAUDE-context.md"
     note: "Conventions: User-facing text slot"
+superseded_by: DEC-J033
 revisit_if: "A bug reaches main that a deleted class, copy or duplicate-layer assertion would have caught."
 ---
 
