@@ -73,6 +73,7 @@ that never reached the spec is a red build rather than prose nobody cross-read.
 - DEC-J030 — /build-task writes the walked spec into the issue
 - DEC-J032 — The hand-back carries a script-picked sample, answered through /sample
 - DEC-J033 — Words are approved in the spec and checked by hand, never asserted by a test
+- DEC-J034 — @code-review has no file-length limit
 
 ### Model selection
 - DEC-J009 — Model and effort settings for sessions and agents
