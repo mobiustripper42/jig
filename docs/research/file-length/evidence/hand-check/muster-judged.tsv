@@ -1,0 +1,26 @@
+pair	sha	path	verdict	reason
+1	4e8023577a	app/api/health/route.ts	hit	Stops the unauthenticated health endpoint leaking integrity detail.
+2	d2f7efde15	src/import/import-reservations.ts	miss-not-a-fix	New updatedAt nudge feature; the regex matched 'closes' text only.
+3	4bbd0cdadc	src/admin/at-risk-board.ts	hit	Applies the past-trip guard to the board so departed shifts no longer ping.
+4	0102e0214f	app/(admin)/admin/shifts/page.tsx	hit	Fixes duplicate keys and empty-before cut options in the split select.
+5	ce249684fd	src/builder/tick.ts	hit	comment: review finding that the comments misdescribed where board-landing runs.
+6	0b4b065ede	app/(admin)/admin/import/run/[id]/page.tsx	hit	cleanup: central guard and extracted shared SkippedRowList removing duplicated JSX.
+7	b1b4dc961a	app/(admin)/admin/page.tsx	hit	cleanup: restores the trailing newline this review nit flagged.
+8	07511679b6	src/builder/tick.ts	miss-incidental	Fix #483 lives in ask-loop; tick.ts only had poolExhaustedFor moved out.
+9	667a4341db	src/import/xola-pull.ts	hit	comment: corrects the false claim that the Xola pull runs hourly.
+10	fada2987e5	src/reservations/calendar-detail.ts	hit	Refund no longer re-bills fare; this file aligns paid with countsAsPaid.
+11	964aa470c9	src/admin/time-clock-admin.ts	hit	Adds outIsNextDay so the edit form can express overnight punches.
+12	28997a01b9	src/reservations/hull-busy.ts	hit	Guards a non-finite candidate time so bad data blocks instead of reading free.
+13	fb04c77437	app/(admin)/admin/calendar/[reservationId]/actions.ts	hit	Wraps the unguarded resend call and fixes the wrong DEC citation.
+14	3743824a8b	src/adapters/in-memory-repository.ts	hit	Makes in-memory read marker latest-instant-wins and removes the NUL byte.
+15	5d5b8f4502	db/pay-dev.ts	hit	Restores the isBooked guard before the accessor to avoid an uncaught throw.
+16	b296c662da	src/adapters/forward-formation-alert.ts	hit	Groups failures by cause so one outage is one alert.
+17	75d1ee2714	app/b/[code]/page.tsx	hit	cleanup: removes dead tip UI states left by the deletion, per review.
+18	9f185ced8c	app/(admin)/admin/calendar/calendar-view.tsx	hit	Operator review bug: selected card scrolled off screen, now revealed.
+19	cb6d286b00	src/checkin/departure.ts	hit	Caps counted and checked-in at the boat limit and fixes asId casts.
+20	b7e825c0a5	src/adapters/in-memory-repository.ts	hit	Adds in-memory cancelIfBooked so racing cancels are single-owner.
+21	33fdaf3cb4	src/oracle/reliability-log.ts	hit	Folds shiftId into the minted id to fix the primary key collision.
+22	11ffdb341e	src/adapters/in-memory-repository.ts	hit	Makes in-memory savePayment insert-only to match Postgres.
+23	dfad80f836	src/builder/form-shifts.ts	hit	Guards Completed state so a re-import no longer un-completes a shift.
+24	3d31275198	app/api/cron/tick/route.ts	hit	Corrects the log message that falsely claimed nothing fired.
+25	a5984e1dbe	app/w/[code]/page.tsx	hit	Restores form from draft after cancelled pick and adds waiver_changed copy.

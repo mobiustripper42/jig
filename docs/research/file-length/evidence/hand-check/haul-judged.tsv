@@ -1,0 +1,26 @@
+pair	sha	path	verdict	reason
+1	3e2b0e1b75	app/session.ts	hit	Review fix: per-request cache of member lookup.
+2	4a3f4e5b40	components/ui/button.tsx	hit	cleanup: Button props destructured once instead of twice.
+3	942da3a231	components/ui/card.tsx	hit	Review fix: full-width Supper Club cards need the Card fill width.
+4	db4fb9e229	app/paths.ts	hit	cleanup: new single home for pages' paths, review finding on duplication.
+5	6c36d7636f	app/supper-club/page.tsx	hit	Review fix: card-failed and pay-error messages wired for refused card.
+6	6c36d7636f	src/signup.ts	hit	Review fix: races between tabs and charge amount mismatch handled.
+7	8ab29d6811	db/seeds/members.ts	hit	Hand-walk fix: seed emails Square refuses replaced.
+8	0d073c6332	src/adapters/postgres-repository.ts	hit	Review fix: Postgres query made to match in-memory paid-row behaviour.
+9	200742c9dd	app/sign-in/code/page.tsx	hit	Screen fix: page title and new-code notice passed through.
+10	200742c9dd	app/supper-club/page.tsx	hit	Screen fix: member name at step 3, cap-free hint, page title.
+11	200742c9dd	src/adapters/repository-contract.ts	miss-incidental	Only adds test coverage for the receipt date feature, not part of a correction.
+12	7c0812c850	src/pickup-week.ts	hit	comment: weekday comment wrongly claimed capitalised output.
+13	0503445f1d	src/messages/es.ts	hit	Review fix: Skip/Unskip accessible names need the Spanish strings.
+14	a408e241b6	app/account/history/page.tsx	hit	comment: review finding asked History's meal line to note it shows current picks.
+15	e9903238c8	src/pickup-week.ts	hit	cleanup: addDays exported so the fake reuses it instead of duplicating.
+16	bc8946d93a	src/email-change.ts	hit	Review fix: taken address no longer breaks transaction and Square runs outside it.
+17	dd3a4ebabb	src/adapters/email-change-contract.ts	miss-incidental	Test-only addition after the fix, no corrected behaviour in this file.
+18	13239adf82	db/seed.ts	hit	comment: seed header omitted the production exception to the local guard.
+19	fec6cf8b9e	app/account/page.tsx	hit	comment: locked comment named the wrong rule.
+20	7bdf69bdc4	components/ui/card-entry.tsx	hit	Review fix: a card attached after cleanup is no longer handed out.
+21	6c36d7636f	components/ui/card-entry.tsx	hit	Review fix: failed Square form or throwing tokenize now shows an error.
+22	200742c9dd	app/sign-in/shared.ts	hit	Screen fix: singular minutes text and new-code notice redirect.
+23	a408e241b6	db/seeds/account-weeks.ts	hit	Review fix: seed clears earlier closure and credit and uses pastWeeks.
+24	bc8946d93a	src/messages/es.ts	hit	Review fix: Save gets its own message key.
+25	283e284380	src/adapters/postgres-repository.ts	hit	cleanup: claim update guards on declined status itself.

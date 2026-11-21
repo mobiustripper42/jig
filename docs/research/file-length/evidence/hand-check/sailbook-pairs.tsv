@@ -1,0 +1,25 @@
+1	main	3b2e5773d0	2026-04-04	src/app/(admin)/admin/students/[id]/edit/page.tsx	46	<200	Phase 2 complete — enrollment RLS, student/instructor edit, dev tooling, RLS recursion fix
+2	main	5bc3971d31	2026-04-05	src/app/(admin)/layout.tsx	80	<200	Phase 3.8 QA fixes — code review, title fix, test password, seed
+3	main	6c5bfde0c6	2026-04-05	src/components/admin/makeup-session-form.tsx	99	<200	Phase 3.4 — makeup session flow, attendance page fix, addSession gap fix
+4	main	5bbdb5d681	2026-04-14	src/components/admin/course-status-actions.tsx	77	<200	Phase 1.13 — dual-role nav toggle + code review fixes
+5	main	fdc0c3f0f6	2026-04-14	src/components/instructor/instructor-mobile-nav-drawer.tsx	120	<200	Phase 1.21 — dev login helper + code review fixes
+6	main	04cd61ee01	2026-04-15	src/app/(instructor)/instructor/dashboard/page.tsx	159	<200	Session 66 — housekeeping, ui-reviewer audit + fixes (6.3/6.4)
+7	main	0c74fff1af	2026-04-15	src/app/(auth)/login/page.tsx	126	<200	Phase 1.18/1.19 + code review fixes + dark mode selects
+8	main	c12b57599a	2026-04-15	src/app/(auth)/forgot-password/page.tsx	86	<200	Phase 1.8 fixes + Phase 1.9 — password reset hardening and unsaved changes guard
+9	main	e80fb67b92	2026-04-15	src/app/(student)/layout.tsx	80	<200	Phase 1.15 (revised) — revert theme persistence to localStorage-only
+10	main	f4adeb30cb	2026-04-19	src/app/(admin)/admin/courses/[id]/page.tsx	317	200-400	Phase 2.8 — admin refund & cancel: payment column, partial refund dialog, WITH CHECK security fix
+11	main	a53b1640f2	2026-04-20	src/app/(student)/student/courses/[id]/actions.ts	284	200-400	Phase 2.9 code review fixes + Phase 2.10 payment E2E test
+12	main	e53a48d15b	2026-04-25	src/actions/enrollments.ts	463	>400	Phase 5.10 + session 93 code review fixups
+13	main	e212ee114a	2026-04-29	src/app/auth/callback/route.ts	38	<200	Phase 3.13 + 3.15 + 3.12 carryovers + mobile-access fix
+14	main	862357b43a	2026-04-30	src/lib/notifications/triggers.ts	674	>400	Phase 4.11 + 5.8 — substitute-instructor fix + low-enrollment thresholds
+15	main	6b75c2481d	2026-05-01	src/components/student/notification-preferences-section.tsx	91	<200	Fix CR findings: convert remaining uncontrolled inputs in 6.22 scope
+16	main	4572fafd85	2026-05-02	src/components/admin/users-list.tsx	191	<200	6.14 polish — copy fixes + users list dropdown
+17	main	2b633b0139	2026-05-03	src/actions/enrollments.ts	463	>400	Task 6.27 — Restore cancelled enrollment + P8/CX3 workflow fixes
+18	main	d4884a3bc0	2026-05-03	src/actions/profiles.ts	254	200-400	Session 129 — instructor fixes, agenda views, role nav, JWT sync, bug fixes
+19	main	dc7d2c7434	2026-06-29	src/app/(auth)/actions.ts	302	200-400	Address code review: don't surface OTP send-side errors (enumeration fix)
+20	main	f0204ca1c5	2026-07-16	src/app/(student)/student/attendance/page.tsx	157	<200	Hyperlink course titles in history; fix member-pricing CI regression (#127)
+21	200+ supplement	5bc3971d31	2026-04-05	src/app/dev/page.tsx	303	200-400	Phase 3.8 QA fixes — code review, title fix, test password, seed
+22	200+ supplement	35a06a63a8	2026-04-15	src/app/(auth)/actions.ts	302	200-400	Fix updatePassword to use user returned by updateUser directly
+23	200+ supplement	60a4f723c3	2026-04-20	src/app/(student)/student/courses/[id]/actions.ts	284	200-400	Phase 2.8 code review fixes + Phase 2.9 member pricing
+24	200+ supplement	f2962bfef1	2026-04-29	src/actions/sessions.ts	219	200-400	Phase 4.10 + 4.6 — ui-reviewer agent + instructor session notes
+25	200+ supplement	a3d672692c	2026-05-03	src/components/admin/courses-list.tsx	217	200-400	Code review fixes: delete orphaned course-type-actions, extract shared SortableHead
