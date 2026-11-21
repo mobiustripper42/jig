@@ -15,6 +15,12 @@ stopping only where information turns out to be missing.
 
 ## Step 0 — Gate
 
+**First, the session file's Next Steps,** unless this conversation has already read them: find the
+open session file the way `/kill-this` Step 0 does, read its Next Steps, restore its parking lot,
+and obey its standing rules from here on. Run straight after a `/clear`, this skill is the fresh
+context's first step, and skipping the file is how a Haul run missed a branch rule and cut the
+wrong branch.
+
 Abort with a one-line reason if any of these fail:
 
 - **Testable.** The line between the two loops, whatever the points. At least one acceptance
