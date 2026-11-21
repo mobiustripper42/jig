@@ -18,12 +18,14 @@ revisit_if: "A re-run of the length analysis finds a length past which cost clim
 
 ## DEC-J034: @code-review has no file-length limit
 
-The ~200-line flag had no source. The research in `docs/research/file-length/` (issue 134) found
-that where the rule was off — Centerline after 2026-10-04, Soundings after 2026-06-13, and
-Muster's ~800 period — files of 200 to 400 lines drew no bigger fix share and no more review
-citations per line changed than shorter ones. Above 400 the data cannot say either way, so no
-other number earned the place. With the rule on, Haul still grew from 1 file over 200 lines to 24
-in three weeks, and most of the flags were left.
+The ~200-line flag had no evidence behind it. The research in `docs/research/file-length/` (issue
+134) found that where the rule was off — Centerline after 2026-10-04, Soundings after 2026-06-13,
+and Muster's ~800 period — files of 200 to 400 lines drew no bigger share of fix commits among the
+commits that modified them, and no more review citations per line changed, than shorter ones.
+Counting every commit, 200 to 400 is slightly higher in all three windows; the gaps are small.
+Above 400 the data cannot say either way, so no other number earned the place. With the rule on,
+Haul still grew from 1 file over 200 lines to 24 in three weeks, and most of Haul's length flags
+were left.
 
 A file that mixes concerns is still caught as an inconsistent pattern or a convention break;
 length alone is not the signal. The operator re-runs the analysis on a month of their choosing.
