@@ -160,7 +160,8 @@ Check, in order:
    Removes line lists it, and the edit is the deletion or retarget that line names. A retargeted
    test keeps its own name, with no criterion id, and is exempt from the naming rule and from
    check 2: it guards behaviour that already exists, so it may pass against the stubs. A name the
-   retarget would make false is renamed, and the Removes line gives the new name.
+   retarget would make false is renamed by `@test-writer`, reported as `renamed from <old name>`;
+   check the new name is true, and write the rename into the Removes line as a `[Lead]` line.
 2. **Fails for the right reason.** Run the `Proof command` yourself, against the stubs. Each test
    must fail on its own assertion — a wrong value, a missing row, a call that didn't throw — not on
    a missing file or function, a typo, a bad import path, or broken setup. The one exception is a
