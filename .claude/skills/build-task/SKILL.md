@@ -159,7 +159,8 @@ Check, in order:
    test's name or body is an edit, and that is a stub report, not a test — unless Interfaces'
    Removes line lists it, and the edit is the deletion or retarget that line names. A retargeted
    test keeps its own name, with no criterion id, and is exempt from the naming rule and from
-   check 2: it guards behaviour that already exists, so it may pass against the stubs.
+   check 2: it guards behaviour that already exists, so it may pass against the stubs. A name the
+   retarget would make false is renamed, and the Removes line gives the new name.
 2. **Fails for the right reason.** Run the `Proof command` yourself, against the stubs. Each test
    must fail on its own assertion — a wrong value, a missing row, a call that didn't throw — not on
    a missing file or function, a typo, a bad import path, or broken setup. The one exception is a

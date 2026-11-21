@@ -133,7 +133,9 @@ What to report:
    test that asserts a copy key's text is deleted, never retargeted to the new key's text, unless it
    checks a choice between lines (What a test asserts); one that
    only reads the key to locate a control is retargeted to the new key. List
-   every such file under Files. A retargeted test keeps its name and needs no criterion id, and
+   every such file under Files. A retargeted test keeps its name, unless the retarget makes the name
+   false (`?note on an open week opens nothing`, now checking that it opens): then rename it, and
+   report the old and new names. It needs no criterion id, and
    item 5 does not apply to it: it guards behaviour that already exists, so it may pass against
    the stubs. Report it under Against the stubs as `retargeted: <replacement>`. An existing test
    that uses something removed and is not listed under Removes is a question, not an edit: stop
