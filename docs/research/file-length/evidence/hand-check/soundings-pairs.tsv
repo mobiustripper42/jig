@@ -1,0 +1,23 @@
+1	main	749210b091	2026-06-16	firmware/src/core/iclock.h	17	<200	Address code review: const millis() seam, named heartbeat constant
+2	main	9d2f006477	2026-06-16	contracts/tools/gen_vectors.py	203	200-400	Address code review: header is 12 bytes, not 14
+3	main	508f09bc4a	2026-06-17	firmware/src/core/packet.cpp	105	<200	Address code review: bounds-guard channel accessors, cache knownMask, cover BadFaultMask/LengthMismatch
+4	main	b3bcfc6106	2026-06-17	gateway/soundings_gateway/packet.py	259	200-400	Address code review: bytes-like guard + robustness test gaps
+5	main	d80e45f91f	2026-06-17	gateway/soundings_gateway/emitter.py	176	<200	Address code review: fix sub-zero soil-temp encode crash + cleanups
+6	main	d80e45f91f	2026-06-17	gateway/soundings_gateway/spine.py	176	<200	Address code review: fix sub-zero soil-temp encode crash + cleanups
+7	main	ff0888772c	2026-08-10	firmware/src/core/nodemanifest.h	53	<200	Address review: bound count against the manifest's own array, not just the caller's
+8	main	859b293f34	2026-08-13	gateway/soundings_gateway/config.py	133	<200	Address review: refuse an unkeyable reading, hide credentials, own the topic parse
+9	main	859b293f34	2026-08-13	gateway/soundings_gateway/derive.py	312	200-400	Address review: refuse an unkeyable reading, hide credentials, own the topic parse
+10	main	c8ea6c981a	2026-08-22	firmware/src/core/a02yyuw.h	119	<200	Address review — cumulative badChecksums stated, constexpr, consumed() asserted
+11	main	c586fba7f9	2026-08-23	firmware/src/core/serial_framing.cpp	82	<200	Address review — move the frame reader into core, where it can be tested
+12	main	c586fba7f9	2026-08-23	firmware/src/gateway/main.cpp	197	<200	Address review — move the frame reader into core, where it can be tested
+13	main	383be50cb3	2026-08-24	firmware/src/gateway/main.cpp	197	<200	Address review — the reply window's single-node assumption is a bench simplification, not a property
+14	main	98db1e7299	2026-08-25	firmware/src/core/downlink.h	55	<200	Address review — four stale claims the OTA work invalidated
+15	main	98db1e7299	2026-08-25	firmware/src/esp32/ota_client.cpp	290	200-400	Address review — four stale claims the OTA work invalidated
+16	main	ff721a248e	2026-09-08	firmware/src/core/ds18b20.cpp	194	<200	Address code review: the endurance bound rested on a verify that can lie
+17	main	ff721a248e	2026-09-08	firmware/src/core/ds18b20.h	180	<200	Address code review: the endurance bound rested on a verify that can lie
+18	main	f697cb7fcb	2026-09-10	firmware/src/esp32/main.cpp	251	200-400	Address code review: a precondition that stopped being self-enforcing
+19	main	f697cb7fcb	2026-09-10	firmware/src/esp32/onewire_bus.h	99	<200	Address code review: a precondition that stopped being self-enforcing
+20	main	0bbad7e3dc	2026-09-11	gateway/soundings_gateway/vpd.py	172	<200	Address code review: publish each air channel on its own merits
+21	200+ supplement	749210b091	2026-06-16	firmware/src/esp32/main.cpp	251	200-400	Address code review: const millis() seam, named heartbeat constant
+22	200+ supplement	8c1482967e	2026-08-25	firmware/src/esp32/ota_client.cpp	290	200-400	Address /security-review — the OTA design weighed corruption, never an adversary
+23	200+ supplement	0bbad7e3dc	2026-09-11	gateway/soundings_gateway/derive.py	312	200-400	Address code review: publish each air channel on its own merits

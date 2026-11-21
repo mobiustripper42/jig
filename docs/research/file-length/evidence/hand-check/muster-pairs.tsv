@@ -1,0 +1,25 @@
+1	main	4e8023577a	2026-06-06	app/api/health/route.ts	62	<200	Address review: don't leak integrity detail from unauthenticated /api/health
+2	main	d2f7efde15	2026-06-11	src/import/import-reservations.ts	326	200-400	Builder 'changed since reviewed' nudge (4.6, closes #58)
+3	main	4bbd0cdadc	2026-06-25	src/admin/at-risk-board.ts	385	200-400	Address review: share the past-trip guard with the at-risk board + DRY + tests
+4	main	0102e0214f	2026-07-01	app/(admin)/admin/shifts/page.tsx	593	>400	Address review: dedupe + floor the split-cut options (8.3b)
+5	main	ce249684fd	2026-07-04	src/builder/tick.ts	556	>400	9.9 review — comment accuracy (board-landing pass location, 23:59 test-env gap)
+6	main	0b4b065ede	2026-07-10	app/(admin)/admin/import/run/[id]/page.tsx	276	200-400	Address review: central backward-compat guard, boundary tests, shared list
+7	main	b1b4dc961a	2026-07-11	app/(admin)/admin/page.tsx	27	<200	Restore trailing newlines on refactored admin pages (review nit)
+8	main	07511679b6	2026-07-20	src/builder/tick.ts	556	>400	Fix #483: bail()/vacateSeat() fire no asks — defer re-crewing to the tick
+9	main	667a4341db	2026-07-26	src/import/xola-pull.ts	232	200-400	Audit shard C2 (C2.1 + C2.2) — ledgers + 3 fixes
+10	main	fada2987e5	2026-07-28	src/reservations/calendar-detail.ts	300	200-400	Address code review: a refunded tip was re-billing the customer for fare
+11	main	964aa470c9	2026-08-01	src/admin/time-clock-admin.ts	216	200-400	Review: the form couldn't express an overnight punch, and the nav guard had a hole
+12	main	28997a01b9	2026-08-07	src/reservations/hull-busy.ts	191	<200	Four review findings on the guard's edges (#615, #691)
+13	main	fb04c77437	2026-08-11	app/(admin)/admin/calendar/[reservationId]/actions.ts	633	>400	Review fixes: guard the repo call, cite DEC-147, and name an untried channel
+14	main	3743824a8b	2026-08-25	src/adapters/in-memory-repository.ts	1630	>400	Review fixes: trip parity, adapter parity, and a NUL byte (#769)
+15	main	5d5b8f4502	2026-09-07	db/pay-dev.ts	139	<200	Address review: guard before the accessor, not instead of it
+16	main	b296c662da	2026-09-13	src/adapters/forward-formation-alert.ts	163	<200	Address review: many boats, one cause, is one outage
+17	main	75d1ee2714	2026-09-20	app/b/[code]/page.tsx	578	>400	Address review: the e2e spec I never looked at, and the edges the deletion left
+18	main	9f185ced8c	2026-09-26	app/(admin)/admin/calendar/calendar-view.tsx	1323	>400	Review: the selected card stays in view when its pane opens
+19	main	cb6d286b00	2026-10-04	src/checkin/departure.ts	346	200-400	18.8 review: the integrity list caps at the boat's limit; its own failure path
+20	main	b7e825c0a5	2026-11-02	src/adapters/in-memory-repository.ts	1630	>400	16.9 ultra review fixes: one press owns a cancel; a failed release is reported; partial refunds say what moved
+21	200+ supplement	33fdaf3cb4	2026-06-19	src/oracle/reliability-log.ts	341	200-400	Fix reliability-event pkey collision: fold shiftId into the id for system shift-level events
+22	200+ supplement	11ffdb341e	2026-07-12	src/adapters/in-memory-repository.ts	1630	>400	11.2a review fixes: webhook 500-not-400 on infra error, insert-only payments, richer alert
+23	200+ supplement	dfad80f836	2026-07-30	src/builder/form-shifts.ts	702	>400	Address @code-review: Completed survives a re-import; correct the gaming math
+24	200+ supplement	3d31275198	2026-09-02	app/api/cron/tick/route.ts	286	200-400	Address review: the log must not claim nothing fired
+25	200+ supplement	a5984e1dbe	2026-10-01	app/w/[code]/page.tsx	234	200-400	Review fixes: record the waiver version the guest read; a cancelled pick asks again

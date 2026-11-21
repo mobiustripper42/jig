@@ -1,0 +1,26 @@
+pair	sha	path	verdict	reason
+1	3b2e5773d0	src/app/(admin)/admin/students/[id]/edit/page.tsx	miss-incidental	New file added as feature work; the fixes in the commit are elsewhere.
+2	5bc3971d31	src/app/(admin)/layout.tsx	hit	Browser tab title fix: moved title into generateMetadata in this layout.
+3	6c5bfde0c6	src/components/admin/makeup-session-form.tsx	miss-incidental	New makeup form is feature work; the attendance bug fix is in other files.
+4	5bbdb5d681	src/components/admin/course-status-actions.tsx	hit	cleanup: window.confirm standardization from code review.
+5	fdc0c3f0f6	src/components/instructor/instructor-mobile-nav-drawer.tsx	hit	Review fix: startsWith guard so the active nav link matches subpaths.
+6	04cd61ee01	src/app/(instructor)/instructor/dashboard/page.tsx	hit	cleanup: ui-reviewer audit consistency fixes (padding, heading weight, card size).
+7	0c74fff1af	src/app/(auth)/login/page.tsx	miss-incidental	Logo added to login card is feature work; the review fixes are in other files.
+8	c12b57599a	src/app/(auth)/forgot-password/page.tsx	hit	Review fix: controlled email input on forgot-password.
+9	e80fb67b92	src/app/(student)/layout.tsx	hit	Revert of DB-synced theme persistence removes ThemeSync from this layout.
+10	f4adeb30cb	src/app/(admin)/admin/courses/[id]/page.tsx	miss-incidental	Payment column and refund wiring is feature work; the WITH CHECK fix is in a migration.
+11	a53b1640f2	src/app/(student)/student/courses/[id]/actions.ts	hit	Review fix: member pricing now also requires is_student.
+12	e53a48d15b	src/actions/enrollments.ts	hit	Review fix: confirmEnrollment now fires the missed confirmation notification.
+13	e212ee114a	src/app/auth/callback/route.ts	hit	Security fix: Host header allow-list and safeNextPath close open-redirect.
+14	862357b43a	src/lib/notifications/triggers.ts	miss-incidental	Low-enrollment threshold refactor is feature work; the 4.11 fix is in another file.
+15	6b75c2481d	src/components/student/notification-preferences-section.tsx	hit	CR fix: checkboxes converted from uncontrolled to controlled state.
+16	4572fafd85	src/components/admin/users-list.tsx	miss-not-a-fix	Copy polish and dropdown menu refactor; not a correction.
+17	2b633b0139	src/actions/enrollments.ts	miss-not-a-fix	restoreEnrollment is new feature work; skill tweaks elsewhere are not fixes to this file.
+18	d4884a3bc0	src/actions/profiles.ts	hit	Bug fix: admin self-removal of admin flag guard and JWT metadata sync.
+19	dc7d2c7434	src/app/(auth)/actions.ts	hit	Review fix: enumeration leak closed by swallowing OTP send-side errors.
+20	f0204ca1c5	src/app/(student)/student/attendance/page.tsx	miss-incidental	Course link added to history card is feature work; the CI regression fix is in tests.
+21	5bc3971d31	src/app/dev/page.tsx	miss-incidental	Test password string change is not part of the QA fix in this file.
+22	35a06a63a8	src/app/(auth)/actions.ts	hit	Fix: use user returned by updateUser, avoiding null getUser fallthrough.
+23	60a4f723c3	src/app/(student)/student/courses/[id]/actions.ts	miss-incidental	Member pricing is Phase 2.9 feature work; code review fixes are in other files.
+24	f2962bfef1	src/actions/sessions.ts	miss-not-a-fix	updateSessionNotes is new feature work; regex matched ui-reviewer.
+25	a3d672692c	src/components/admin/courses-list.tsx	hit	cleanup: extracted duplicated SortableHead per review finding.
