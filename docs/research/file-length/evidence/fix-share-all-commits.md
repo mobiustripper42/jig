@@ -5,7 +5,7 @@ Fix regex (Python, case-insensitive): `\b(fix(?!ture)|bug|review|revert)` on the
 
 ## centerline-off: centerline, commits `91c7378..origin/main`, lengths at `origin/main`
 
-Rule: off (no line limit since 91c7378, 2026-10-04). Non-merge commits in range: 119; matching the fix regex: 30. Source files at end ref: 158. Per-file data: `per-file-centerline-off.csv`.
+Rule: off (no line limit since 91c7378, 2026-10-04). Non-merge commits in range: 119 (`git rev-list --no-merges --count 91c7378..origin/main`: 119); matching the fix regex: 30. Source files at end ref: 158. Per-file data: `per-file-centerline-off.csv`.
 
 Bands:
 
@@ -28,7 +28,7 @@ Finer bands:
 
 ## centerline-on: centerline, commits `91c7378`, lengths at `91c7378`
 
-Rule: on (~200, install 59f05b5 2026-09-19 to 91c7378). Non-merge commits in range: 152; matching the fix regex: 39. Source files at end ref: 108. Per-file data: `per-file-centerline-on.csv`.
+Rule: on (~200, install 59f05b5 2026-09-19 to 91c7378). Non-merge commits in range: 152 (`git rev-list --no-merges --count 91c7378`: 152); matching the fix regex: 39. Source files at end ref: 108. Per-file data: `per-file-centerline-on.csv`.
 
 Bands:
 
@@ -51,7 +51,7 @@ Finer bands:
 
 ## soundings-off: soundings, commits `2e8f2d4..origin/main`, lengths at `origin/main`
 
-Rule: off (dropped at 2e8f2d4, 2026-06-13). Non-merge commits in range: 119; matching the fix regex: 22. Source files at end ref: 79. Per-file data: `per-file-soundings-off.csv`.
+Rule: off (dropped at 2e8f2d4, 2026-06-13). Non-merge commits in range: 119 (`git rev-list --no-merges --count 2e8f2d4..origin/main`: 119); matching the fix regex: 22. Source files at end ref: 79. Per-file data: `per-file-soundings-off.csv`.
 
 Bands:
 
@@ -74,7 +74,7 @@ Finer bands:
 
 ## muster-all: muster, commits `origin/main`, lengths at `origin/main`
 
-Rule: on to 692ebf75 (2026-07-24), then ~800 and mixed concerns. Non-merge commits in range: 1543; matching the fix regex: 434. Source files at end ref: 454. Per-file data: `per-file-muster-all.csv`.
+Rule: on to 692ebf75 (2026-07-24), then ~800 and mixed concerns. Non-merge commits in range: 1543 (`git rev-list --no-merges --count origin/main`: 1543); matching the fix regex: 434. Source files at end ref: 454. Per-file data: `per-file-muster-all.csv`.
 
 Bands:
 
@@ -97,7 +97,7 @@ Finer bands:
 
 ## muster-on: muster, commits `692ebf75`, lengths at `692ebf75`
 
-Rule: on (~200 in code-review until 692ebf75). Non-merge commits in range: 641; matching the fix regex: 160. Source files at end ref: 235. Per-file data: `per-file-muster-on.csv`.
+Rule: on (~200 in code-review until 692ebf75). Non-merge commits in range: 641 (`git rev-list --no-merges --count 692ebf75`: 641); matching the fix regex: 160. Source files at end ref: 235. Per-file data: `per-file-muster-on.csv`.
 
 Bands:
 
@@ -120,7 +120,7 @@ Finer bands:
 
 ## muster-800: muster, commits `692ebf75..origin/main`, lengths at `origin/main`
 
-Rule: ~800 and mixed concerns (since 692ebf75). Non-merge commits in range: 902; matching the fix regex: 274. Source files at end ref: 454. Per-file data: `per-file-muster-800.csv`.
+Rule: ~800 and mixed concerns (since 692ebf75). Non-merge commits in range: 902 (`git rev-list --no-merges --count 692ebf75..origin/main`: 902); matching the fix regex: 274. Source files at end ref: 454. Per-file data: `per-file-muster-800.csv`.
 
 Bands:
 
@@ -143,7 +143,7 @@ Finer bands:
 
 ## haul-on: haul, commits `origin/main`, lengths at `origin/main`
 
-Rule: on (~200 since install 6786cf1, 2026-10-25). Non-merge commits in range: 271; matching the fix regex: 98. Source files at end ref: 220. Per-file data: `per-file-haul-on.csv`.
+Rule: on (~200 since install 6786cf1, 2026-10-25). Non-merge commits in range: 271 (`git rev-list --no-merges --count origin/main`: 271); matching the fix regex: 98. Source files at end ref: 220. Per-file data: `per-file-haul-on.csv`.
 
 Bands:
 
@@ -166,7 +166,7 @@ Finer bands:
 
 ## sailbook-on: sailbook, commits `origin/main`, lengths at `origin/main`
 
-Rule: on (200 since 092820b, 2026-04-04). Non-merge commits in range: 539; matching the fix regex: 126. Source files at end ref: 172. Per-file data: `per-file-sailbook-on.csv`.
+Rule: on (200 since 092820b, 2026-04-04). Non-merge commits in range: 539 (`git rev-list --no-merges --count origin/main`: 539); matching the fix regex: 126. Source files at end ref: 172. Per-file data: `per-file-sailbook-on.csv`.
 
 Bands:
 

@@ -4,17 +4,24 @@
 
 - merged pull requests into main fetched: 116; with a review section: 99
 - finding units in review sections: 407; citing at least one source file: 47
+- dropped as not a finding (a pass verdict or a not-run line, pattern `checked clean|no blast-radius trigger|both fixes are correct|clean bill|no findings|not run\b|nothing to (fix|flag)`): 3 (each listed below)
 - excluded as being about length or splitting: 2 (each listed below)
 - path-like tokens that matched no source file at the merge commit (tests, docs, ambiguous basenames): 14
 
-| rule | band | file-touches (source files changed, pull requests with a review section) | lines changed in them | finding citations | per 100 file-touches | per 1,000 lines changed |
-|---|---|---|---|---|---|---|
-| on | <200 | 227 | 8119 | 18 | 7.9 | 2.2 |
-| on | 200-400 | 33 | 2851 | 7 | 21.2 | 2.5 |
-| on | >400 | 0 | 0 | 0 | 0.0 | 0.0 |
-| off | <200 | 167 | 5266 | 19 | 11.4 | 3.6 |
-| off | 200-400 | 39 | 2286 | 7 | 17.9 | 3.1 |
-| off | >400 | 20 | 1966 | 4 | 20.0 | 2.0 |
+| rule | band | file-touches (source files changed, pull requests with a review section) | lines changed in them | citations of a changed file | per 1,000 lines changed (changed files only, primary) | all citations, including files the pull request did not change | per 100 file-touches (all) | per 1,000 lines changed (all) |
+|---|---|---|---|---|---|---|---|---|
+| on | <200 | 227 | 8119 | 11 | 1.35 | 16 | 7.0 | 1.97 |
+| on | 200-400 | 33 | 2851 | 6 | 2.10 | 6 | 18.2 | 2.10 |
+| on | >400 | 0 | 0 | 0 | 0.00 | 0 | 0.0 | 0.00 |
+| off | <200 | 167 | 5266 | 12 | 2.28 | 18 | 10.8 | 3.42 |
+| off | 200-400 | 39 | 2286 | 5 | 2.19 | 7 | 17.9 | 3.06 |
+| off | >400 | 20 | 1966 | 3 | 1.53 | 3 | 15.0 | 1.53 |
+
+Dropped as not a finding, pull request number and text start:
+
+- pull request 161: - **Checked clean:** the stale-answer guard in `useAreas.ts`, a `choose` racing a reload, the chip and sheet visibility in `App.tsx` (recording, full map, Start, unfinished), leftover references to the old paths, and the
+- pull request 117: Both fixes are correct and complete, with no regressions. It confirmed the two call sites are the only ones in the repo, that a Kotlin throw from `Recorder.read` reaches JS as an exception (so the catch is needed), and t
+- pull request 23: Checked clean: the flag thresholds and the short-and-slow double-flag guard, the client/server boundary (`local-day.ts` has no imports at all, and nothing client-side reaches `season-report.ts` any more), `order by start
 
 Excluded (length or splitting), pull request number and text start:
 
@@ -25,30 +32,44 @@ Excluded (length or splitting), pull request number and text start:
 
 - merged pull requests into main fetched: 62; with a review section: 42
 - finding units in review sections: 149; citing at least one source file: 9
+- dropped as not a finding (a pass verdict or a not-run line, pattern `checked clean|no blast-radius trigger|both fixes are correct|clean bill|no findings|not run\b|nothing to (fix|flag)`): 0 (each listed below)
 - excluded as being about length or splitting: 0 (each listed below)
 - path-like tokens that matched no source file at the merge commit (tests, docs, ambiguous basenames): 10
 
-| rule | band | file-touches (source files changed, pull requests with a review section) | lines changed in them | finding citations | per 100 file-touches | per 1,000 lines changed |
-|---|---|---|---|---|---|---|
-| off | <200 | 118 | 6417 | 11 | 9.3 | 1.7 |
-| off | 200-400 | 13 | 1556 | 2 | 15.4 | 1.3 |
-| off | >400 | 1 | 435 | 0 | 0.0 | 0.0 |
+| rule | band | file-touches (source files changed, pull requests with a review section) | lines changed in them | citations of a changed file | per 1,000 lines changed (changed files only, primary) | all citations, including files the pull request did not change | per 100 file-touches (all) | per 1,000 lines changed (all) |
+|---|---|---|---|---|---|---|---|---|
+| off | <200 | 118 | 6417 | 8 | 1.25 | 11 | 9.3 | 1.71 |
+| off | 200-400 | 13 | 1556 | 2 | 1.29 | 2 | 15.4 | 1.29 |
+| off | >400 | 1 | 435 | 0 | 0.00 | 0 | 0.0 | 0.00 |
 
 ## muster
 
 - merged pull requests into main fetched: 672; with a review section: 454
 - finding units in review sections: 1595; citing at least one source file: 256
+- dropped as not a finding (a pass verdict or a not-run line, pattern `checked clean|no blast-radius trigger|both fixes are correct|clean bill|no findings|not run\b|nothing to (fix|flag)`): 9 (each listed below)
 - excluded as being about length or splitting: 3 (each listed below)
 - path-like tokens that matched no source file at the merge commit (tests, docs, ambiguous basenames): 131
 
-| rule | band | file-touches (source files changed, pull requests with a review section) | lines changed in them | finding citations | per 100 file-touches | per 1,000 lines changed |
-|---|---|---|---|---|---|---|
-| on | <200 | 429 | 18238 | 13 | 3.0 | 0.7 |
-| on | 200-400 | 194 | 9927 | 3 | 1.5 | 0.3 |
-| on | >400 | 163 | 6412 | 0 | 0.0 | 0.0 |
-| ~800 | <200 | 898 | 22848 | 145 | 16.1 | 6.3 |
-| ~800 | 200-400 | 526 | 18064 | 74 | 14.1 | 4.1 |
-| ~800 | >400 | 587 | 22254 | 121 | 20.6 | 5.4 |
+| rule | band | file-touches (source files changed, pull requests with a review section) | lines changed in them | citations of a changed file | per 1,000 lines changed (changed files only, primary) | all citations, including files the pull request did not change | per 100 file-touches (all) | per 1,000 lines changed (all) |
+|---|---|---|---|---|---|---|---|---|
+| on | <200 | 429 | 18238 | 7 | 0.38 | 12 | 2.8 | 0.66 |
+| on | 200-400 | 194 | 9927 | 0 | 0.00 | 2 | 1.0 | 0.20 |
+| on | >400 | 163 | 6412 | 0 | 0.00 | 0 | 0.0 | 0.00 |
+| ~800 | <200 | 898 | 22848 | 54 | 2.36 | 138 | 15.4 | 6.04 |
+| ~800 | 200-400 | 526 | 18064 | 43 | 2.38 | 72 | 13.7 | 3.99 |
+| ~800 | >400 | 587 | 22254 | 72 | 3.24 | 118 | 20.1 | 5.30 |
+
+Dropped as not a finding, pull request number and text start:
+
+- pull request 1188: No findings. Checked: `RADIUS_TOKEN` against `rounded-box`, `rounded-t-box`, `rounded-full`, `rounded-none`, `rounded-lg`, `rounded-t`, `rounded-[5px]`, bare `rounded`, `sm:rounded-xl` and mixed strings; every pre-existi
+- pull request 1018: **No blast-radius trigger.** No path in the diff matches the money, auth or migration rows of the project's table. Applying the fallback question rather than stopping at the path list: `app/(admin)/admin/shifts/**` is on
+- pull request 868: **No blast-radius trigger.** `app/(admin)/admin/at-risk/` is on no row of the project's table, and the fallback question — does a number this produces reach a paycheck or an invoice — is no: what this code produces is a 
+- pull request 866: **No blast-radius trigger.** `app/layout.tsx` is on no path in the project's table, and the fallback question — does a number this produces reach a paycheck or an invoice — is no. Skipped rather than clean.
+- pull request 865: **No blast-radius trigger.** None of the three files matches a row in the project's table, and the only importers are seed scripts (`db/seed-reservation-dev.ts`, `db/seed-concurrent-dev.ts`, `src/reservations/seed-xola.t
+- pull request 852: **@code-review — clean bill of health.** Verified the captain-only row needs no code branch: `deriveSeats` (`src/builder/derive.ts:32-42`) already iterated `manning.flatMap` generically, and nothing in `src/` or `app/` h
+- pull request 753: No blast-radius trigger matched by path — no migration, no auth surface, no payment module. `/security-review` was run anyway because `checkout/page.tsx` computes a fare, and it established the fare is display-only, so n
+- pull request 734: **No blast-radius trigger.** Per `.claude/CLAUDE-context.md` § Blast-Radius Triggers, none of the four path sets match this diff — no `stripe-payment.ts`, no `payment-config.ts`, no payroll or time-clock export, no auth 
+- pull request 375: Clean bill of health (@code-review, verified line-by-line): `Filter`/`ShiftRow`/`canonicalIdOf` are byte-identical moves (only `export` added + import paths adjusted); `Mode`/`Scope` have a single source of truth with no
 
 Excluded (length or splitting), pull request number and text start:
 
@@ -60,14 +81,19 @@ Excluded (length or splitting), pull request number and text start:
 
 - merged pull requests into main fetched: 117; with a review section: 82
 - finding units in review sections: 457; citing at least one source file: 86
+- dropped as not a finding (a pass verdict or a not-run line, pattern `checked clean|no blast-radius trigger|both fixes are correct|clean bill|no findings|not run\b|nothing to (fix|flag)`): 1 (each listed below)
 - excluded as being about length or splitting: 11 (each listed below)
 - path-like tokens that matched no source file at the merge commit (tests, docs, ambiguous basenames): 66
 
-| rule | band | file-touches (source files changed, pull requests with a review section) | lines changed in them | finding citations | per 100 file-touches | per 1,000 lines changed |
-|---|---|---|---|---|---|---|
-| on | <200 | 549 | 14573 | 63 | 11.5 | 4.3 |
-| on | 200-400 | 56 | 3862 | 21 | 37.5 | 5.4 |
-| on | >400 | 78 | 4156 | 8 | 10.3 | 1.9 |
+| rule | band | file-touches (source files changed, pull requests with a review section) | lines changed in them | citations of a changed file | per 1,000 lines changed (changed files only, primary) | all citations, including files the pull request did not change | per 100 file-touches (all) | per 1,000 lines changed (all) |
+|---|---|---|---|---|---|---|---|---|
+| on | <200 | 549 | 14573 | 50 | 3.43 | 62 | 11.3 | 4.25 |
+| on | 200-400 | 56 | 3862 | 19 | 4.92 | 20 | 35.7 | 5.18 |
+| on | >400 | 78 | 4156 | 7 | 1.68 | 8 | 10.3 | 1.92 |
+
+Dropped as not a finding, pull request number and text start:
+
+- pull request 226: No findings. The dialog's `listWeekDue` call (`app/admin/weeks/page.tsx:347`) takes the same product, week and cutoff as the close action (`app/admin/weeks/actions.ts:43`). The mark's value is defined once, and `landing(
 
 Excluded (length or splitting), pull request number and text start:
 
@@ -87,14 +113,19 @@ Excluded (length or splitting), pull request number and text start:
 
 - merged pull requests into main fetched: 115; with a review section: 39
 - finding units in review sections: 153; citing at least one source file: 25
+- dropped as not a finding (a pass verdict or a not-run line, pattern `checked clean|no blast-radius trigger|both fixes are correct|clean bill|no findings|not run\b|nothing to (fix|flag)`): 1 (each listed below)
 - excluded as being about length or splitting: 2 (each listed below)
 - path-like tokens that matched no source file at the merge commit (tests, docs, ambiguous basenames): 12
 
-| rule | band | file-touches (source files changed, pull requests with a review section) | lines changed in them | finding citations | per 100 file-touches | per 1,000 lines changed |
-|---|---|---|---|---|---|---|
-| on | <200 | 117 | 3881 | 20 | 17.1 | 5.2 |
-| on | 200-400 | 34 | 1154 | 10 | 29.4 | 8.7 |
-| on | >400 | 6 | 554 | 0 | 0.0 | 0.0 |
+| rule | band | file-touches (source files changed, pull requests with a review section) | lines changed in them | citations of a changed file | per 1,000 lines changed (changed files only, primary) | all citations, including files the pull request did not change | per 100 file-touches (all) | per 1,000 lines changed (all) |
+|---|---|---|---|---|---|---|---|---|
+| on | <200 | 117 | 3881 | 14 | 3.61 | 20 | 17.1 | 5.15 |
+| on | 200-400 | 34 | 1154 | 6 | 5.20 | 9 | 26.5 | 7.80 |
+| on | >400 | 6 | 554 | 0 | 0.00 | 0 | 0.0 | 0.00 |
+
+Dropped as not a finding, pull request number and text start:
+
+- pull request 151: @code-review — clean bill on correctness (no RLS/auth/logic bugs; required-vs-optional split correctly gated behind `has_student_fields`). Addressed before opening: added the `required` prop the refactor had dropped from
 
 Excluded (length or splitting), pull request number and text start:
 

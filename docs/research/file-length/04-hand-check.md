@@ -6,7 +6,7 @@ Written 2026-11-21. The selection, the tally and the joins are in `evidence/hand
 
 `02-fix-share-by-length.md` counts a fix commit against every source file it touches. The check asks, for one commit and one file at a time: **was the fix actually in this file?**
 
-- **Hit:** the commit corrects something (a defect, a review finding acted on, or a revert), and this file's change is part of the correction. Hits are split two ways: a defect or revert, and a cleanup or comment (a review finding that was duplication, naming, or a wrong comment).
+- **Hit:** the commit corrects something (a defect, a review finding acted on, or a revert), and this file's change is part of the correction. Hits are split two ways: a defect or revert, and a cleanup or comment (a review finding that was duplication, naming, or a wrong comment). The split is carried by the verdict's reason: a hit whose reason starts `cleanup:` or `comment:` in `evidence/hand-check/<repo>-judged.tsv` is a cleanup or comment hit, and every other hit is a defect or revert. The tally reads that prefix.
 - **Miss, not a fix:** the regex matched a commit that corrects nothing. Muster's "Builder 'changed since reviewed' nudge" matched on "reviewed".
 - **Miss, incidental:** the commit is a fix, but this file's change is not part of it, such as a version bump, a moved function, or a feature riding along.
 
@@ -47,7 +47,7 @@ Five research agents read one repo's diffs each, from a file holding each commit
 
 **About half of what it counts are defects.** The rest are cleanups and comment corrections asked for by a review. So the fix share in `02` measures "changes that correct something", not "bugs". Soundings is the far end: 11 of its 18 hits are cleanups or comments.
 
-**The accuracy does not depend on length.** The hit rate is 0.86, 0.82 and 0.86 across the three bands, and the defect-only rate 0.54, 0.56 and 0.57. If the regex were blaming long files for fixes that happened elsewhere in the same commit, the over-400 band would score lower. It does not.
+**The accuracy shows no detectable lean by length.** The hit rate is 0.86, 0.82 and 0.86 across the three bands, and the defect-only rate 0.54, 0.56 and 0.57. If the regex were blaming long files for fixes that happened elsewhere in the same commit, the over-400 band would score lower. It does not, though with 28 pairs over 400 a small lean would not show.
 
 ## Limits
 

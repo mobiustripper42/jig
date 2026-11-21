@@ -48,4 +48,5 @@ Muster had 44 files over 200 when it dropped the flag at 692ebf75, and 120 at or
 
 - **Dated points use the first-parent commit on or before the date.** Sailbook has no first-parent commit between 2026-05-15 and 2026-06-15, so three rows show the same commit (88ce2a16).
 - **Line counts include comments and blank lines.** Muster's context file counts lines of code without the doc comments. This count does not, so it reads muster's files as longer than muster's own guideline does.
+- **Sailbook's history ends 2026-07-24.** Its `origin/main` was last updated then (`evidence/rule-history.md`), so its rows stop there while the others run into November.
 - **The local checkouts were on task branches.** All counts are at `origin/main`. Soundings' origin/main has 180 commits since 2e8f2d4; its local HEAD has 156, the number in the brief (`evidence/rule-history.md`).
