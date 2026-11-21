@@ -15,11 +15,12 @@ stopping only where information turns out to be missing.
 
 ## Step 0 — Gate
 
-**First, the session file's Next Steps,** unless this conversation has already read them: find the
-open session file the way `/kill-this` Step 0 does, read its Next Steps, restore its parking lot,
-and obey its standing rules from here on. Run straight after a `/clear`, this skill is the fresh
-context's first step, and skipping the file is how a Haul run missed a branch rule and cut the
-wrong branch.
+**First, the session file's Next Steps,** unless this conversation has read them since the last
+`/save-this`: find the open session file the way `/kill-this` Step 0 does (none open: abort, the
+operator runs `/its-alive`; several: ask, as it does), read its Next Steps, restore its parking
+lot, and obey its standing rules from here on. Run in a fresh context on an issue whose spec is
+already written, this skill is the first thing that context does, and skipping the file is how a
+Haul run missed a standing rule about its branch and cut the wrong one.
 
 Abort with a one-line reason if any of these fail:
 
@@ -27,7 +28,8 @@ Abort with a one-line reason if any of these fail:
   criterion is something the `Proof` slot can check — behavior or data. A task that is only
   layout, spacing, styling or wording has nothing for `@test-writer` to assert: use the normal
   loop, with `@ui-reviewer` and a screenshot at the hand-back.
-- **Branch.** You are on `task/X.Y-*` or `task/<issue>-*`, not `main`.
+- **Branch.** You are on `task/X.Y-*` or `task/<issue>-*`, not `main`, and on the branch any
+  standing rule names for this task.
 - **Proof slot.** `.claude/CLAUDE-context.md` § Workflow Mechanisms names a real `Proof` and
   `Proof command`. If it says `none`, there is nothing to write tests in — use the normal loop.
 - **Spec.** Decide by the issue body, not by memory of the conversation. If the body already has
