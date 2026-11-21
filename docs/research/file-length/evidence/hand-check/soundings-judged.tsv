@@ -1,0 +1,24 @@
+pair	sha	path	verdict	reason
+1	749210b091	firmware/src/core/iclock.h	hit	cleanup: review finding made IClock::millis() const.
+2	9d2f006477	contracts/tools/gen_vectors.py	miss-incidental	The correction was prose byte counts; the added assert is bundled extra hardening.
+3	508f09bc4a	firmware/src/core/packet.cpp	hit	cleanup: review finding to cache knownMask() in a static local.
+4	b3bcfc6106	gateway/soundings_gateway/packet.py	hit	Review finding: parse() now rejects non-bytes-like input with a clear PacketError.
+5	d80e45f91f	gateway/soundings_gateway/emitter.py	hit	Fixes the sub-zero soil-temp encode crash and the non-idempotent schedule RNG.
+6	d80e45f91f	gateway/soundings_gateway/spine.py	hit	cleanup: review finding to disconnect MQTT clients before loop_stop for clean teardown.
+7	ff0888772c	firmware/src/core/nodemanifest.h	hit	comment: the finding was a comment overstating kSensorTypeNone as a distinct error path.
+8	859b293f34	gateway/soundings_gateway/config.py	hit	cleanup: review finding hid broker credentials from repr.
+9	859b293f34	gateway/soundings_gateway/derive.py	hit	cleanup: review finding moved the topic metric parse into derive.py as metric_name().
+10	c8ea6c981a	firmware/src/core/a02yyuw.h	hit	comment: review findings were an unstated cumulative badChecksums and a constexpr cleanup.
+11	c586fba7f9	firmware/src/core/serial_framing.cpp	hit	Adds the tested reader that fixes the invalid-length resync bug found by review.
+12	c586fba7f9	firmware/src/gateway/main.cpp	hit	Replaces the hand-rolled reader that had the resync bug with the core reader.
+13	383be50cb3	firmware/src/gateway/main.cpp	hit	comment: review found the single-node reply-window justification overstated as fact.
+14	98db1e7299	firmware/src/core/downlink.h	hit	comment: stale 'no bits assigned' claim corrected and kFlagUpdateWaiting added.
+15	98db1e7299	firmware/src/esp32/ota_client.cpp	hit	comment: stale delay() claim fixed and bare 0x0001 replaced by the named flag.
+16	ff721a248e	firmware/src/core/ds18b20.cpp	hit	Marks the attempt before the write so the endurance bound no longer depends on a lying verify.
+17	ff721a248e	firmware/src/core/ds18b20.h	hit	Adds verifyDischargeMs config that is part of the verify and endurance fix.
+18	f697cb7fcb	firmware/src/esp32/main.cpp	miss-incidental	Only a kFwVersion bump riding along with the review fixes.
+19	f697cb7fcb	firmware/src/esp32/onewire_bus.h	hit	comment: review finding that begin() as a required precondition was undocumented.
+20	0bbad7e3dc	gateway/soundings_gateway/vpd.py	hit	Splits band checks per channel so one bad channel no longer suppresses a good one.
+21	749210b091	firmware/src/esp32/main.cpp	hit	cleanup: review finding named the heartbeat constant (plus const override ripple).
+22	8c1482967e	firmware/src/esp32/ota_client.cpp	hit	Fixes configured() not checking the WiFi password, which allowed association to an open network.
+23	0bbad7e3dc	gateway/soundings_gateway/derive.py	hit	Publishes each air channel on its own merits instead of withholding both.

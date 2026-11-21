@@ -1,0 +1,26 @@
+pair	sha	path	verdict	reason
+1	42a1b4d8e3	mobile/src/gps-line.ts	hit	The Start gate never opened on an open street; this file removes the gate.
+2	ce752a33ed	app/parts/check-row.tsx	miss-incidental	One-word comment tweak; the fix was in the areas panel and list button.
+3	e0f35626e3	app/stats/stats-view.ts	hit	The done flag now follows counted classes so a fully ridden park reads 100%.
+4	e0f35626e3	db/area-stats.ts	hit	Adds the counted classes the done-flag fix reads.
+5	0e3812c0a1	mobile/AreasScreen.tsx	hit	Back and Done are held while a save lands, fixing the lost Not saved.
+6	82cf1153f3	app/import/page.tsx	miss-incidental	Comment updated to match the list change; the fix is in track-list.
+7	82cf1153f3	app/import/track-list.tsx	hit	Delete survives a dropped call, keeps the list, and export stays on the page.
+8	5965c7b146	mobile/App.tsx	hit	cleanup: memoized the stack and sources per review, plus a comment.
+9	cd13fc6951	mobile/src/area-fit.ts	hit	A missing or malformed box now means no fit instead of a bad camera move.
+10	06fa286b2f	mobile/LoadingLine.tsx	hit	Wrong easing curve corrected to the desktop's and dead label removed.
+11	0148dafef5	mobile/App.tsx	hit	The first list now takes its own stamp even mid-ride.
+12	6b670ced30	db/area-clip.ts	hit	The empty fallback geometry now carries SRID 4326, fixing mixed-SRID failures.
+13	e3ef8116ae	db/uncredited.ts	hit	Meters on the ground, unmatched tracks skipped, and classes taken from kinds.ts.
+14	9a2163af55	src/match/valhalla.ts	hit	cleanup: the magic 0.7 named as a constant per review.
+15	ba004f1190	db/coverage.ts	hit	Slivers are now matched so a ride on one credits its divided-road partner.
+16	4a8f77be65	db/coverage.ts	hit	comment: rewrapped step 6 comments and named the oneway rule's twin per review.
+17	15ff22f6b1	db/settings.ts	hit	comment: the setting cited the wrong decision, DEC-033.
+18	0e3a8a8e9f	db/coverage.ts	hit	comment: decision citations corrected to DEC-036.
+19	0e3a8a8e9f	db/settings.ts	hit	comment: the pair_distance_m description cited the wrong decision.
+20	31e7f7c236	db/coverage.ts	hit	cleanup: MATCHED_CLASSES derived from the two matchers' lists.
+21	db711352b0	db/import-gpx.ts	hit	The fill now locks and re-checks the live row, fixing a concurrent-importer race.
+22	cd13fc6951	mobile/App.tsx	hit	A fitBounds throw on remount is now caught and the fit comment corrected.
+23	0148dafef5	app/map/streets-map.tsx	hit	A failed fetch clears its stale flag and a reload's covered count is kept.
+24	a5ec349130	db/coverage.ts	hit	Dead-end snap now applies only to street ways, not trail chains.
+25	9b0993a285	db/coverage.ts	hit	cleanup: step 6 reuses STREET_CLS instead of the inline case.

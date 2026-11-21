@@ -1,0 +1,25 @@
+1	main	42a1b4d8e3	2026-10-05	mobile/src/gps-line.ts	23	<200	Start works once your dot is on the map: any fix is ready, the ±20 m / 10 s gate gone
+2	main	ce752a33ed	2026-10-09	app/parts/check-row.tsx	39	<200	Review fixes: every row held while a write lands; failed numbers retried (9.6)
+3	main	e0f35626e3	2026-10-09	app/stats/stats-view.ts	165	<200	Review fixes: a park's stats rows read done, one kind lookup throughout (9.5)
+4	main	e0f35626e3	2026-10-09	db/area-stats.ts	221	200-400	Review fixes: a park's stats rows read done, one kind lookup throughout (9.5)
+5	main	0e3812c0a1	2026-10-11	mobile/AreasScreen.tsx	144	<200	Review fix: My areas and Areas held while a save lands (9.7)
+6	main	82cf1153f3	2026-10-19	app/import/page.tsx	59	<200	10.2 review: delete survives a dropped call, a delete keeps the list, export never leaves the page
+7	main	82cf1153f3	2026-10-19	app/import/track-list.tsx	258	200-400	10.2 review: delete survives a dropped call, a delete keeps the list, export never leaves the page
+8	main	5965c7b146	2026-10-20	mobile/App.tsx	679	>400	10.6 review: memoize the stack; say what a mid-ride list change does to the ride line
+9	main	cd13fc6951	2026-10-20	mobile/src/area-fit.ts	44	<200	10.5 review: the fit's comment says what holds it, a remount skips the fit, no box is no fit
+10	main	06fa286b2f	2026-10-21	mobile/LoadingLine.tsx	50	<200	10.7 review: the desktop's ease-in-out curve; no dead label; say what the effect's keys carry
+11	main	0148dafef5	2026-10-26	mobile/App.tsx	679	>400	10.9 review: the first-idle readout keeps a reload's count; a failed fetch clears its stale flag; the first list takes its own stamp; areaSources' stamp has no default
+12	main	6b670ced30	2026-10-26	db/area-clip.ts	107	<200	186 review: the clip's empty fallback is SRID 4326, tested with a covered part outside every piece; doc lines say true things
+13	main	e3ef8116ae	2026-10-26	db/uncredited.ts	153	<200	Review fixes: along-way meters on the ground, unmatched tracks skipped, classes from kinds.ts
+14	main	9a2163af55	2026-10-27	src/match/valhalla.ts	212	200-400	Review fixes: DEC-027 cites DEC-014 and records AC7's cost; the 0.7 named
+15	main	ba004f1190	2026-10-28	db/coverage.ts	538	>400	Review fix: slivers pair across a divided road, so a ride on one credits its partner (AC9)
+16	main	4a8f77be65	2026-10-30	db/coverage.ts	538	>400	Review fixes: rewrap step 6 comments, name the oneway rule's twin, drop misleading AC prefixes
+17	main	15ff22f6b1	2026-10-31	db/settings.ts	60	<200	Review fixes: name the split-node tolerance, note the planar angle, cite DEC-033
+18	main	0e3a8a8e9f	2026-11-01	db/coverage.ts	538	>400	Review fixes: cite DEC-036 where the pairing test lives; the run is a total
+19	main	0e3a8a8e9f	2026-11-01	db/settings.ts	60	<200	Review fixes: cite DEC-036 where the pairing test lives; the run is a total
+20	main	31e7f7c236	2026-11-03	db/coverage.ts	538	>400	Review fixes: MATCHED_CLASSES from the two matchers' lists; check names a missing streets load
+21	200+ supplement	db711352b0	2026-10-18	db/import-gpx.ts	312	200-400	Review fix: the fill re-checks the live row; SPEC:174 past tense
+22	200+ supplement	cd13fc6951	2026-10-20	mobile/App.tsx	679	>400	10.5 review: the fit's comment says what holds it, a remount skips the fit, no box is no fit
+23	200+ supplement	0148dafef5	2026-10-26	app/map/streets-map.tsx	540	>400	10.9 review: the first-idle readout keeps a reload's count; a failed fetch clears its stale flag; the first list takes its own stamp; areaSources' stamp has no default
+24	200+ supplement	a5ec349130	2026-10-29	db/coverage.ts	538	>400	Review fix: only a street way has a dead end, so a trail chain's splits never snap 30 m
+25	200+ supplement	9b0993a285	2026-11-01	db/coverage.ts	538	>400	Review fix: step 6 reads STREET_CLS; SPEC says vertex of both legs
