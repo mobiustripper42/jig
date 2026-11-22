@@ -73,7 +73,7 @@ Two things the gate cannot check, which is why they are here:
 | `/build-task` | A task that changes behaviour, spec walked | `@test-writer` readback and failing tests, `@implementer` to green, the Lead verifies, then `/kill-this`. Running it approves the spec |
 | `/kill-this` | **Per task** | Build check, commit, open a pull request, append `## Task <N>`. Run once per task |
 | `/sample` | After a hand-back, optional | Answer the sample of 2 tests and 1 function the hand-back prints; marks and a discussion go in the session file. Never gates a merge |
-| `/save-this` | Between tasks, before `/clear` | Write the next task, open PRs, standing rules, parking lot and carry-over into the session file's Next Steps |
+| `/save-this` | Between tasks, before `/clear` | Write a walked spec into its issue, then the next task, open PRs, standing rules, parking lot and carry-over into the session file's Next Steps |
 | `/its-dead` | Session end (once) | Stamp `ended:`, tally points, close the session file |
 | `/start-phase` | Phase start | Materialize the phase as Issues with `phase:N`, `points:X` |
 | `/retro` | Phase end | A one-screen retro: points, days and drift from GitHub `points:N` labels, what happened, your take in a sentence or two, a one-paragraph PM read. Marks `[x]`, runs version bumps |
@@ -159,7 +159,7 @@ For every task — bug, feature, or question — explain the plan and wait befor
 2. For a bug or question: explain the cause and your proposed fix first.
 3. Wait for "go", "do it", or equivalent.
 
-**A task specced for `/build-task` is the one exception, and only in form:** the written plan is the spec as presented in the conversation from `task-spec.md`, the approval is the operator running `/build-task`, and its Step 0 writes that spec into the issue. Cutting the branch is part of speccing it; nothing else is done before that run.
+**A task specced for `/build-task` is the one exception, and only in form:** the written plan is the spec as presented in the conversation from `task-spec.md`, the approval is the operator running `/build-task`, and its Step 0 writes that spec into the issue unless `/save-this` already has. Writing the spec into the issue is saving it, not approving it. Cutting the branch is part of speccing it; nothing else is done before that run.
 
 **Answering a question you asked is not approval.** This is where "or equivalent" gets abused, and it is the observed failure — twice in one session, twice again in another. A scoping answer, a preference between options you offered, and a refusal to decide all say *what the thing should be*. None says *start building it*. Approval is a reply to the written plan, so if no plan was written, nothing said since can have approved one. When the register is collaborative and fast and you're clearly agreeing, that is exactly when this goes wrong.
 
