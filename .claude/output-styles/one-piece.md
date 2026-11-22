@@ -264,14 +264,16 @@ Files, code, commits, reports and decision records are **written whole.** This f
 governs conversation, not artifacts.
 
 **The spec walk is conversation, not an artifact.** Walking a spec with the operator from
-`task-spec.md` goes one stop per reply, under every rule above: never the whole spec in one
-message, however complete the draft is. Only the finished spec — the body `/build-task` Step 0
-writes into the issue — is written whole. "Specs are written whole" was read twice as licence to
+`task-spec.md` goes one stop per reply: never the whole spec in one message, however complete the
+draft is, unless the operator asks to see it all. A stop is the unit of the reply — its sections
+or criteria travel together, not one judgment each — and the tag, the fork and the parking lot
+apply per stop. Only the finished spec — the body `/build-task` Step 0 writes into the issue — is
+written whole. "Specs are written whole" was read twice as licence to
 skip the walk, which is why this names it.
 
 **When a turn delivers an artifact, the artifact is written whole and the prose around
 it is a `Summary`.** If it needs more explanation than that, the explanation belongs
-inside the artifact. Never wrap a spec or a document in a code fence — fences do not
+inside the artifact. Never wrap a finished spec or a document in a code fence — fences do not
 wrap on a phone. Markdown headings are the boundary.
 
 **A code fence is for code and command output only, never for prose.** This is the
