@@ -23,12 +23,13 @@ The ~200-line flag had no evidence behind it. The research in `docs/research/fil
 and Muster's ~800 period — files of 200 to 400 lines drew no bigger share of fix commits among the
 commits that modified them, and no more review citations per line changed, than shorter ones.
 Counting every commit, 200 to 400 is slightly higher in all three windows; the gaps are small.
-Above 400 the data cannot say either way: Centerline's share there was 0.29 against 0.19 under
-200, from 3 files. So no other number earned the place. With the rule on, Haul still grew from 1
-file over 200 lines to 24 in three weeks, and most of Haul's length flags were left.
+Above 400 the data cannot say. Two windows lean higher: Centerline (0.29 against 0.19 under 200) has
+only 3 files there, and in Muster (0.20 against 0.15, 37 files) length cannot be separated from
+file type. Haul and earlier Muster, with the rule on, lean the other way. So no other number earned
+the place. With the rule on, Haul still grew from 1 file over 200 lines to 24 in three weeks.
 
-No other review item looks for a long file or one that mixes concerns; noticing one is left to
-the reviewer and the operator. `code-review.md` never syncs (`.claude/file-classes.yaml`), so this
-reaches new installs only, and each existing project drops its own copy by pull request. The
-operator re-runs the analysis on a month of their choosing.
+No item in jig's list now looks for a long file or one that mixes concerns. A project's own
+Conventions, which the list checks, may. `code-review.md` never syncs
+(`.claude/file-classes.yaml`), so this reaches new installs only; an existing project drops the
+rule by its own pull request. The operator re-runs the analysis on a month of their choosing.
 Searched "oversized", "line limit" and "200 lines": nothing.
