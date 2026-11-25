@@ -26,10 +26,11 @@ generated index. To add or change one, edit its file and run `npm run gen:decisi
 `npm run check:decisions` fails the build if this index is stale, which is the actual fix for a
 hand-maintained index's decay rather than remembering to regenerate it.
 
-**A change to a decision goes *in* that decision's file**, appended as a dated
-`## Amendment, YYYY-MM-DD (who)` section. It is not a new decision and gets no id. A new id is for
-a subject the record has no decision about yet. Two decisions that merely relate name each other
-in plain **see also** prose the generator neither writes nor strips.
+**A draft is rewritten; a built decision is superseded** (DEC-J020). Nothing is appended to a record.
+A draft's change of mind replaces its ruling, body and `revisit_if`; an active one's is a new record
+carrying `supersedes`. A new id is for a subject the record has no decision about yet, or for a
+supersede. Two decisions that merely relate name each other in plain **see also** prose
+the generator neither writes nor strips.
 
 A decision that changes the spec declares it in frontmatter — `amends_spec: [{section, scope}]` —
 and the pointer under that spec section's heading is generated from the declaration, so a claim

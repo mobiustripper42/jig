@@ -12,8 +12,6 @@ claims:
   - kind: "script"
     target: "scripts/check-decisions.mjs"
     note: "`legacyVerdict`"
-  - kind: "file"
-    target: "CLAUDE.md"
 revisit_if: "Converting a record proves so costly that legacy files go unfixed rather than being split."
 ---
 

@@ -82,10 +82,39 @@ nothing to copy. Which style is **on** is `{ "outputStyle": "One piece" }` in
 `~/.claude/settings.json`, hand-edited once; the master defines no such key, so `settings-policy`
 neither checks nor writes one.
 
-Until 2026-09-18 both travelled — the file as `logic`, the key in the master — and a project-level
-`.claude/settings.json` beats the user-level one, so the machine default was never consulted in
-any installed repo. If a style does not take effect, look for the key or a stray file somewhere
-more specific first.
+**The output style is two things, and both live on the machine (DEC-J007).** The **setting** says
+which style is on. The **file** says what that style is. They are separate, and treating them as one
+is what cost a full session.
+
+```
+~/.claude/settings.json                { "outputStyle": "One piece" }     the setting — hand-edited, once
+~/.claude/output-styles/one-piece.md   → symlink to jig's copy             the file — jig is the versioned home
+```
+
+**Both are one-time hand steps per machine.** A fresh machine has neither until someone does this,
+with `<jig>` as that machine's jig checkout:
+
+```
+mkdir -p ~/.claude/output-styles && ln -sfn <jig>/.claude/output-styles/one-piece.md ~/.claude/output-styles/one-piece.md
+```
+
+**`settings-policy.mjs` checks the link, and only when the setting names a style jig ships.** Absent,
+a regular file, a link into another checkout, a link whose target is gone — each is a separate
+finding carrying the `ln -sfn` that fixes it. Reported, never repaired: `--write` edits `permissions`
+and the machine keys, and making a symlink in a home directory is not that. An unset `outputStyle` is
+silent, because nothing is reading the file. What it still cannot see is **which** style is on — that
+setting is deliberately unmanaged, so a link that is correct says the file is current, not that it is
+in use.
+
+**Precedence, lowest to highest.** For the setting: `~/.claude/settings.json`, then
+`<repo>/.claude/settings.json`, then `<repo>/.claude/settings.local.json`. For the file:
+`~/.claude/output-styles/` loses to `<repo>/.claude/output-styles/` — observed 2026-09-18, a repo
+holding a stale copy ran it over the machine's newer one. Both run the same way: the more specific
+location silently beats the machine. That is the trap. Jig shipped the key and the file until
+2026-09-18, so setting either "at the machine level" did nothing, in any repo. A repo copy of the
+style file is therefore not untidy, it is the style that repo runs — delete it. If a style ever fails
+to take effect, look for the key or the file somewhere more specific than you looked. Both are read
+once at launch, so a change applies at the **next** session start.
 
 | Style | What it adds |
 |-------|--------------|

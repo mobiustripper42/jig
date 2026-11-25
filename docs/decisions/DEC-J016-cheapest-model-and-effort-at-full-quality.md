@@ -9,7 +9,7 @@ ruling: "Quality first, then the cheapest model and effort that keeps it. Sessio
 claims:
   - kind: "file"
     target: "CLAUDE.md"
-    note: "Model Selection states the rule and the six agents"
+    note: "Model Selection states the rule; docs/AGENTS.md names the six agents"
   - kind: "file"
     target: ".claude/agents/test-writer.md"
     note: "model opus, effort high"
