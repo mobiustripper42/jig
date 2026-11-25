@@ -5,7 +5,7 @@ branch: task/drop-installs-trigger
 started: 2026-11-24T19:43:54Z
 ended:
 points:
-pr_numbers: [142, 143]
+pr_numbers: [142, 143, 144]
 status: open
 transcript: /home/eric/.claude/projects/-home-eric-jig/aa823fcc-9b0d-52be-a818-975758c4d468.jsonl
 ---
@@ -40,6 +40,21 @@ transcript: /home/eric/.claude/projects/-home-eric-jig/aa823fcc-9b0d-52be-a818-9
 **Points:** 0 (unpointed)
 **Branch:** task/retro-drops-ui-review
 **Opened at:** 2026-11-25T15:13:32Z
+**Sample:** none — no changed test or function in a JS/TS file
+
+## Task 3: Retro checks the context files against the code in the background
+
+**Completed:**
+- `.claude/skills/retro/SKILL.md`: Step 0.5 starts one background agent on the trunk; Step 10 files its report as one issue for the next phase.
+- `docs/AGENTS.md` row; DEC-J036.
+- Issue 103 rewritten as the shell trim, its figures corrected to each repo's `origin/main`. Issues 102 and 131 closed.
+- The agent's instructions have not been run against a project.
+
+**Code review:** @code-review 9 findings. Fixed in `786dc59`, not reviewed again: late report, wrong-branch start, failure undefined, absent trigger table, Haul's figures. Left, with reasons in the PR: duplicate issue on a re-run, agent can edit, `CLAUDE.md` and CHEATSHEET rows, `points:1`. /security-review not run (no trigger).
+**PR:** [PR #144](https://github.com/mobiustripper42/jig/pull/144)
+**Points:** 2
+**Branch:** task/retro-context-review
+**Opened at:** 2026-11-25T16:05:55Z
 **Sample:** none — no changed test or function in a JS/TS file
 
 **Next Steps:**
