@@ -1,6 +1,6 @@
 # [Project Name] — Interface Context (for @ui-reviewer)
 
-What `@ui-reviewer` checks a screen against, and what `/kill-this` and `/retro` read to decide when it runs. Copied once from jig's scaffold when the project gets its first screen, then owned here. Delete it while the project has no screens: `/kill-this` and `/retro` skip the review when it is absent.
+What `@ui-reviewer` checks a screen against, and what `/kill-this` reads to decide when it runs. Copied once from jig's scaffold when the project gets its first screen, then owned here. Delete it while the project has no screens: `/kill-this` skips the review when it is absent.
 
 Rules and pointers only. Every value lives in a file named here; a list of components or colours copied into this file is wrong the day the code moves.
 
@@ -23,7 +23,6 @@ Rules and pointers only. Every value lives in a file named here; a list of compo
 ## Screen files and routes
 
 - **Screen file:** [which files count as a screen change: paths and extensions, tests excluded]
-- **Strings file:** [where translated or user-facing strings live, or "None"]
 - **Route:** [how a screen file maps to the route it renders, and the command that lists every route. Say what a shared file, such as a layout or a component, reaches.]
 
 ## Reaching a screen

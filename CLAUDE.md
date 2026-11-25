@@ -91,7 +91,7 @@ Two things the gate cannot check, which is why they are here:
 | @architect | Opus | Before design decisions, new dependencies, scope creep | Coherence vs SPEC + decisions |
 | @code-review | Sonnet | After every commit (wired into `/kill-this`) | Catch issues early |
 | @pm | Sonnet | Session start/end via skills | Progress, risks |
-| @ui-reviewer | Sonnet | After interface work, phase boundaries | Design quality |
+| @ui-reviewer | Sonnet | After interface work (wired into `/kill-this`); over every screen only when asked | Design quality |
 | @test-writer | Opus | `/build-task` | Readback, then failing tests from the issue spec |
 | @implementer | Sonnet | `/build-task` | Makes the tests pass; may not edit them |
 
