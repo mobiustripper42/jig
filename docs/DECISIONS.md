@@ -76,6 +76,7 @@ that never reached the spec is a red build rather than prose nobody cross-read.
 - DEC-J033 — Words are approved in the spec and checked by hand, never asserted by a test
 - DEC-J034 — @code-review has no file-length limit
 - DEC-J035 — @ui-reviewer runs per task; every screen only when the operator asks
+- DEC-J037 — sed -n is allowed; sed -i stays denied
 
 ### Model selection
 - DEC-J009 — Model and effort settings for sessions and agents
