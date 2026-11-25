@@ -5,7 +5,7 @@ branch: task/drop-installs-trigger
 started: 2026-11-24T19:43:54Z
 ended:
 points:
-pr_numbers: [142, 143, 144]
+pr_numbers: [142, 143, 144, 145]
 status: open
 transcript: /home/eric/.claude/projects/-home-eric-jig/aa823fcc-9b0d-52be-a818-975758c4d468.jsonl
 ---
@@ -55,6 +55,21 @@ transcript: /home/eric/.claude/projects/-home-eric-jig/aa823fcc-9b0d-52be-a818-9
 **Points:** 2
 **Branch:** task/retro-context-review
 **Opened at:** 2026-11-25T16:05:55Z
+**Sample:** none — no changed test or function in a JS/TS file
+
+## Task 4: Trim the shell
+
+**Completed:**
+- `CLAUDE.md`: 4,757 words to 3,723, section by section with the operator's approval (issue 103).
+- `docs/AGENTS.md § Output styles` takes the machine setup; `promote-production/SKILL.md` takes the adoption warning; `scaffold/docs/decisions-baseline.txt` comment reworded.
+- `docs/decisions/_preamble.md`: the stale Amendment paragraph replaced (DEC-J020), approved separately.
+- Not done: the "not listed" gate message in `check-decisions.mjs:493` does not name the baseline generator.
+
+**Code review:** @code-review 13 findings, no hard rule lost. Fixed in `06b85ce`, not reviewed again: "written whole" clause, when to archive, adoption pointer, one-liner clause, the preamble's new-id line, DEC-J004 and DEC-J016 claims. Left, with reasons in the PR: the Key Docs advice, repetition in AGENTS.md, the gate message. /security-review not run (no trigger).
+**PR:** [PR #145](https://github.com/mobiustripper42/jig/pull/145)
+**Points:** 3
+**Branch:** task/103-trim-shell
+**Opened at:** 2026-11-25T17:24:37Z
 **Sample:** none — no changed test or function in a JS/TS file
 
 **Next Steps:**
