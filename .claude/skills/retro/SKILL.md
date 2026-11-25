@@ -24,18 +24,18 @@ Confirm: "Run retro for Phase **N**?" Wait.
 
 ## Step 0.5 — Context review, in the background
 
-Once the phase is confirmed, start one `general-purpose` agent with `model: sonnet`, `effort: high` and `run_in_background: true`, then go straight to Step 1. It asks the operator nothing and no step waits for it: the operator is tired by the end of a phase, so what it finds becomes an issue for the next one (DEC-J036). When its report arrives, keep it for Step 10 and end the turn without a reply. If a question is already open to the operator, it stays open.
+Once the phase is confirmed, and only on the trunk (Step 9's `WORKING_BRANCH`), start one `general-purpose` agent with `model: sonnet`, `effort: high` and `run_in_background: true`, then go straight to Step 1. On any other branch, start nothing: Step 9 sends the operator to the trunk and the re-run starts it, and switching branches under a running agent would change the files it is reading. It asks the operator nothing and no step waits for it: the operator is tired by the end of a phase, so what it finds becomes an issue for the next one (DEC-J036). When its report arrives before Step 10, keep it for Step 10 and end the turn without a reply; a question already open to the operator stays open. When it arrives after Step 10 has printed, act on it as Step 10 says and answer in one line.
 
 Its task, whole:
 
 > Review `.claude/CLAUDE-context.md`, and `.claude/ui-context.md` when it exists, against the code in this checkout. Read every line. Edit nothing. Report three kinds of finding, each quoting the line with its file and line number, and citing the `path:line` in the code that shows it:
 > - **False:** a line the code contradicts.
-> - **Missing:** something a list or table should name and does not. Do the `## Blast-Radius Triggers` table first: for each row, search the code for every file that fits what the row is for, and report each one the row does not cover.
+> - **Missing:** something a list or table should name and does not. Do the `## Blast-Radius Triggers` table first, when there is one: for each row, search the code for every file that fits what the row is for, and report each one the row does not cover.
 > - **Finished:** a line about something that was going to happen and has, or a rule for something that is gone.
 >
 > A line you could not check is not a finding. A rule that is still true but looks unneeded is not a finding either. Report nothing you did not read the code for. With no findings, return exactly: `Clean.`
 >
-> Order: Blast-Radius Triggers, then False, Missing, Finished.
+> Order: the Missing findings from Blast-Radius Triggers, then False, the other Missing, Finished.
 
 ## Step 1 — Account for all phase issues
 
@@ -237,7 +237,7 @@ Echo: `Phase <N> closed at v<NEW_VERSION>` (and `tagged` if main).
 
 ## Step 10 — Summary
 
-**First, the Step 0.5 report.** Findings: file one issue titled `Phase <N> retro: context review`, with the report as its body under the line `Found by an agent reading the files. Check each against the code before changing anything.`, labelled `phase:<N+1>` and `points:1` (create either label when it is missing, as `/start-phase` does). `Clean.`: file nothing. Not arrived: say `still running`, and file the issue, or say `clean`, when it does. The agent failed or was never started: say `not run`.
+**First, the Step 0.5 report.** Findings: file one issue titled `Phase <N> retro: context review`, with the report as its body under the line `Found by an agent reading the files. Check each against the code before changing anything.`, labelled `phase:<N+1>` and `points:1` (create either label when it is missing, as `/start-phase` does). `Clean.`: file nothing. Not arrived: say `still running`, and file the issue, or say `clean`, when it does. The agent failed, was never started, or returned neither `Clean.` nor a finding with a file and line: file nothing and say `not run`.
 
 ```
 Phase <N> closed.

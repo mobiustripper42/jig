@@ -22,8 +22,8 @@ trigger table missed files that start a payment, so a change to only those would
 `/security-review`. That is why the agent looks for what a table leaves out, and not only for lines
 that are wrong.
 
-A phase is the interval because the file moves with the project: Haul's went from 1,124 words to
-1,951 between 2026-11-02 and 2026-11-25 (issue 103).
+A phase is the interval because the file moves with the project: Haul's `.claude/CLAUDE-context.md`
+went from 1,380 words (2026-11-02, its commit `74ee6c5`) to 1,951 (2026-11-18, `4491da4`).
 
 It runs in the background and ends in an issue because the operator is tired at the end of a phase
 (DEC-J035). The finding is decided on a later day.
