@@ -5,7 +5,7 @@ branch: task/drop-installs-trigger
 started: 2026-11-24T19:43:54Z
 ended:
 points:
-pr_numbers: [142, 143, 144, 145]
+pr_numbers: [142, 143, 144, 145, 146]
 status: open
 transcript: /home/eric/.claude/projects/-home-eric-jig/aa823fcc-9b0d-52be-a818-975758c4d468.jsonl
 ---
@@ -70,6 +70,20 @@ transcript: /home/eric/.claude/projects/-home-eric-jig/aa823fcc-9b0d-52be-a818-9
 **Points:** 3
 **Branch:** task/103-trim-shell
 **Opened at:** 2026-11-25T17:24:37Z
+**Sample:** none — no changed test or function in a JS/TS file
+
+## Task 5: Allow sed -n; sed -i stays denied
+
+**Completed:**
+- `.claude/settings.json`: `Bash(sed -n *)` removed from the denies; `Bash(sed -i *)` stays.
+- `CLAUDE.md`: reading with the Read tool is a preference (DEC-J037).
+- Owed by hand, after merge: `node scripts/settings-policy.mjs --write /home/eric/.claude/settings.json` on each machine.
+
+**Code review:** @code-review 5 findings: record's sourcing and the per-machine note fixed (not reviewed again); four "never a `sed`/`grep` one-liner" lines in skills and two dated accounts left. /security-review 0 at its bar; note that `sed -n -i` is not matched by the `sed -i` deny. @ui-reviewer not run (no ui-context.md).
+**PR:** [PR #146](https://github.com/mobiustripper42/jig/pull/146)
+**Points:** 2
+**Branch:** task/allow-sed-n
+**Opened at:** 2026-11-25T17:45:17Z
 **Sample:** none — no changed test or function in a JS/TS file
 
 **Next Steps:**
