@@ -88,4 +88,27 @@ transcript: /home/eric/.claude/projects/-home-eric-jig/aa823fcc-9b0d-52be-a818-9
 
 **Next Steps:**
 
+_Saved 2026-11-25T17:51:56Z by /save-this._
+
+**Next task:** Not named — the operator: "nothing is next, just waiting for the haul browser runs"
+
+**Open pull requests:** none — every pull request in `pr_numbers` is merged.
+
+**Standing rules:**
+- A /build-task spec that balloons can be cut back to a normal-loop task: "we always have the 'just build it' option" (operator, 2026-10-18, after issue 91's readback grew it to 18 criteria).
+- Syncs go through `npm run sync -- ../<project> --pr`, never by hand in the project's checkout (`.claude/CLAUDE-context.md`, median-gap row). This session synced centerline PR 175 by hand, which was a miss.
+- Before starting a project session after a sync: merge the sync pull request, check out `main`, pull, then launch Claude. Permissions are read at launch (operator, 2026-10-19).
+- While a project prototypes a change to jig's workflow files, make no jig changes to those files until it's harvested (operator, 2026-10-30: "or try not to"). Prototypes are built in the project, then harvested into jig.
+- No guards for problems that have not happened: "if this becomes a problem we'll fix it, but it's not happened yet" (operator, 2026-11-11, on the final-"yes" guard and `--no-track`).
+- No uncommitted files kept around; nothing in the workflow keeps a file uncommitted on purpose (operator, 2026-11-11, dropping Haul's Step 0 rule).
+- Specs are written on Fable while the subscription allows, otherwise on Opus. Opus is the `/build-task` Lead. The operator switches models by hand, out of habit, with no reminder and no decision record (operator, 2026-11-14: "too fluid" for a DEC).
+- Harvests are done ad hoc and sometimes need a little adjustment; no harvest skill (operator, 2026-11-20).
+
+**Parking lot:** nothing.
+
+**Carry-over:**
+- Haul browser run trial: three screen tasks, instruction pasted into the Haul session on 2026-11-24, no workflow file changed. At the third task's hand-back it lists three `Browser run:` lines with each task's cost; no defect found only there means drop it.
+- Muster, Haul and centerline have not been synced since PRs 142 to 146. Until they are, their `/retro` still runs the UI review and has no context review.
+- When the length analysis is re-run: Muster keeps its ~300 guideline and ~800 review flag on purpose, as a kind of control. The 8 dormant repos keep the 200 rule until each is rebooted (operator, 2026-11-23).
+
 **Context:**
