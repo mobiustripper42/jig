@@ -3,7 +3,7 @@ schema: 1
 id: DEC-J027
 title: "@ui-reviewer runs per task on touched screens, and on every screen at phase end"
 topic: "Session workflow & skills"
-status: "active"
+status: "superseded"
 date: "2026-11-02"
 ruling: "Where .claude/ui-context.md exists, /kill-this runs @ui-reviewer on the routes a task's screen files reach, and /retro runs it over every route; each finding is fixed before close or filed."
 claims:
@@ -15,6 +15,7 @@ claims:
     note: "Step 1.5"
   - kind: "file"
     target: "scaffold/claude/ui-context.md"
+superseded_by: DEC-J035
 revisit_if: "Retro reviews keep filing findings a per-task review should have caught, or not reached routes become routine."
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: ui-reviewer
-description: Reviews visual design quality for this project's pages against the project's design system. Covers nav/layout consistency, color/brand adherence, mobile responsiveness, typography, use of the project's components, and accessibility basics. Use after completing a page or significant component, at phase boundaries, or when something looks off.
+description: Reviews visual design quality for this project's pages against the project's design system. Covers nav/layout consistency, color/brand adherence, mobile responsiveness, typography, use of the project's components, and accessibility basics. Use after completing a page or significant component, when something looks off, or over every screen when the operator asks for that.
 model: sonnet
 effort: high
 ---
