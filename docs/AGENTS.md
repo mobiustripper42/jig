@@ -18,7 +18,7 @@ entry is an unclassified file, which is the state this workflow keeps finding de
 | `/save-this` | Between tasks, before `/clear` | Write a spec walked in the conversation into its issue, then replace the session file's Next Steps with the next task, open PRs, standing rules (word for word), the parking lot (nothing dropped unless closed) and a carry-over for the next task; push the `sessions` branch. The cleared context reads it back at the spec step |
 | `/its-dead` | Session end, once | Stamp `ended:`, tally points, display wall clock, close the session file. No time math, no version bump |
 | `/start-phase` | Phase start | Materialize the phase as GitHub Issues with `phase:N` and `points:X` labels |
-| `/retro` | Phase end | A one-screen retro: points, days and drift from issue labels, what happened, the operator's take, a one-paragraph @pm read. Marks `[x]`, writes `RETROSPECTIVES.md`, runs version bumps |
+| `/retro` | Phase end | A one-screen retro: points, days and drift from issue labels, what happened, the operator's take, a one-paragraph @pm read. A background agent checks the context files against the code and files one issue for the next phase. Marks `[x]`, writes `RETROSPECTIVES.md`, runs version bumps |
 | `/bump-major` | Breaking change | Major bump with a supplied rationale, CHANGELOG entry, tag on `main` |
 | `/promote-production` | Ship | ff-merge `main` → `production`, push, then wait for the project's post-promote checks to report the deploy landed. Projects with that branch only |
 
