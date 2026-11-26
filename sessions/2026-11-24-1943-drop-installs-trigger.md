@@ -5,7 +5,7 @@ branch: task/drop-installs-trigger
 started: 2026-11-24T19:43:54Z
 ended:
 points:
-pr_numbers: [142, 143, 144, 145, 146]
+pr_numbers: [142, 143, 144, 145, 146, 147]
 status: open
 transcript: /home/eric/.claude/projects/-home-eric-jig/aa823fcc-9b0d-52be-a818-975758c4d468.jsonl
 ---
@@ -84,6 +84,21 @@ transcript: /home/eric/.claude/projects/-home-eric-jig/aa823fcc-9b0d-52be-a818-9
 **Points:** 2
 **Branch:** task/allow-sed-n
 **Opened at:** 2026-11-25T17:45:17Z
+**Sample:** none — no changed test or function in a JS/TS file
+
+## Task 6: Any session may read any repo on this machine
+
+**Completed:**
+- `CLAUDE.md`: a Workflow Notes bullet saying any session may read any repo on this machine, at `~/<repo>`, with state read at `origin/main`. Writes are unchanged.
+- `docs/decisions/DEC-J038-any-session-may-read-any-repo.md` (draft), plus the regenerated `docs/DECISIONS.md`.
+- Cause: a sheepdog session declined to read another repo, citing its system prompt's repository-scope line.
+- Same window, no PR: the sheepdog sync went out as sheepdog PR #68, with a lint fix carried in it (sheepdog's `eslint.config.js` now ignores `.claude/skills/**/*.mjs`). It's merged. Tested a `PermissionRequest` hook for the `.claude/` sed prompt in scratch only; nothing was installed.
+
+**Code review:** @code-review 6 findings, nothing blocking. Five were fixed: DEC-J012 is now cited for the sync, reads are pointed at origin/main, the claims are sourced, "here" is dropped, and the record says why it's prose. The no-secrets clause was not taken (no guards for problems that haven't happened). /security-review not run (no trigger). @ui-reviewer not run (no ui-context.md).
+**PR:** [PR #147](https://github.com/mobiustripper42/jig/pull/147)
+**Points:** 1
+**Branch:** task/read-any-repo
+**Opened at:** 2026-11-26T01:18:11Z
 **Sample:** none — no changed test or function in a JS/TS file
 
 **Next Steps:**
