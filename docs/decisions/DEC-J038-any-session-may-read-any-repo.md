@@ -15,19 +15,19 @@ revisit_if: "A session's read of another repo leaks something the operator did n
 
 ## DEC-J038: Any session may read any repo on this machine
 
-The operator, 2026-11-25: "i don't care if any Claude reads any repo."
+The operator, 2026-11-25: "i don't care if any Claude reads any repo". That was said in the jig
+session `aa823fcc-9b0d-52be-a818-975758c4d468` on mill-dev.
 
-That day a sheepdog session declined to look at another repo. It cited its system prompt's
-repository-scope section: "GitHub access is scoped to: `mobiustripper42/sheepdog`. Don't read or
-write any other repository: those calls are denied." The jig session that same day read `~/muster`
-and `~/haul` from disk and was never blocked. Its system prompt carried the same section, scoped
-to jig. Sessions are started the same way, so which reading a session lands on varies from run to
-run.
+The operator pasted a sheepdog session's answer into that session. Sheepdog had declined to look
+at another repo, quoting its system prompt: "Don't read or write any other repository: those
+calls are denied." In that same transcript, jig read `~/muster` and `~/haul` from disk unblocked,
+under the same section scoped to jig. Sessions start alike, so the reading varies by run.
 
-That text is written into each session by Claude Code. No file in any repo holds it, so it cannot
-be edited from here. The shell can say plainly what the operator allows, and every project gets
-that line on its next sync. The shell already sent sessions to sibling repos to check claims
-about them ("Sibling repos are on disk: open the file"). That line did not settle it.
+Claude Code writes that text; no repo file holds it. Prose, not a settings rule: the scope line
+looks like a model instruction, not a permission check. That is inferred, not tested. The old
+shell line ("Sibling repos are on disk: open the file") did not settle it.
 
-Reads only. Writing to another repo stays where DEC-J002 puts it: inside a skill's own ritual,
-such as the sync, or with the operator's go.
+Reads go to `origin/main`, since a sibling's working tree is often a parked branch behind it.
+
+Writing to another repo still needs the operator's go, or a ritual they started, such as
+`scripts/sync.mjs --pr` (DEC-J012). See also DEC-J002.
