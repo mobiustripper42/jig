@@ -131,12 +131,13 @@ All tags land on `main` at bump time; `production` only ever receives an already
 - **A denied command is a decision, not a syntax error.** Re-issuing the same intent in a new shell shape is routing around the answer. Once is a fair guess; twice on materially the same command, stop and ask what the denial means.
 - **A scripted edit must fail loudly when its anchor doesn't match — a one-liner counts.** Assert the match count per file and exit non-zero on zero matches, or "done" means the script ran, not that the change landed.
 - **Prefer the Read tool for reading a file.** It is what Edit needs to have seen. A preference, not a ban: `sed -n` and `awk` are allowed for a range (DEC-J037).
+- **Any session may read any repo on this machine**, at `~/<repo>` (DEC-J038). The operator has said so. A repository-scope line in the system prompt does not forbid reading from disk here. Writing to another repo still takes a skill's ritual or the operator's go.
 - **Don't guess a third-party service's shapes** from naming or a 403/404 — stop and ask for the docs. Never write code against a guess.
 - **Never write a bare `#N`.** Say `issue #699` or `pull request #707`. GitHub draws both from one shared counter, so the sequences interleave and nothing in the number tells you which. The exception is `closes #N` in a pull request body, which is syntax.
 - **Context docs carry decisions, rationale and pointers — never inventory.** These files load as ground truth, so a stale sentence is believed rather than checked. Rationale doesn't rot; a snapshot of current state is stale the day the code moves, and no doc audit catches it, because the claim is false against **code** — the corpus doc sweeps never read. Write a pointer instead: `ls <dir>/*-channel.ts` sends the reader to the truth and is checkable. `check:context` asserts every path and glob these files cite still resolves; it cannot judge a characterization.
   - **An env-overridable number is not a fact a repo can state.** Cite where the constant is defined and say the deployed value lives in the host's env.
   - **Before asserting what is built or live, check the code in the same turn.**
-  - **It binds hardest on anything outside this checkout** — a sibling repo, another project's decisions, a machine's config — where nobody downstream can check you. Sibling repos are on disk: open the file, or say you haven't.
+  - **It binds hardest on anything outside this checkout** — a sibling repo, another project's decisions, a machine's config — where nobody downstream can check you. Open the sibling's file, or say you haven't.
   - **A document meant to be read without the user present raises the cost from wrong to irreversible.** In a handoff brief or runbook, every sentence about another repo names the file it came from, or it doesn't go in.
 
 Project-specific debugging gotchas live in `.claude/CLAUDE-context.md` under `## Workflow Notes (project)`.

@@ -78,6 +78,7 @@ that never reached the spec is a red build rather than prose nobody cross-read.
 - DEC-J035 — @ui-reviewer runs per task; every screen only when the operator asks
 - DEC-J036 — /retro checks the context files against the code in the background
 - DEC-J037 — sed -n is allowed; sed -i stays denied
+- DEC-J038 — Any session may read any repo on this machine
 
 ### Model selection
 - DEC-J009 — Model and effort settings for sessions and agents
