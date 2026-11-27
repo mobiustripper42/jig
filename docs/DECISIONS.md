@@ -79,6 +79,7 @@ that never reached the spec is a red build rather than prose nobody cross-read.
 - DEC-J036 — /retro checks the context files against the code in the background
 - DEC-J037 — sed -n is allowed; sed -i stays denied
 - DEC-J038 — Any session may read any repo on this machine
+- DEC-J039 — A browser run is not a standing step
 
 ### Model selection
 - DEC-J009 — Model and effort settings for sessions and agents
